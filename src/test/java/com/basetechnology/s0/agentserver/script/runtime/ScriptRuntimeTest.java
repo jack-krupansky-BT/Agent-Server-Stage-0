@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +34,6 @@ import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.AgentServerTestBase;
-import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.appserver.AgentAppServer;
 import com.basetechnology.s0.agentserver.script.intermediate.ExpressionNode;
 import com.basetechnology.s0.agentserver.script.intermediate.IntegerTypeNode;
@@ -44,7 +42,6 @@ import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
-import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.parser.ParserException;
 import com.basetechnology.s0.agentserver.script.parser.ScriptParser;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerException;
@@ -60,7 +57,6 @@ import com.basetechnology.s0.agentserver.script.runtime.value.NullValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.StringValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.TrueValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
-import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessManager;
 
 public class ScriptRuntimeTest extends AgentServerTestBase {
 
