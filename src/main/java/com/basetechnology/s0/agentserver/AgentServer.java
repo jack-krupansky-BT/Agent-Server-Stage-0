@@ -877,4 +877,8 @@ public class AgentServer {
   public ListMap<String, String> getWebSiteAccessControls(User user) throws JSONException, AgentServerException{
     return webAccessManager.getWebSiteAccessControls(user);
   }
+  
+  public String getAdminPassword(){
+    return config.agentServerProperties.adminPassword;
+  }
 }

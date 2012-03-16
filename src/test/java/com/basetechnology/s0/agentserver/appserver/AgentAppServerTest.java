@@ -2265,7 +2265,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("Status JSON", "{\"status\":\"running\",\"since\":\"" + since + "\",\"num_registered_users\":0,\"num_active_users\":0,\"num_registered_agents\":0,\"num_active_agents\":0}", statusJson.toString());
 
     // Test status for paused server
-    url = baseUrl + "/status/pause?password=" + AgentAppServer.adminPassword;
+    url = baseUrl + "/status/pause?password=" + server.agentServer.getAdminPassword();
     statusJson = doPutJson(url, 204);
 
     url = baseUrl + "/status";
@@ -2286,7 +2286,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("Status JSON", "{\"status\":\"paused\",\"since\":\"" + since + "\",\"num_registered_users\":0,\"num_active_users\":0,\"num_registered_agents\":0,\"num_active_agents\":0}", statusJson.toString());
 
     // Test status for resume of paused server
-    url = baseUrl + "/status/resume?password=" + AgentAppServer.adminPassword;
+    url = baseUrl + "/status/resume?password=" + server.agentServer.getAdminPassword();
     statusJson = doPutJson(url, 204);
 
     url = baseUrl + "/status";
@@ -2307,7 +2307,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("Status JSON", "{\"status\":\"running\",\"since\":\"" + since + "\",\"num_registered_users\":0,\"num_active_users\":0,\"num_registered_agents\":0,\"num_active_agents\":0}", statusJson.toString());
     
     // Test status for shutdown server
-    url = baseUrl + "/status/shutdown?password=" + AgentAppServer.adminPassword;
+    url = baseUrl + "/status/shutdown?password=" + server.agentServer.getAdminPassword();
     statusJson = doPutJson(url, 204);
 
     url = baseUrl + "/status";
@@ -2328,7 +2328,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("Status JSON", "{\"status\":\"shutdown\",\"since\":\"" + since + "\",\"num_registered_users\":0,\"num_active_users\":0,\"num_registered_agents\":0,\"num_active_agents\":0}", statusJson.toString());
 
     // Test status after starting server
-    url = baseUrl + "/status/start?password=" + AgentAppServer.adminPassword;
+    url = baseUrl + "/status/start?password=" + server.agentServer.getAdminPassword();
     statusJson = doPutJson(url, 204);
 
     url = baseUrl + "/status";
@@ -2349,7 +2349,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("Status JSON", "{\"status\":\"running\",\"since\":\"" + since + "\",\"num_registered_users\":0,\"num_active_users\":0,\"num_registered_agents\":0,\"num_active_agents\":0}", statusJson.toString());
 
     // Test status after restarting server
-    url = baseUrl + "/status/restart?password=" + AgentAppServer.adminPassword;
+    url = baseUrl + "/status/restart?password=" + server.agentServer.getAdminPassword();
     statusJson = doPutJson(url, 204);
 
     url = baseUrl + "/status";
@@ -3956,85 +3956,85 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertJsonSourceEquals("JSON error", "{\"errors\":[{\"message\":\"Unknown user Id or incorrect admin password\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", accessJson.toString());
 
     // Verify that getting web site access controls is a no-op if none set
-    accessJson = doGetJson(baseUrl + "/users/user1/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertEquals("Access JSON map size", 0, accessJson.length());
 
     // Verify that add of an empty list is a no-op
-    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(),
         "{}",
         204);
     assertTrue("Access JSON map should not be returned", accessJson == null);
 
     // Verify that bad access keyword is detected
-    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site1.com/\": \"grantx\"}",
         400);
     assertTrue("JSON", accessJson != null);
     assertJsonSourceEquals("JSON error", "{\"errors\":[{\"message\":\"Verb parameter for addAccess is not 'grant' or 'deny': grantx\",\"type\":\"com.basetechnology.s0.agentserver.webaccessmanager.WebAccessException\"}]}", accessJson.toString());
 
-    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site1.com/\": \"\"}",
         400);
     assertTrue("JSON", accessJson != null);
     assertJsonSourceEquals("JSON error", "{\"errors\":[{\"message\":\"Empty verb parameter for addAccess\",\"type\":\"com.basetechnology.s0.agentserver.webaccessmanager.WebAccessException\"}]}", accessJson.toString());
 
-    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site1.com/\": 4.5}",
         400);
     assertTrue("JSON", accessJson != null);
     assertJsonSourceEquals("JSON error", "{\"errors\":[{\"message\":\"Verb parameter for addAccess is not 'grant' or 'deny': 4.5\",\"type\":\"com.basetechnology.s0.agentserver.webaccessmanager.WebAccessException\"}]}", accessJson.toString());
 
     // Add the web site access controls for the scenario to be tested
-    accessJson = doPostJson(baseUrl + "/users/*/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/*/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site1.com/\": \"grant\"}", 204);
     assertTrue("Access JSON map should not be returned", accessJson == null);
 
-    accessJson = doPostJson(baseUrl + "/users/*/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/*/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site2.com\": \"deny\"}", 204);
     assertTrue("Access JSON map should not be returned", accessJson == null);
 
-    accessJson = doPostJson(baseUrl + "/users/*/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/*/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site3.com/\": \"grant\"}", 204);
     assertTrue("Access JSON map should not be returned", accessJson == null);
-    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site3.com/any/path\": \"deny\"}", 204);
     assertTrue("Access JSON map should not be returned", accessJson == null);
-    accessJson = doPostJson(baseUrl + "/users/user2/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/user2/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site3.com\": \"deny\"}", 204);
     assertTrue("Access JSON map should not be returned", accessJson == null);
 
-    accessJson = doPostJson(baseUrl + "/users/*/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/*/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site4.com\": \"deny\"}", 204);
     assertTrue("Access JSON map should not be returned", accessJson == null);
-    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site4.com\": \"grant\"}", 204);
     assertTrue("Access JSON map should not be returned", accessJson == null);
-    accessJson = doPostJson(baseUrl + "/users/user2/website_access?password=" + AgentAppServer.adminPassword,
+    accessJson = doPostJson(baseUrl + "/users/user2/website_access?password=" + server.agentServer.getAdminPassword(),
         "{\"http://www.site4.com\": \"grant\"}", 204);
     assertTrue("Access JSON map should not be returned", accessJson == null);
 
     // Validate that entries created as expected
-    accessJson = doGetJson(baseUrl + "/users/*/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/*/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON",
         "{\"http://www.site1.com/\": \"grant\", \"http://www.site2.com/\": \"deny\", \"http://www.site3.com/\": \"grant\", \"http://www.site4.com/\": \"deny\"}", accessJson);
 
-    accessJson = doGetJson(baseUrl + "/users/user1/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON",
         "{\"http://www.site3.com/\": \"deny\", \"http://www.site4.com/\": \"grant\"}", accessJson);
 
-    accessJson = doGetJson(baseUrl + "/users/user2/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/user2/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON",
         "{\"http://www.site3.com/\": \"deny\", \"http://www.site4.com/\": \"grant\"}", accessJson);
 
-    accessJson = doGetJson(baseUrl + "/users/user3/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/user3/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON", "{}", accessJson);
 
-    accessJson = doGetJson(baseUrl + "/users/user4/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/user4/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON", "{}", accessJson);
 
@@ -4104,26 +4104,26 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check that web access control persists over shutdown and restart
     restartServer();
 
-    accessJson = doGetJson(baseUrl + "/users/*/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/*/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON",
         "{\"http://www.site1.com/\": \"grant\", \"http://www.site2.com/\": \"deny\", \"http://www.site3.com/\": \"grant\", \"http://www.site4.com/\": \"deny\"}", accessJson);
 
-    accessJson = doGetJson(baseUrl + "/users/user1/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON",
         "{\"http://www.site3.com/\": \"deny\", \"http://www.site4.com/\": \"grant\"}", accessJson);
 
-    accessJson = doGetJson(baseUrl + "/users/user2/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/user2/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON",
         "{\"http://www.site3.com/\": \"deny\", \"http://www.site4.com/\": \"grant\"}", accessJson);
 
-    accessJson = doGetJson(baseUrl + "/users/user3/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/user3/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON", "{}", accessJson);
 
-    accessJson = doGetJson(baseUrl + "/users/user4/website_access?password=" + AgentAppServer.adminPassword, 200);
+    accessJson = doGetJson(baseUrl + "/users/user4/website_access?password=" + server.agentServer.getAdminPassword(), 200);
     assertTrue("Access JSON map not returned", accessJson != null);
     assertJsonSourceEquals("Access list JSON", "{}", accessJson);
 
@@ -5117,7 +5117,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationRecordJson.getString("time");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 2000);
+    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta <= 4000);
     assertTrue("notification is missing from notification record [0]", notificationRecordJson.has("notification"));
     notificationJson = notificationRecordJson.getJSONObject("notification");
     assertEquals("Count of field in notification[1]", 9, notificationJson.length());

@@ -5,4 +5,7 @@ bin
 classes
 test-classes
 test-reports
+dist/files
+old-libs
+test
 

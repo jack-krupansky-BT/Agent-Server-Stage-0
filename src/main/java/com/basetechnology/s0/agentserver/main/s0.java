@@ -24,20 +24,19 @@ public class s0 {
   static final Logger log = Logger.getLogger(s0.class);
 
   /**
-   * A little test embedded Jetty server for Agent Server
+   * Start up the embedded Jetty server for an Agent Server
    * 
    * @param args
    */
   public static void main(String[] args) throws Exception {
+    // Create a new agent app server
+    log.info("Creating new agent app server");
     AgentAppServer server = new AgentAppServer();
 
-    String userName = "joe";
-    log.info("Adding dummy user: " + userName);
-    server.agentServer.addUser(userName);
-
+    // Start it
+    log.info("Starting new agent app server");
     server.start();
-    
-    log.info("End of Main");
+    log.info("New agent app server started");
   }
 
 }

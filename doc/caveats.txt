@@ -1,0 +1,18 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Some features known to be missing or incomplete or buggy
+
+- Script language features not yet implemented
+ - try statement
+ - throw statement
+ - switch statement
+ - ? : operators
+
+- No support for inter-server communications other than raw HTTP network I/O
+
+- No admin control to force new users to be approved
+
+- No support for email confirmation for new users
+
+- Some of the unit tests are too timing sensitive and fail sometimes

@@ -120,7 +120,7 @@ public class PersistentFile implements Iterable<String> {
     long fileLength = file.length();
     byte[] buffer = new byte[20000];
     int numButesRead = file.read(buffer);
-    log.info("Opened persistent file of length " + fileLength + " and read " + numButesRead + " bytes");
+    log.info("Opened persistent file " + path + " of length " + fileLength + " and read " + numButesRead + " bytes");
     
     // Change raw UTF-8 bytes into Java string
     String header = new String(buffer);

@@ -316,7 +316,7 @@ public class HandlePost extends HandleHttp {
       } else if (password.trim().length() == 0){
         throw new AgentAppServerBadRequestException("Empty password query parameter");
       } else if ((! userId.equals("*") && ! agentServer.users.containsKey(userId)) ||
-          ! password.equals(AgentAppServer.adminPassword)){
+          ! password.equals(agentServer.getAdminPassword())){
         throw new AgentAppServerBadRequestException("Unknown user Id or incorrect admin password");
       } else if (accessControlsJson == null){
         throw new AgentAppServerBadRequestException("Invalid website access JSON object");

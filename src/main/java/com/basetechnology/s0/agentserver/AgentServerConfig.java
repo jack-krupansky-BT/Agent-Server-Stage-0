@@ -21,9 +21,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.basetechnology.s0.agentserver.appserver.HandleGet;
 import com.basetechnology.s0.agentserver.mailaccessmanager.MailAccessManager;
 import com.basetechnology.s0.agentserver.persistence.persistentfile.PersistentFileException;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
@@ -33,6 +35,7 @@ import com.basetechnology.s0.agentserver.util.ListMap;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessManager;
 
 public class AgentServerConfig {
+  static final Logger log = Logger.getLogger(AgentServerConfig.class);
   public AgentServer agentServer;
   public ListMap<String, String> config;
   public boolean batchUpdate;
@@ -48,6 +51,7 @@ public class AgentServerConfig {
   }
 
   public void load() throws IOException, PersistentFileException, AgentServerException {
+    log.info("Loading config table");
     // Load the table of config settings
     if (agentServer.persistence != null)
       config = agentServer.persistence.get("config");
@@ -137,6 +141,7 @@ public class AgentServerConfig {
   }
   
   public void restoreDefaults() throws AgentServerException {
+    log.info("Setting defaults for config properties");
     this.config = new ListMap<String, String>();
     
     put("name", agentServerProperties.agentServerName);

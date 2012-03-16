@@ -1,0 +1,78 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+1. Download the zip file from github:
+
+2. Unzip
+
+3. Run the agent server
+
+ant test-zip
+
+or
+
+java -jar AgentServer-0.1.jar
+
+The server will remain running until it is shut down.
+
+To communicate with the server, open a new command window.
+
+4. Ping the agent server to see that it is running
+
+curl http://localhost:8980/API/v0.1/status
+
+{
+    "status": "running",
+    "since": "Fri, 16 Mar 2012 18:56:13 -0400",
+    "num_registered_users": 0,
+    "num_active_users": 0,
+    "num_registered_agents": 0,
+    "num_active_agents": 0
+}
+
+curl http://localhost:8980/API/v0.1/about
+
+{
+    "name": "YourAgentServer",
+    "software": "s0",
+    "version": "0.1.0",
+    "description": "Your Agent Server",
+    "website": "http://your-website.com",
+    "contact": "jack@basetechnology.com"
+}
+
+curl http://localhost:8980/API/v0.1/config
+
+{
+    "name": "YourAgentServer",
+    "description": "Your Agent Server",
+    "software": "s0",
+    "version": "0.1.0",
+    "website": "http://your-website.com",
+    "admin_approve_user_create": "false",
+    "mail_confirm_user_create": "false",
+    "contact": "jack@basetechnology.com",
+    "user_agent_name": "AgentServer",
+    "default_web_page_refresh_interval": "60000",
+    "minimum_web_page_refresh_interval": "60000",
+    "minimum_web_site_access_interval": "60000",
+    "minimum_web_access_interval": "100",
+    "execution_limit_level_1": "10",
+    "execution_limit_level_2": "100",
+    "execution_limit_level_3": "1000",
+    "execution_limit_level_4": "10000",
+    "execution_limit_default_level": "2",
+    "max_users": "100",
+    "max_instances": "1000",
+    "implicitly_deny_web_access": "false",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "mail_access_enabled": "true",
+    "minimum_mail_access_interval": "2000",
+    "minimum_host_mail_access_interval": "2000",
+    "minimum_address_mail_access_interval": "10000"
+}
+
+5. Shut the server down
+
+curl -X put http://localhost:8980/API/v0.1/shutdown?password=your-admin-password

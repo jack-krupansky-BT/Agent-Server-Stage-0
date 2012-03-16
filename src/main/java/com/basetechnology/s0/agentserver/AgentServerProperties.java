@@ -22,11 +22,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+
+import com.basetechnology.s0.agentserver.appserver.HandleGet;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessManager;
 
 
 public class AgentServerProperties {
+  static final Logger log = Logger.getLogger(AgentServerProperties.class);
   public static final String DEFAULT_PROPERTIES_FILE_PATH = "agentserver.properties";
   public static final String ALTERNATE_PROPERTIES_FILE_PATH = "local-properties/agentserver.properties";
   public String propertiesFilePath = DEFAULT_PROPERTIES_FILE_PATH;
@@ -34,6 +38,8 @@ public class AgentServerProperties {
   public int appServerPort;
   public String agentServerName;
   public String agentServerDescription;
+  public static String DEFAULT_ADMIN_PASSWORD = "abracadabra";
+  public String adminPassword;
   public String mailServerHostName;
   public String mailServerUserName;
   public String mailServerUserPassword;
@@ -104,6 +110,10 @@ public class AgentServerProperties {
     if (agentServerName == null || agentServerName.trim().length() == 0)
       throw new AgentServerException("You must edit agentserver.properties (or set the agentserver_properties_path environment variable to point to another file) - agent_server_name is blank");
     agentServerDescription = properties.getProperty("agent_server_description");
+    log.info("agentServerDescription: " + agentServerDescription);
+    adminPassword = properties.getProperty("admin_password");
+    if (adminPassword == null || adminPassword.trim().length() == 0)
+      adminPassword = DEFAULT_ADMIN_PASSWORD;
     mailServerHostName = properties.getProperty("mail_server_host_name");
     mailServerUserName = properties.getProperty("mail_server_user_name");
     mailServerUserPassword = properties.getProperty("mail_server_user_password");

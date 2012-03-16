@@ -128,7 +128,7 @@ public class HandleGet extends HandleHttp {
       String password = request.getParameter("password");
       if (password == null)
         throw new AgentAppServerBadRequestException("Missing password query parameter");
-      else if (! password.equals(AgentAppServer.adminPassword))
+      else if (! password.equals(agentServer.getAdminPassword()))
         throw new AgentAppServerBadRequestException("Incorrect admin password");
 
       try {
@@ -157,7 +157,7 @@ public class HandleGet extends HandleHttp {
       String password = request.getParameter("password");
       if (password == null)
         throw new AgentAppServerBadRequestException("Missing password query parameter");
-      else if (! password.equals(AgentAppServer.adminPassword))
+      else if (! password.equals(agentServer.getAdminPassword()))
         throw new AgentAppServerBadRequestException("Incorrect admin password");
 
       try {
@@ -782,7 +782,7 @@ public class HandleGet extends HandleHttp {
       } else if (password.trim().length() == 0){
         throw new AgentAppServerBadRequestException("Empty password query parameter");
       } else if ((! userId.equals("*") && ! agentServer.users.containsKey(userId)) ||
-          ! password.equals(AgentAppServer.adminPassword)){
+          ! password.equals(agentServer.getAdminPassword())){
         throw new AgentAppServerBadRequestException("Unknown user Id or incorrect admin password");
       } else {
         log.info("Getting web site access controls for user: " + userId);

@@ -30,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import com.basetechnology.s0.agentserver.AgentActivityThread;
 import com.basetechnology.s0.agentserver.AgentDefinition;
 import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentInstanceList;
@@ -52,7 +53,9 @@ import com.basetechnology.s0.agentserver.util.JsonListMap;
 public class HandlePut extends HandleHttp {
   static final Logger log = Logger.getLogger(HandlePut.class);
 
-  public boolean handlePut(HttpInfo httpInfo) throws IOException, ServletException, AgentAppServerException, InterruptedException, RuntimeException, SymbolException, AgentServerException, JSONException, ParseException, TokenizerException, ParserException {
+  static public Thread shutdownThread;
+  
+  public boolean handlePut(HttpInfo httpInfo) throws Exception {
     this.httpInfo = httpInfo;
     
     // Extract out commonly used info
@@ -140,7 +143,7 @@ public class HandlePut extends HandleHttp {
         throw new AgentAppServerBadRequestException("Missing password query parameter");
       } else if (password.trim().length() == 0){
         throw new AgentAppServerBadRequestException("Empty password query parameter");
-      } else if (! password.equals(AgentAppServer.adminPassword)){
+      } else if (! password.equals(agentServer.getAdminPassword())){
         throw new AgentAppServerBadRequestException("Incorrect password");
       }
 
@@ -159,7 +162,7 @@ public class HandlePut extends HandleHttp {
         throw new AgentAppServerBadRequestException("Missing password query parameter");
       } else if (password.trim().length() == 0){
         throw new AgentAppServerBadRequestException("Empty password query parameter");
-      } else if (! password.equals(AgentAppServer.adminPassword)){
+      } else if (! password.equals(agentServer.getAdminPassword())){
         throw new AgentAppServerBadRequestException("Incorrect password");
       }
 
@@ -170,6 +173,44 @@ public class HandlePut extends HandleHttp {
 
       // Update was successful
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    } else if (lcPath.equals("/shutdown")){
+      // Get password from query parameters
+      String password = request.getParameter("password");
+      if (password == null){
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.setContentType("text/html");
+        response.getWriter().println("<title>Agent Server</title>");
+        response.getWriter().println("<h1>Bad Request</h1>");
+        response.getWriter().println("Missing password query parameter");
+        ((Request)request).setHandled(true);
+      } else if (password.trim().length() == 0){
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.setContentType("text/html");
+        response.getWriter().println("<title>Agent Server</title>");
+        response.getWriter().println("<h1>Bad Request</h1>");
+        response.getWriter().println("Empty password query parameter");
+        ((Request)request).setHandled(true);
+      } else if (! password.equals(agentServer.getAdminPassword())){
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.setContentType("text/html");
+        response.getWriter().println("<title>Agent Server</title>");
+        response.getWriter().println("<h1>Bad Request</h1>");
+        response.getWriter().println("Incorrect password");
+        return true;
+      } else {
+        // Request the agent app server to shutdown
+        // TODO: Can we really do this here and still return a response?
+        // Or do we need to set a timer, return, and shutdown independent of current request
+        
+        // Spin up a separate thread to gracefully shutdown the server in a timely manner
+        AgentAppServerShutdown agentAppServerShutdown = new AgentAppServerShutdown(agentServer);
+        shutdownThread = new Thread(agentAppServerShutdown);
+        shutdownThread.start();
+        
+        // Done
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        return true;
+      }
     } else if (lcPath.equals("/status/pause")){
       // Get password from query parameters
       String password = request.getParameter("password");
@@ -187,7 +228,7 @@ public class HandlePut extends HandleHttp {
         response.getWriter().println("<h1>Bad Request</h1>");
         response.getWriter().println("Empty password query parameter");
         ((Request)request).setHandled(true);
-      } else if (! password.equals(AgentAppServer.adminPassword)){
+      } else if (! password.equals(agentServer.getAdminPassword())){
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         response.setContentType("text/html");
         response.getWriter().println("<title>Agent Server</title>");
@@ -217,7 +258,7 @@ public class HandlePut extends HandleHttp {
         response.getWriter().println("<h1>Bad Request</h1>");
         response.getWriter().println("Empty password query parameter");
         ((Request)request).setHandled(true);
-      } else if (! password.equals(AgentAppServer.adminPassword)){
+      } else if (! password.equals(agentServer.getAdminPassword())){
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         response.setContentType("text/html");
         response.getWriter().println("<title>Agent Server</title>");
@@ -259,7 +300,7 @@ public class HandlePut extends HandleHttp {
         response.getWriter().println("<h1>Bad Request</h1>");
         response.getWriter().println("Empty password query parameter");
         ((Request)request).setHandled(true);
-      } else if (! password.equals(AgentAppServer.adminPassword)){
+      } else if (! password.equals(agentServer.getAdminPassword())){
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         response.setContentType("text/html");
         response.getWriter().println("<title>Agent Server</title>");
@@ -289,7 +330,7 @@ public class HandlePut extends HandleHttp {
         response.getWriter().println("<h1>Bad Request</h1>");
         response.getWriter().println("Empty password query parameter");
         ((Request)request).setHandled(true);
-      } else if (! password.equals(AgentAppServer.adminPassword)){
+      } else if (! password.equals(agentServer.getAdminPassword())){
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         response.setContentType("text/html");
         response.getWriter().println("<title>Agent Server</title>");
@@ -298,7 +339,9 @@ public class HandlePut extends HandleHttp {
         return true;
       } else {
         // Request the agent scheduler to shutdown
+        log.info("Shutting down agent server");
         AgentScheduler.singleton.shutdown();
+        log.info("Agent server shut down");
         response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         return true;
       }
@@ -319,7 +362,7 @@ public class HandlePut extends HandleHttp {
         response.getWriter().println("<h1>Bad Request</h1>");
         response.getWriter().println("Empty password query parameter");
         ((Request)request).setHandled(true);
-      } else if (! password.equals(AgentAppServer.adminPassword)){
+      } else if (! password.equals(agentServer.getAdminPassword())){
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         response.setContentType("text/html");
         response.getWriter().println("<title>Agent Server</title>");
@@ -332,6 +375,38 @@ public class HandlePut extends HandleHttp {
           // Force the scheduler to start
           AgentScheduler agentScheduler = new AgentScheduler(agentServer);
         }
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        return true;
+      }
+    } else if (lcPath.equals("/status/stop")){
+      // Get password from query parameters
+      String password = request.getParameter("password");
+      if (password == null){
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.setContentType("text/html");
+        response.getWriter().println("<title>Agent Server</title>");
+        response.getWriter().println("<h1>Bad Request</h1>");
+        response.getWriter().println("Missing password query parameter");
+        ((Request)request).setHandled(true);
+      } else if (password.trim().length() == 0){
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.setContentType("text/html");
+        response.getWriter().println("<title>Agent Server</title>");
+        response.getWriter().println("<h1>Bad Request</h1>");
+        response.getWriter().println("Empty password query parameter");
+        ((Request)request).setHandled(true);
+      } else if (! password.equals(agentServer.getAdminPassword())){
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.setContentType("text/html");
+        response.getWriter().println("<title>Agent Server</title>");
+        response.getWriter().println("<h1>Bad Request</h1>");
+        response.getWriter().println("Incorrect password");
+        return true;
+      } else {
+        // Request the agent scheduler to shutdown
+        log.info("Shutting down agent server");
+        AgentScheduler.singleton.shutdown();
+        log.info("Agent server shut down");
         response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         return true;
       }

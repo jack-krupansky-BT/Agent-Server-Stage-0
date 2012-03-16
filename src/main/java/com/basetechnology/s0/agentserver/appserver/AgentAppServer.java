@@ -16,7 +16,6 @@
 
 package com.basetechnology.s0.agentserver.appserver;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Iterator;
@@ -33,12 +32,9 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
-
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.RuntimeException;
-import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.parser.ParserException;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerException;
 import com.basetechnology.s0.agentserver.util.XmlUtils;
@@ -49,7 +45,6 @@ public class AgentAppServer {
   public static String apiPathPrefix;
   public static String appServerBaseUrl;
   public static String appServerApiBaseUrl;
-  public static String adminPassword = "abracadabra";
   public AgentServer agentServer;
 
   public Server server;
@@ -233,17 +228,13 @@ public class AgentAppServer {
 
   public AgentAppServer(boolean start) throws RuntimeException, AgentServerException,  Exception {
 
-    log.error("Test error message");
-    log.warn("Test warning message");
-    log.info("Test info message");
-    log.debug("Test debug message");
-    
     // Start the agent server.
     agentServer = new AgentServer(this);
 
     // Get the desired port number
     appServerPort = agentServer.config.agentServerProperties.appServerPort;
-    
+
+    // Build and save the bas API URLs
     apiPathPrefix = "/API/v0.1";
     appServerBaseUrl = "http://localhost:" + appServerPort;
     appServerApiBaseUrl = appServerBaseUrl + apiPathPrefix;
@@ -374,6 +365,8 @@ public class AgentAppServer {
         } catch (WebAccessException e){
           handleException(httpInfo, HttpServletResponse.SC_BAD_REQUEST, e);
         } catch (ParseException e) {
+          handleException(httpInfo, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
+        } catch (Exception e) {
           handleException(httpInfo, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e);
         }
       }
