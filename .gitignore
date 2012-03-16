@@ -1,0 +1,8 @@
+.settings
+test.log
+local-properties
+bin
+classes
+test-classes
+test-reports
+
