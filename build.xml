@@ -1,0 +1,144 @@
+<project name="AgentServer" default="build-zip">
+
+  <property name="version.suffix" value="-0.1" />
+
+  <property name="src.dir" value="src/main/java" />
+  <property name="classes.dir" value="classes" />
+  <property name="test.src.dir" value="src/test/java" />
+  <property name="test.classes.dir" value="test-classes" />
+  <property name="test.reports.dir" value="test-reports" />
+  <property name="dist.dir" value="dist" />
+  <property name="lib.dir" value="lib" />
+  <property name="logenv.dir" value="logenv/ant-test" />
+  <property name="legal.dir" value="legal" />
+  <property name="examples.dir" value="examples" />
+  <property name="test.examples.dir" value="test/examples" />
+  <property name="test.release-examples.dir" value="test/release-examples" />
+  <property name="dist.files.dir" value="${dist.dir}/files" />
+  <property name="dist.jar.dir" value="${dist.files.dir}" />
+  <property name="dist.lib.dir" value="${dist.files.dir}/lib" />
+  <property name="dist.legal.dir" value="${dist.files.dir}/legal" />
+  <property name="dist.examples.dir" value="${dist.files.dir}/examples" />
+  <property name="dist.jar.file" value="${dist.jar.dir}/AgentServer${version.suffix}.jar" />
+  <property name="dist.zip.file" value="${dist.dir}/AgentServer${version.suffix}.zip" />
+  <property name="test.dir" value="test" />
+  <property name="test.zip.file" value="${test.dir}/AgentServer${version.suffix}.zip" />
+  <property name="test.jar.dir" value="${test.dir}" />
+  <property name="test.jar.file" value="${test.jar.dir}/AgentServer${version.suffix}.jar" />
+  <property name="debug" value="true" />
+
+  <path id="lib">
+    <fileset dir="${lib.dir}">
+      <include name="**/*.jar" />
+    </fileset>
+  </path>
+
+  <path id="junit.classpath">
+    <pathelement location="${classes.dir}" />
+    <pathelement location="${test.classes.dir}" />
+    <path refid="lib" />
+    <pathelement location="${logenv.dir}" />
+  </path>
+
+  <target name="compile" description="Compile Java source into .class files ">
+    <mkdir dir="${classes.dir}" />
+    <javac srcdir="${src.dir}" destdir="${classes.dir}" debug="${debug}" encoding="UTF-8" includeantruntime="false">
+      <classpath>
+        <path refid="lib" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="build-jar" depends="compile,build-dist-dirs">
+    <jar destfile="${dist.jar.file}">
+      <fileset dir="${classes.dir}" />
+      <manifest>
+        <attribute name="Main-Class" value="com.basetechnology.s0.agentserver.main.AgentServer" />
+      	<!-- TODO: list proper jars or figire out how to simplify this --> 
+        <attribute name="Class-Path" value=". AgentServer.jar lib/slf4j-api-1.6.1.jar lib/slf4j-log4j12-1.6.1.jar lib/jcl-over-slf4j-1.6.1.jar lib/jul-to-slf4j-1.6.1.jar lib/log4j-1.2.16.jar lib/org.json-2.0.jar lib/org.codehaus.jackson.core.jar lib/org.codehaus.jackson.mapper.jar lib/org.restlet.ext.xml.jar lib/apache-log4j-extras-1.1.jar lib/commons-io-1.4.jar lib/org.restlet.jar lib/apache-solr-solrj-4.0-SNAPSHOT.jar lib/org.restlet.ext.fileupload.jar lib/commons-codec-1.4.jar lib/org.restlet.ext.jackson.jar lib/commons-httpclient-3.1.jar lib/org.restlet.ext.json.jar lib/org.restlet.ext.servlet.jar lib/commons-io-1.3.1.jar lib/org.restlet.ext.slf4j.jar" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="build-lib" depends="build-dist-dirs">
+    <delete dir="${dist.lib.dir}" />
+    <mkdir dir="${dist.lib.dir}" />
+    <copy toDir="${dist.lib.dir}" flatten="true" includeEmptyDirs="false">
+      <fileset dir="${lib.dir}">
+        <exclude name="**/junit/**" />
+        <exclude name="**/*.pom" />
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="clean-dist">
+    <delete dir="${dist.dir}" />
+  </target>
+
+  <target name="build-dist-dirs" depends="clean-dist">
+    <mkdir dir="${dist.dir}" />
+    <mkdir dir="${dist.files.dir}" />
+    <mkdir dir="${dist.jar.dir}" />
+    <mkdir dir="${dist.lib.dir}" />
+    <mkdir dir="${dist.examples.dir}" />
+  </target>
+
+  <target name="build-zip" depends="build-dist-dirs,compile,build-jar,build-lib">
+    <antcall target="build-zip-no-dep" />
+  </target>
+
+  <target name="build-zip-no-dep" depends="build-dist-dirs,compile,build-jar,build-lib">
+    <copy todir="${dist.examples.dir}">
+      <fileset dir="${examples.dir}" />
+    </copy>
+    <copy todir="${dist.files.dir}" file="logenv/log4j.properties" />
+    <copy todir="${dist.files.dir}" file="README.txt" />
+    <copy todir="${dist.files.dir}" file="NOTICES.txt" />
+    <copy todir="${dist.legal.dir}">
+      <fileset dir="${legal.dir}" />
+    </copy>
+    <zip destfile="${dist.zip.file}" basedir="${dist.files.dir}" />
+  </target>
+
+  <target name="compile-test" description="Compile Java test source into .class files ">
+    <mkdir dir="${test.classes.dir}" />
+    <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}" debug="${debug}" encoding="UTF-8" includeantruntime="false">
+      <classpath>
+        <path refid="junit.classpath" />
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="test" depends="compile,compile-test,build-zip">
+    <antcall target="test-no-dep" />
+  </target>
+
+  <target name="test-no-dep" depends="compile,compile-test">
+    <delete dir="${test.reports.dir}" />
+    <mkdir dir="${test.reports.dir}" />
+    <junit printsummary="on" showoutput="true" haltonfailure="no" haltonerror="no" errorproperty="junit.failed" failureproperty="junit.failed">
+      <formatter type="xml" />
+      <classpath>
+        <path refid="junit.classpath" />
+      </classpath>
+      <batchtest fork="yes" todir="${test.reports.dir}">
+        <fileset dir="${test.src.dir}">
+          <include name="**/*Test.java" />
+          <include name="**/Test*.java" />
+        </fileset>
+      </batchtest>
+    </junit>
+    <fail if="junit.failed">Tests failed!</fail>
+  </target>
+
+
+  <target name="test-zip" depends="build-zip">
+    <delete dir="${test.dir}" />
+    <mkdir dir="${test.dir}" />
+    <copy toDir="${test.dir}" file="${dist.zip.file}" />
+    <unzip dest="${test.dir}" src="${test.zip.file}" />
+  </target>
+
+	<!-- TODO: Add 'run' target -->
+	
+</project>
