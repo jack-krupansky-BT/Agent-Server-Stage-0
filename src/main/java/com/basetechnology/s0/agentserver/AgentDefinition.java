@@ -44,8 +44,10 @@ import com.basetechnology.s0.agentserver.util.NameValueList;
 public class AgentDefinition {
   static final Logger log = Logger.getLogger(AgentDefinition.class);
 
-  public final static int DEFAULT_TRIGGER_INTERVAL = 50;
-  public final static int DEFAULT_REPORTING_INTERVAL = 200;
+  public final static long DEFAULT_TRIGGER_INTERVAL = 50;
+  public final static String DEFAULT_TRIGGER_INTERVAL_EXPRESSION = Long.toString(DEFAULT_TRIGGER_INTERVAL);
+  public final static long DEFAULT_REPORTING_INTERVAL = 200;
+  public final static String DEFAULT_REPORTING_INTERVAL_EXPRESSION = Long.toString(DEFAULT_REPORTING_INTERVAL);
   public long timeCreated;
   public long timeModified;
   public AgentServer agentServer;
@@ -62,9 +64,10 @@ public class AgentDefinition {
   public FieldList outputs;
   public List<Goal> goals;
   public NameValueList<NotificationDefinition> notifications;
-  public long triggerInterval;
-  public long reportingInterval;
+  public String triggerIntervalExpression;
+  public String reportingIntervalExpression;
   public SymbolManager symbolManager;
+  public Boolean enabled;
 
   public AgentDefinition(AgentServer agentServer) throws SymbolException, RuntimeException {
     this.timeCreated = System.currentTimeMillis();
@@ -81,8 +84,9 @@ public class AgentDefinition {
     this.notifications = new NameValueList<NotificationDefinition>();
     this.outputs = new FieldList();
     this.goals = new ArrayList<Goal>();
-    this.triggerInterval = agentServer.getDefaultTriggerInterval();
-    this.reportingInterval = agentServer.getDefaultReportingInterval();
+    this.triggerIntervalExpression = agentServer.getDefaultTriggerInterval();
+    this.reportingIntervalExpression = agentServer.getDefaultReportingInterval();
+    this.enabled = true;
   }
 
   public AgentDefinition(
@@ -100,10 +104,11 @@ public class AgentDefinition {
       NameValueList<NotificationDefinition> notifications,
       FieldList outputs,
       List<Goal> goals,
-      long triggerInterval,
-      long reportingInterval,
+      String triggerIntervalExpression,
+      String reportingIntervalExpression,
       long timeCreated,
-      long timeModified) throws SymbolException, RuntimeException  {
+      long timeModified,
+      Boolean enabled) throws SymbolException, RuntimeException  {
     this.timeCreated = timeCreated > 0 ? timeCreated : System.currentTimeMillis();
     this.timeModified = timeModified > 0 ? timeModified : this.timeCreated;
     this.agentServer = agentServer;
@@ -120,8 +125,9 @@ public class AgentDefinition {
     this.notifications = notifications == null ? new NameValueList<NotificationDefinition>() : notifications;
     this.outputs = outputs == null ? new FieldList() : outputs;
     this.goals = goals == null ? new ArrayList<Goal>() : goals;
-    this.triggerInterval = triggerInterval;
-    this.reportingInterval = reportingInterval;
+    this.triggerIntervalExpression = triggerIntervalExpression;
+    this.reportingIntervalExpression = reportingIntervalExpression;
+    this.enabled = enabled;
   }
 
   static public AgentDefinition fromJson(AgentServer agentServer, String agentJsonSource) throws AgentServerException, SymbolException, JSONException {
@@ -423,8 +429,8 @@ public class AgentDefinition {
       }
     }
 
-    long reportingInterval = agentJson.optLong("reporting_interval", agentServer.getDefaultReportingInterval());
-    long triggerInterval = agentJson.optLong("trigger_interval", agentServer.getDefaultTriggerInterval());
+    String reportingIntervalExpression = agentJson.optString("reporting_interval", agentServer.getDefaultReportingInterval());
+    String triggerIntervalExpression = agentJson.optString("trigger_interval", agentServer.getDefaultTriggerInterval());
 
     String created = agentJson.optString("created", null);
     long timeCreated = -1;
@@ -440,6 +446,10 @@ public class AgentDefinition {
     } catch (ParseException e){
       throw new AgentServerException("Unable to parse modified date ('" + modified + "') - " + e.getMessage());
     }
+
+    Boolean enabled = update ? null : true;
+    if (agentJson.has("enabled"))
+      enabled = agentJson.optBoolean("enabled");
     
     // Validate keys
     JsonUtils.validateKeys(agentJson, "Agent definition", new ArrayList<String>(Arrays.asList(
@@ -448,7 +458,9 @@ public class AgentDefinition {
         "modified", "reporting_interval", "trigger_interval", "enabled")));
 
     // TODO: Differentiate create vs. recreate vs. update - handling of SHA
-    agent = new AgentDefinition(agentServer, user, agentDefinitionName, agentDescription, parameters, inputs, timers, conditions, scripts, scratchpad, memory, notifications, outputsList, goalsList, triggerInterval, reportingInterval, timeCreated, timeModified);
+    agent = new AgentDefinition(agentServer, user, agentDefinitionName, agentDescription, parameters,
+        inputs, timers, conditions, scripts, scratchpad, memory, notifications, outputsList,
+        goalsList, triggerIntervalExpression, reportingIntervalExpression, timeCreated, timeModified, enabled);
 
     // Return the created agent definition
     return agent;
@@ -523,8 +535,10 @@ public class AgentDefinition {
         goalsArrayJson.put(goal.toJson());
       agentJson.put("goals", goalsArrayJson);
 
-      agentJson.put("trigger_interval", triggerInterval);
-      agentJson.put("reporting_interval", reportingInterval);
+      agentJson.put("trigger_interval", triggerIntervalExpression);
+      agentJson.put("reporting_interval", reportingIntervalExpression);
+
+      agentJson.put("enabled", enabled);
 
       return agentJson;
     } catch (JSONException e){
@@ -551,10 +565,10 @@ public class AgentDefinition {
       this.outputs = updated.outputs;
     if (updated.goals != null)
       this.goals = updated.goals;
-    if (updated.triggerInterval != -1)
-      this.triggerInterval = updated.triggerInterval;
-    if (updated.reportingInterval != -1)
-      this.reportingInterval = updated.reportingInterval;
+    if (updated.triggerIntervalExpression != null)
+      this.triggerIntervalExpression = updated.triggerIntervalExpression;
+    if (updated.reportingIntervalExpression != null)
+      this.reportingIntervalExpression = updated.reportingIntervalExpression;
     
     // Persist the changes
     agentServer.persistence.put(this);

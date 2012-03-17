@@ -30,7 +30,7 @@ public class AgentActivityCondition extends AgentActivity {
   public AgentCondition condition;
   
   public AgentActivityCondition(AgentInstance agent, AgentCondition condition) throws RuntimeException {
-    super(agent, System.currentTimeMillis() + condition.interval, "Init for AgentCondition " + condition.toString());
+    super(agent, System.currentTimeMillis() + condition.interval, "AgentCondition " + condition.toString());
     this.condition = condition;
   }
   

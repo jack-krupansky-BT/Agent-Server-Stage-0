@@ -167,7 +167,7 @@ public class SymbolValues implements Iterable<Symbol> {
             match = true;
             break;
           } else {
-            log.info(valueNode.toString() + "  NOT EQUALS  " + otherValueNode.toString());
+            //log.info(valueNode.toString() + "  NOT EQUALS  " + otherValueNode.toString());
             return false;
           }
         }

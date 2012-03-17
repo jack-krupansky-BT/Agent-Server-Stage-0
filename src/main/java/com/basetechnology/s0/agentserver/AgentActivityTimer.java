@@ -28,9 +28,9 @@ public class AgentActivityTimer extends AgentActivity {
   static final Logger log = Logger.getLogger(AgentActivityTimer.class);
   public AgentTimer timer;
   
-  public AgentActivityTimer(AgentInstance agent, AgentTimer timer) throws RuntimeException {
+  public AgentActivityTimer(AgentInstance agent, AgentTimer timer) throws AgentServerException {
     // TODO: Review whether now plus interval or original schedule plus interval
-    super(agent, System.currentTimeMillis() + timer.interval, "Init for AgentTimer " + timer.toString());
+    super(agent, System.currentTimeMillis() + timer.getInterval(agent), "AgentTimer " + timer.toString());
     this.timer = timer;
     log.info("Starting timer " + timer);
   }
@@ -79,7 +79,7 @@ public class AgentActivityTimer extends AgentActivity {
 
         // Schedule the next interval of the timer
         if (AgentScheduler.singleton != null) {
-          log.info("Rescheduling timer " + timer.name + " for t plus " + timer.interval + " ms.");
+          log.info("Rescheduling timer " + timer.name + " for t plus " + timer.getInterval(agent) + " ms.");
           AgentScheduler.singleton.add(timerActivity);
         } else 
           log.info("Timer " + timer.name + " will not be rescheduled since scheduler has been terminated");

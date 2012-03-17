@@ -29,10 +29,24 @@ public class AgentActivityTriggerInputChanged extends AgentActivity {
   static final Logger log = Logger.getLogger(AgentActivityTriggerInputChanged.class);
 
   public AgentInstance dataSource;
+  long triggerInterval;
   
-  public AgentActivityTriggerInputChanged(AgentInstance agent, AgentInstance dataSource) throws RuntimeException {
-    super(agent, agent.getTriggerTime(), "Init for AgentActivityTriggerInputChanged for data source " + dataSource.agentDefinition.name);
+  public AgentActivityTriggerInputChanged(AgentInstance agent, AgentInstance dataSource) throws AgentServerException {
+    super(agent, -1, "AgentActivityTriggerInputChanged for data source " + dataSource.agentDefinition.name);
     this.dataSource = dataSource;
+    this.triggerInterval = agent.getTriggerInterval();
+    this.when = System.currentTimeMillis() + triggerInterval;
+    
+  }
+  
+  public long computeTriggerInterval() throws AgentServerException {
+    triggerInterval = agent.evaluateExpressionLong(agent.triggerIntervalExpression);
+    return triggerInterval;
+  }
+  
+  public long computeTriggerTime() throws AgentServerException {
+    triggerInterval = agent.evaluateExpressionLong(agent.triggerIntervalExpression);
+    return System.currentTimeMillis() + triggerInterval;
   }
   
   public boolean performActivity() throws SymbolException, RuntimeException, AgentServerException, JSONException {
@@ -104,7 +118,7 @@ public class AgentActivityTriggerInputChanged extends AgentActivity {
 
       // Fire trigger, but only if its trigger_interval has been reached
       long delta = now - agent.lastTriggered;
-      if (delta >= agent.triggerInterval){
+      if (delta >= triggerInterval){
         agent.lastTriggered = now;
 
         // Optionally run the 'inputs_changed' script
@@ -112,7 +126,7 @@ public class AgentActivityTriggerInputChanged extends AgentActivity {
         if (agent.agentDefinition.scripts.containsKey(scriptName)){
           try {
             // Run the condition's script - no need to re-capture input values
-            log.info("Running " + agent.name + ".inputs_changed - delta: " + delta + " ms. > trigger_interval: " + agent.triggerInterval);
+            log.info("Running " + agent.name + ".inputs_changed - delta: " + delta + " ms. > trigger_interval: \"" + agent.triggerIntervalExpression + "\" (" + triggerInterval + " ms.)");
             Value returnValueNode = agent.runScript(scriptName, captureInputValues);
             // TODO: Should we do anything with return value?
           } catch (TokenizerException e){
@@ -127,6 +141,8 @@ public class AgentActivityTriggerInputChanged extends AgentActivity {
             return false;
           }
         }
+      } else {
+        log.info("Skipping " + agent.name + ".inputs_changed  since delta: " + delta + " ms. < trigger_interval: \"" + agent.triggerIntervalExpression + "\" (" + triggerInterval + " ms.)");
       }
     }
 

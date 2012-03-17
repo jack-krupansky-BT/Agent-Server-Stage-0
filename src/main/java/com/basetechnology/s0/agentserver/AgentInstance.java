@@ -72,8 +72,10 @@ public class AgentInstance {
   public Map<String, Long> scriptEndTime;
   public Map<String, AgentTimerStatus> timerStatus;
   public Map<String, AgentConditionStatus> conditionStatus;
-  public long triggerInterval;
-  public long reportingInterval;
+  public String triggerIntervalExpression;
+  public String reportingIntervalExpression;
+  //public long triggerInterval;
+  //public long reportingInterval;
   public Boolean enabled;
   public boolean pendingSuspended;
   public boolean busy;
@@ -115,7 +117,7 @@ public class AgentInstance {
   }
 
   public AgentInstance(User user, AgentDefinition agentDefinition, SymbolValues parameterValues) throws SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException  {
-    this(user, agentDefinition, null, null, parameterValues, 0, 0, true, -1, -1, null, false);
+    this(user, agentDefinition, null, null, parameterValues, null, null, agentDefinition.enabled, -1, -1, null, false);
   }
   
   public AgentInstance(
@@ -124,8 +126,8 @@ public class AgentInstance {
       String name,
       String description,
       SymbolValues parameterValues,
-      long triggerInterval,
-      long reportingInterval,
+      String triggerIntervalExpression,
+      String reportingIntervalExpression,
       Boolean enabled,
       long timeInstantiated,
       long timeUpdated,
@@ -149,9 +151,14 @@ public class AgentInstance {
     this.scriptEndTime = new HashMap<String, Long>();
     this.timerStatus = new HashMap<String, AgentTimerStatus>();
     this.conditionStatus = new HashMap<String, AgentConditionStatus>();
-    this.triggerInterval = triggerInterval == 0 ? agentDefinition.triggerInterval :
-      AgentDefinition.DEFAULT_TRIGGER_INTERVAL;
-    this.reportingInterval = reportingInterval;
+    this.triggerIntervalExpression =
+        triggerIntervalExpression == null || triggerIntervalExpression.trim().length() == 0 ?
+            agentDefinition.triggerIntervalExpression :
+              triggerIntervalExpression;
+    this.reportingIntervalExpression =
+        reportingIntervalExpression == null || reportingIntervalExpression.trim().length() == 0 ?
+            agentDefinition.reportingIntervalExpression :
+              reportingIntervalExpression;
     this.lastInputsChanged = 0;
     this.lastTriggerReady = 0;
     this.lastTriggered = 0;
@@ -186,8 +193,9 @@ public class AgentInstance {
     this.busy = false;
     this.ranInit = false;
 
-    if (! update && enabled)
+    if (! update && enabled != null && enabled)
       enable();
+    log.info("Enabled for " + this.name + ": " + enabled);
   }
 
   public boolean equals(AgentDefinition otherAgentDefinition, SymbolValues otherParameterValues){
@@ -250,8 +258,12 @@ public class AgentInstance {
       if (! agentDefinition.scripts.containsKey("init"))
         ranInit = true;
 
-    } else
-      log.info("Skipped scheduling 'init' for instance '" + name + "'");
+    } else {
+      log.info("Skipped scheduling 'init' for instance '" + name + "' since it has already been performed before agent instance was enabled");
+      
+      // Now schedule all timers and conditions for this agent
+      AgentScheduler.scheduleTimersAndConditions(this);
+    }
   }
 
   public void disable() throws SymbolException, JSONException, AgentServerException {
@@ -486,15 +498,15 @@ public class AgentInstance {
     SymbolValues savedOutputValues = outputRecord == null ? null :  outputRecord.output;
     if (savedOutputValues == null || ! savedOutputValues.equals(currentOutputValues)){
       if (savedOutputValues == null)
-        log.info("Initial output: " + currentOutputValues);
+        log.info("Initial output for " + name + ": " + currentOutputValues);
       else
-        log.info("Output changed - last sequence #" + outputRecord.sequenceNumber + " old output: " + savedOutputValues + " new output: " + currentOutputValues);
+        log.info("Output changed for " + name + " - #" + outputRecord.sequenceNumber + " old output: " + savedOutputValues + " new output: " + currentOutputValues);
 
       // Trigger all dependent instances that output has changed
       triggerInputChanged();
 
-      if (savedOutputValues != null)
-        log.info("equals: " + savedOutputValues.equals(currentOutputValues));
+      //if (savedOutputValues != null)
+        //log.info("equals: " + savedOutputValues.equals(currentOutputValues));
       
       // Save deep copy of changed output
       outputHistory.add(currentOutputValues.clone());
@@ -525,6 +537,10 @@ public class AgentInstance {
       // Queue up the notification
       queueNotify(notificationInstance);
     }
+  }
+  
+  public long evaluateExpressionLong(String expression) throws AgentServerException {
+    return evaluateExpression(expression, true).getLongValue();
   }
   
   public Value evaluateExpression(String expression) throws AgentServerException {
@@ -667,8 +683,8 @@ public class AgentInstance {
       agentJson.put("instantiated", DateUtils.toRfcString(timeInstantiated));
       agentJson.put("updated", timeUpdated > 0 ? DateUtils.toRfcString(timeUpdated) : "");
 
-      agentJson.put("trigger_interval", triggerInterval);
-      agentJson.put("reporting_interval", reportingInterval);
+      agentJson.put("trigger_interval", triggerIntervalExpression);
+      agentJson.put("reporting_interval", reportingIntervalExpression);
       agentJson.put("enabled", enabled);
 
       // Return most recent parameter values
@@ -750,7 +766,7 @@ public class AgentInstance {
 
         agentJson.put("state", stateHistoryJson);
       }
-      log.info("AgentInstance.toJson: " + agentJson.toString());
+      //log.info("AgentInstance.toJson: " + agentJson.toString());
 
       return agentJson;
     } catch (JSONException e) {
@@ -806,13 +822,13 @@ public class AgentInstance {
     dataSourceInstances.clear();
   }
 
-  public void triggerInputChanged() throws RuntimeException {
+  public void triggerInputChanged() throws AgentServerException {
     // Trigger each instance that is dependent on this instance as an input
     for (AgentInstance agentInstance: dependentInstances)
       triggerInputChanged(agentInstance);
   }
 
-  public void triggerInputChanged(AgentInstance dataSourceInstance) throws RuntimeException {
+  public void triggerInputChanged(AgentInstance dataSourceInstance) throws AgentServerException {
     // Create a new trigger activity for data source change
     AgentActivityTriggerInputChanged triggerActivity = new AgentActivityTriggerInputChanged(dataSourceInstance, this);
 
@@ -835,11 +851,11 @@ public class AgentInstance {
     if (updated.enabled != null)
       this.enabled = updated.enabled;
     
-    if (updated.triggerInterval != -2)
-      this.triggerInterval = updated.triggerInterval;
+    if (updated.triggerIntervalExpression != null)
+      this.triggerIntervalExpression = updated.triggerIntervalExpression;
     
-    if (updated.reportingInterval != -2)
-      this.reportingInterval = updated.reportingInterval;
+    if (updated.reportingIntervalExpression != null)
+      this.reportingIntervalExpression = updated.reportingIntervalExpression;
     
     // Persist the changes
     agentServer.persistence.put(this);
@@ -910,8 +926,8 @@ public class AgentInstance {
         throw new AgentServerException("Parameter names for agent instance " + agentInstanceName + " are not defined for referenced agent definition " + agentDefinition.name + ": " + invalidParameterNames);
     }
 
-    long triggerInterval = agentJson.optLong("trigger_interval", update ? -2 : AgentDefinition.DEFAULT_TRIGGER_INTERVAL);
-    long reportingInterval = agentJson.optLong("reporting_interval", update ? -2 : AgentDefinition.DEFAULT_REPORTING_INTERVAL);
+    String triggerInterval = JsonUtils.getString(agentJson, "trigger_interval", update ? null : AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION);
+    String reportingInterval = JsonUtils.getString(agentJson, "reporting_interval", update ? null : AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION);
 
     //Boolean enabled = agentJson.has("enabled") ? agentJson.optBoolean("enabled") : (update ? null : true);
     Boolean enabled = null;
@@ -964,14 +980,18 @@ public class AgentInstance {
     return agentInstance;
   }
   
-  public long getTriggerTime(){
+  public long getTriggerInterval() throws AgentServerException {
+    return evaluateExpressionLong(triggerIntervalExpression);
+  }
+  
+  public long getTriggerTime() throws AgentServerException {
     // If we have never triggered, we can accept input immediately
     if (lastTriggered == 0)
       return System.currentTimeMillis();
     else
       // Otherwise we can't take input until our trigger interval expires
       // Note: That may be a time in the past, but that is okay and means immediately
-      return lastTriggered + triggerInterval;
+      return lastTriggered + getTriggerInterval();
   }
   
   public void setState(List<AgentState> state, boolean update) throws SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException {

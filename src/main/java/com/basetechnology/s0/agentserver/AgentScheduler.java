@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.eclipse.jetty.util.log.Log;
-
 import com.basetechnology.s0.agentserver.util.DateUtils;
 import com.basetechnology.s0.agentserver.util.NameValue;
 
@@ -163,9 +161,9 @@ public class AgentScheduler implements Runnable {
             noneAvailable = false;
             
             // TODO: Log start of activity
-            log.info("AgentScheduler.run starting activity - " + activity.description);
+            //log.info("Starting activity - " + activity.description);
           } else
-            log.info("AgentScheduler.run skipping activity due to busy agent - " + activity.description);
+            log.info("Skipping activity due to busy agent - " + activity.description);
             
           // Process next activity in queue
           i++;
@@ -185,7 +183,7 @@ public class AgentScheduler implements Runnable {
           
           // Done with this activity, remove it
           // TODO: Log end of this activity
-          log.info("AgentScheduler.run finished activity - " + activity.description + " status: " + activity.status + " in " + (activity.endTime - activity.startTime) + " ms.");
+          //log.info("Finished activity - " + activity.description + " status: " + activity.status + " in " + (activity.endTime - activity.startTime) + " ms.");
           queue.remove(i);
           queueLen = queue.size();
           
@@ -240,7 +238,8 @@ public class AgentScheduler implements Runnable {
     // TODO: Notify scheduler's thread if it is waiting due to previously empty queue
   }
 
-  static public void scheduleInit(AgentInstance agent) throws RuntimeException {
+  static public void scheduleInit(AgentInstance agent) throws AgentServerException {
+    // TODO: Should 'init' be called if agent is not yet enabled?
     // No-op if no scheduler created yet
     if (singleton != null){
       // Check if agent even has an 'init' script
@@ -254,34 +253,42 @@ public class AgentScheduler implements Runnable {
         // TODO: This needs to synchronized
         singleton.add(initActivity);
       }
-      
-      // Now schedule all timers for this agent
-      // TODO: Should this be done only after 'init' finishes?
+   
+      // Now schedule all timers and conditions for this agent
+      log.info("scheduleTimersAndConditions for " + agent.name);
+      scheduleTimersAndConditions(agent);
+    }
+  }
+
+  static public void scheduleTimersAndConditions(AgentInstance agent) throws AgentServerException {
+    // Now schedule all timers for this agent, if agent is enabled
+    // TODO: Should this be done only after 'init' finishes?
+    if (agent.enabled)
       for (NameValue<AgentTimer> agentTimerNameValue: agent.agentDefinition.timers)
         // Ignore disabled timers
         if (agentTimerNameValue.value.enabled){
           // Create a new timer init activity
           AgentActivityTimer timerActivity = new AgentActivityTimer(agent, agentTimerNameValue.value);
-          
+
           // Schedule it
           singleton.add(timerActivity);
         }
-      
-      // Now schedule all conditions for this agent
-      // TODO: Should this be done only after 'init' finishes?
+
+    // Now schedule all conditions for this agent, if agent is enabled
+    // TODO: Should this be done only after 'init' finishes?
+    if (agent.enabled)
       for (NameValue<AgentCondition> agentConditionNameValue: agent.agentDefinition.conditions)
         // Ignore disabled conditions
         if (agentConditionNameValue.value.enabled){
           // Create a new condition init activity
           AgentActivityCondition conditionActivity = new AgentActivityCondition(agent, agentConditionNameValue.value);
-          
+
           // Schedule it
           singleton.add(conditionActivity);
         }
-    }
   }
 
-  public void scheduleInitAll() throws RuntimeException {
+  public void scheduleInitAll() throws AgentServerException {
     log.info("Scheduling all enabled agents for 'init'");
     // Start all agents for all users
     for (NameValue<AgentInstanceList> userAgentInstancesNameValue: agentServer.agentInstances){

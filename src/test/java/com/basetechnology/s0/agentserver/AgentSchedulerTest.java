@@ -84,6 +84,8 @@ public class AgentSchedulerTest {
   AgentAppServer agentAppServer = null;
   AgentServer agentServer;
 
+  static final long nearDeltaTime = 5000;
+
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
   }
@@ -207,7 +209,7 @@ public class AgentSchedulerTest {
     dummyAgentInit2Instance.enable();
 
     // Wait a little while for both agents to run 'init'
-    Thread.sleep(350);
+    agentScheduler.waitUntilDone(4 * 1000);
 
     // Make sure the two init script activities ran
     assertEquals("Number of uncompleted activities", 0, agentScheduler.queue.size());
@@ -220,11 +222,11 @@ public class AgentSchedulerTest {
     assertEquals("Number of script start times recorded", 1, dummyAgentInit1Instance.scriptStartTime.size());
     assertTrue("Script start time is missing", dummyAgentInit1Instance.scriptStartTime.containsKey("init"));
     long deltaTime = (Long)dummyAgentInit1Instance.scriptStartTime.get("init") - baseTime;
-    assertTrue("Script start time is not near current time", deltaTime > 25 && deltaTime < 1000);
+    assertTrue("Script start time is not near current time", deltaTime > 25 && deltaTime < nearDeltaTime);
     assertEquals("Number of script end times recorded", 1, dummyAgentInit1Instance.scriptEndTime.size());
     assertTrue("Script end time is missing", dummyAgentInit1Instance.scriptEndTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptEndTime.get("init") - baseTime;
-    assertTrue("Script end time is not near current time", deltaTime > 25 && deltaTime < 1000);
+    assertTrue("Script end time is not near current time", deltaTime > 25 && deltaTime < nearDeltaTime);
     assertEquals("Number of script return values", 1, dummyAgentInit1Instance.scriptReturnValue.size());
     assertTrue("Script return value is missing", dummyAgentInit1Instance.scriptReturnValue.containsKey("init"));
     Value returnValueNode = dummyAgentInit1Instance.scriptReturnValue.get("init");
@@ -236,11 +238,11 @@ public class AgentSchedulerTest {
     assertEquals("Number of script start times recorded", 1, dummyAgentInit2Instance.scriptStartTime.size());
     assertTrue("Script start time is missing", dummyAgentInit2Instance.scriptStartTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptStartTime.get("init") - baseTime;
-    assertTrue("Script start time is not near current time", deltaTime > 25 && deltaTime < 1000);
+    assertTrue("Script start time is not near current time", deltaTime > 25 && deltaTime < nearDeltaTime);
     assertEquals("Number of script end times recorded", 1, dummyAgentInit2Instance.scriptEndTime.size());
     assertTrue("Script end time is missing", dummyAgentInit2Instance.scriptEndTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptEndTime.get("init") - baseTime;
-    assertTrue("Script end time is not near current time", deltaTime > 25 && deltaTime < 1000);
+    assertTrue("Script end time is not near current time", deltaTime > 25 && deltaTime < nearDeltaTime);
     assertEquals("Number of script return values", 1, dummyAgentInit2Instance.scriptReturnValue.size());
     assertTrue("Script return value is missing", dummyAgentInit2Instance.scriptReturnValue.containsKey("init"));
     returnValueNode = dummyAgentInit2Instance.scriptReturnValue.get("init");
@@ -287,17 +289,17 @@ public class AgentSchedulerTest {
     assertEquals("Number of script start times recorded", 2, dummyAgentInit1Instance.scriptStartTime.size());
     assertTrue("Script start time is missing", dummyAgentInit1Instance.scriptStartTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptStartTime.get("init") - baseTime;
-    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < 200);
+    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < nearDeltaTime);
     assertTrue("Script start time is missing", dummyAgentInit1Instance.scriptStartTime.containsKey("script1"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptStartTime.get("script1") - baseTime2;
-    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 10 && deltaTime < 200);
+    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
     assertEquals("Number of script end times recorded", 2, dummyAgentInit1Instance.scriptEndTime.size());
     assertTrue("Script end time is missing", dummyAgentInit1Instance.scriptEndTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptEndTime.get("init") - baseTime;
-    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < 500);
+    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < nearDeltaTime);
     assertTrue("Script end time is missing", dummyAgentInit1Instance.scriptEndTime.containsKey("script1"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptEndTime.get("script1") - baseTime2;
-    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < 750);
+    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < nearDeltaTime);
     assertEquals("Number of script return values", 2, dummyAgentInit1Instance.scriptReturnValue.size());
     assertTrue("Script return value is missing", dummyAgentInit1Instance.scriptReturnValue.containsKey("init"));
     returnValueNode = dummyAgentInit1Instance.scriptReturnValue.get("init");
@@ -315,17 +317,17 @@ public class AgentSchedulerTest {
     assertEquals("Number of script start times recorded", 2, dummyAgentInit2Instance.scriptStartTime.size());
     assertTrue("Script start time is missing", dummyAgentInit2Instance.scriptStartTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptStartTime.get("init") - baseTime;
-    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < 1000);
+    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < nearDeltaTime);
     assertTrue("Script start time is missing", dummyAgentInit2Instance.scriptStartTime.containsKey("script2"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptStartTime.get("script2") - baseTime2;
-    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < 1000);
+    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < nearDeltaTime);
     assertEquals("Number of script end times recorded", 2, dummyAgentInit2Instance.scriptEndTime.size());
     assertTrue("Script end time is missing", dummyAgentInit2Instance.scriptEndTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptEndTime.get("init") - baseTime;
-    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < 1000);
+    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < nearDeltaTime);
     assertTrue("Script end time is missing", dummyAgentInit2Instance.scriptEndTime.containsKey("script2"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptEndTime.get("script2") - baseTime2;
-    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < 1000);
+    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < nearDeltaTime);
     assertEquals("Number of script return values", 2, dummyAgentInit2Instance.scriptReturnValue.size());
     assertTrue("Script return value is missing", dummyAgentInit2Instance.scriptReturnValue.containsKey("init"));
     returnValueNode = dummyAgentInit2Instance.scriptReturnValue.get("init");
@@ -362,7 +364,7 @@ public class AgentSchedulerTest {
     AgentScheduler agentScheduler = agentServer.agentScheduler;
 
     // Wait a little while for both agents to run 'init'
-    Thread.sleep(350);
+    agentScheduler.waitUntilDone(4 * 1000);
 
     // Make sure the two init script activities ran
     assertEquals("Number of uncompleted activities", 0, agentScheduler.queue.size());
@@ -375,11 +377,11 @@ public class AgentSchedulerTest {
     assertEquals("Number of script start times recorded", 1, dummyAgentInit1Instance.scriptStartTime.size());
     assertTrue("Script start time is missing", dummyAgentInit1Instance.scriptStartTime.containsKey("init"));
     long deltaTime = (Long)dummyAgentInit1Instance.scriptStartTime.get("init") - baseTime;
-    assertTrue("Script start time is not near current time: " + deltaTime, deltaTime >= 0 && deltaTime < 1000);
+    assertTrue("Script start time is not near current time: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Number of script end times recorded", 1, dummyAgentInit1Instance.scriptEndTime.size());
     assertTrue("Script end time is missing", dummyAgentInit1Instance.scriptEndTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptEndTime.get("init") - baseTime;
-    assertTrue("Script end time is not near current time", deltaTime >= 0 && deltaTime < 1000);
+    assertTrue("Script end time is not near current time", deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Number of script return values", 1, dummyAgentInit1Instance.scriptReturnValue.size());
     assertTrue("Script return value is missing", dummyAgentInit1Instance.scriptReturnValue.containsKey("init"));
     Value returnValueNode = dummyAgentInit1Instance.scriptReturnValue.get("init");
@@ -391,11 +393,11 @@ public class AgentSchedulerTest {
     assertEquals("Number of script start times recorded", 1, dummyAgentInit2Instance.scriptStartTime.size());
     assertTrue("Script start time is missing", dummyAgentInit2Instance.scriptStartTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptStartTime.get("init") - baseTime;
-    assertTrue("Script start time is not near current time: " + deltaTime, deltaTime >= 0 && deltaTime < 1000);
+    assertTrue("Script start time is not near current time: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Number of script end times recorded", 1, dummyAgentInit2Instance.scriptEndTime.size());
     assertTrue("Script end time is missing", dummyAgentInit2Instance.scriptEndTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptEndTime.get("init") - baseTime;
-    assertTrue("Script end time is not near current time: " + deltaTime, deltaTime >= 0 && deltaTime < 1000);
+    assertTrue("Script end time is not near current time: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Number of script return values", 1, dummyAgentInit2Instance.scriptReturnValue.size());
     assertTrue("Script return value is missing", dummyAgentInit2Instance.scriptReturnValue.containsKey("init"));
     returnValueNode = dummyAgentInit2Instance.scriptReturnValue.get("init");
@@ -442,17 +444,17 @@ public class AgentSchedulerTest {
     assertEquals("Number of script start times recorded", 2, dummyAgentInit1Instance.scriptStartTime.size());
     assertTrue("Script start time is missing", dummyAgentInit1Instance.scriptStartTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptStartTime.get("init") - baseTime;
-    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < 200);
+    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertTrue("Script start time is missing", dummyAgentInit1Instance.scriptStartTime.containsKey("script1"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptStartTime.get("script1") - baseTime2;
-    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < 200);
+    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < nearDeltaTime);
     assertEquals("Number of script end times recorded", 2, dummyAgentInit1Instance.scriptEndTime.size());
     assertTrue("Script end time is missing", dummyAgentInit1Instance.scriptEndTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptEndTime.get("init") - baseTime;
-    assertTrue("Script end time is not near current time: " + deltaTime, deltaTime >= 0 && deltaTime < 500);
+    assertTrue("Script end time is not near current time: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertTrue("Script end time is missing", dummyAgentInit1Instance.scriptEndTime.containsKey("script1"));
     deltaTime = (Long)dummyAgentInit1Instance.scriptEndTime.get("script1") - baseTime2;
-    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < 750);
+    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime > 25 && deltaTime < nearDeltaTime);
     assertEquals("Number of script return values", 2, dummyAgentInit1Instance.scriptReturnValue.size());
     assertTrue("Script return value is missing", dummyAgentInit1Instance.scriptReturnValue.containsKey("init"));
     returnValueNode = dummyAgentInit1Instance.scriptReturnValue.get("init");
@@ -470,17 +472,17 @@ public class AgentSchedulerTest {
     assertEquals("Number of script start times recorded", 2, dummyAgentInit2Instance.scriptStartTime.size());
     assertTrue("Script start time is missing", dummyAgentInit2Instance.scriptStartTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptStartTime.get("init") - baseTime;
-    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < 1000);
+    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertTrue("Script start time is missing", dummyAgentInit2Instance.scriptStartTime.containsKey("script2"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptStartTime.get("script2") - baseTime2;
-    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < 1000);
+    assertTrue("Script start time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Number of script end times recorded", 2, dummyAgentInit2Instance.scriptEndTime.size());
     assertTrue("Script end time is missing", dummyAgentInit2Instance.scriptEndTime.containsKey("init"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptEndTime.get("init") - baseTime;
-    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < 1000);
+    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertTrue("Script end time is missing", dummyAgentInit2Instance.scriptEndTime.containsKey("script2"));
     deltaTime = (Long)dummyAgentInit2Instance.scriptEndTime.get("script2") - baseTime2;
-    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < 1000);
+    assertTrue("Script end time is not near current time - deltaTime: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Number of script return values", 2, dummyAgentInit2Instance.scriptReturnValue.size());
     assertTrue("Script return value is missing", dummyAgentInit2Instance.scriptReturnValue.containsKey("init"));
     returnValueNode = dummyAgentInit2Instance.scriptReturnValue.get("init");
@@ -523,7 +525,7 @@ public class AgentSchedulerTest {
     assertEquals("Timer name", "timer-1", timer.name);
     assertTrue("Timer description is missing", timer.description != null);
     assertEquals("Timer description", "10 ms timer", timer.description);
-    assertEquals("Timer interval", 10, timer.interval);
+    assertEquals("Timer interval", 10, Long.parseLong(timer.intervalExpression));
     assertTrue("Timer script is missing", timer.script != null);
     assertEquals("Timer script", "return 'hit timer-10';", timer.script);
 
@@ -574,7 +576,7 @@ public class AgentSchedulerTest {
     assertEquals("Timer name", "timer-1", timer.name);
     assertTrue("Timer description is missing", timer.description != null);
     assertEquals("Timer description", "50 ms timer", timer.description);
-    assertEquals("Timer interval", 50, timer.interval);
+    assertEquals("Timer interval", 50, Long.parseLong(timer.intervalExpression));
     assertTrue("Timer script is missing", timer.script != null);
     assertEquals("Timer script", "return 'hit timer-1';", timer.script);
 
@@ -643,7 +645,7 @@ public class AgentSchedulerTest {
     assertEquals("Timer name", "timer-1", timer.name);
     assertTrue("Timer description is missing", timer.description != null);
     assertEquals("Timer description", "50 ms timer", timer.description);
-    assertEquals("Timer interval", 50, timer.interval);
+    assertEquals("Timer interval", 50, Long.parseLong(timer.intervalExpression));
     assertTrue("Timer script is missing", timer.script != null);
     assertEquals("Timer script", "memory.count1++; return 'hit timer-1';", timer.script);
     timer = agDef.timers.get(1).value;
@@ -651,7 +653,7 @@ public class AgentSchedulerTest {
     assertEquals("Timer name", "timer-2", timer.name);
     assertTrue("Timer description is missing", timer.description != null);
     assertEquals("Timer description", "100 ms timer", timer.description);
-    assertEquals("Timer interval", 100, timer.interval);
+    assertEquals("Timer interval", 100, Long.parseLong(timer.intervalExpression));
     assertTrue("Timer script is missing", timer.script != null);
     assertEquals("Timer script", "memory.count2++; return 'hit timer-2';", timer.script);
     timer = agDef.timers.get(2).value;
@@ -659,7 +661,7 @@ public class AgentSchedulerTest {
     assertEquals("Timer name", "timer-3", timer.name);
     assertTrue("Timer description is missing", timer.description != null);
     assertEquals("Timer description", "250 ms timer", timer.description);
-    assertEquals("Timer interval", 250, timer.interval);
+    assertEquals("Timer interval", 250, Long.parseLong(timer.intervalExpression));
     assertTrue("Timer script is missing", timer.script != null);
     assertEquals("Timer script", "memory.count3++; return 'hit timer-3';", timer.script);
     timer = agDef.timers.get(3).value;
@@ -667,7 +669,7 @@ public class AgentSchedulerTest {
     assertEquals("Timer name", "timer-4", timer.name);
     assertTrue("Timer description is missing", timer.description != null);
     assertEquals("Timer description", "25 sec timer", timer.description);
-    assertEquals("Timer interval", 25000, timer.interval);
+    assertEquals("Timer interval", 25000, Long.parseLong(timer.intervalExpression));
     assertTrue("Timer script is missing", timer.script != null);
     assertEquals("Timer script", "memory.count4++; return 'hit timer-4';", timer.script);
 
@@ -1652,27 +1654,27 @@ public class AgentSchedulerTest {
     OutputRecord dsRecord = dsHistory.get(0);
     assertEquals("Data source history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
     long deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+    assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[0].output", "{\"field1\":-1,\"field2\":\"nothing\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(1);
     assertEquals("Data source history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
+    assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[1].output", "{\"field1\":1,\"field2\":\"Our count is... 1\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(2);
     assertEquals("Data source history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < 5000);
+    assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[2].output", "{\"field1\":2,\"field2\":\"Our count is... 2\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(3);
     assertEquals("Data source history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < 5000);
+    assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[3].output", "{\"field1\":3,\"field2\":\"Our count is... 3\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(4);
     assertEquals("Data source history[4].sequenceNumber", 5, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < 5000);
+    assertTrue("Data source history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[4].output", "{\"field1\":4,\"field2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(5);
     assertEquals("Data source history[5].sequenceNumber", 6, dsRecord.sequenceNumber);
@@ -1691,27 +1693,27 @@ public class AgentSchedulerTest {
     dsRecord = agHistory.get(0);
     assertEquals("Agent history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+    assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Agent history[0].output", "{\"outField1\":-123,\"outField2\":\"not-yet\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(1);
     assertEquals("Agent history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
+    assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
     assertEquals("Agent history[1].output", "{\"outField1\":1,\"outField2\":\"Our count is... 1\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(2);
     assertEquals("Agent history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < 5000);
+    assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < nearDeltaTime);
     assertEquals("Agent history[2].output", "{\"outField1\":2,\"outField2\":\"Our count is... 2\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(3);
     assertEquals("Agent history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < 5000);
+    assertTrue("Agent history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < nearDeltaTime);
     assertEquals("Agent history[3].output", "{\"outField1\":3,\"outField2\":\"Our count is... 3\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(4);
     assertEquals("Agent history[4].sequenceNumber", 5, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < 5000);
+    assertTrue("Agent history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < nearDeltaTime);
     assertEquals("Agent history[4].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(5);
     assertEquals("Agent history[5].sequenceNumber", 6, dsRecord.sequenceNumber);
@@ -1825,7 +1827,7 @@ public class AgentSchedulerTest {
     dsInst.enable();
 
     // Let agents run for awhile
-    Thread.sleep(800);
+    Thread.sleep((6 + 1) * 100);
 
     // Now disable the data source instance
     dsInst.disable();
@@ -1863,27 +1865,27 @@ public class AgentSchedulerTest {
     OutputRecord dsRecord = dsHistory.get(0);
     assertEquals("Data source history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
     long deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+    assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[0].output", "{\"field1\":-1,\"field2\":\"nothing\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(1);
     assertEquals("Data source history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
+    assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[1].output", "{\"field1\":1,\"field2\":\"Our count is... 1\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(2);
     assertEquals("Data source history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < 5000);
+    assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[2].output", "{\"field1\":2,\"field2\":\"Our count is... 2\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(3);
     assertEquals("Data source history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < 5000);
+    assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[3].output", "{\"field1\":3,\"field2\":\"Our count is... 3\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(4);
     assertEquals("Data source history[4].sequenceNumber", 5, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < 5000);
+    assertTrue("Data source history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[4].output", "{\"field1\":4,\"field2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(5);
     assertEquals("Data source history[5].sequenceNumber", 6, dsRecord.sequenceNumber);
@@ -1898,32 +1900,30 @@ public class AgentSchedulerTest {
 
     // Verify agent output history
     OutputHistory agHistory = agInst.outputHistory;
-    assertEquals("Count of agent history", 5, agHistory.size());
+    int agHistorySize = agHistory.size();
+    log.info("TEST: agHistorySize: " + agHistorySize);
+    assertTrue("Agent history size not in range 3 to 5: " + agHistorySize, agHistorySize >= 3 && agHistorySize <= 5);
+    assertEquals("Count of agent history", 4, agHistory.size());
     dsRecord = agHistory.get(0);
     assertEquals("Agent history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+    assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Agent history[0].output", "{\"outField1\":-123,\"outField2\":\"not-yet\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(1);
     assertEquals("Agent history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
-    assertEquals("Agent history[1].output", "{\"outField1\":1,\"outField2\":\"Our count is... 1\"}", dsRecord.output.toJson().toString());
+    assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
+    assertEquals("Agent history[1].output", "{\"outField1\":2,\"outField2\":\"Our count is... 2\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(2);
     assertEquals("Agent history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
-    assertEquals("Agent history[2].output", "{\"outField1\":2,\"outField2\":\"Our count is... 2\"}", dsRecord.output.toJson().toString());
+    assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
+    assertEquals("Agent history[2].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(3);
     assertEquals("Agent history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[3].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < 5000);
-    assertEquals("Agent history[].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
-    dsRecord = agHistory.get(4);
-    assertEquals("Agent history[4].sequenceNumber", 5, dsRecord.sequenceNumber);
-    deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[4].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < 5000);
-    assertEquals("Agent history[4].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6\"}", dsRecord.output.toJson().toString());
+    assertTrue("Agent history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < nearDeltaTime);
+    assertEquals("Agent history[3].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6\"}", dsRecord.output.toJson().toString());
 
     // Tell the scheduler to stop
     agentServer.shutdown();
@@ -2062,27 +2062,27 @@ public class AgentSchedulerTest {
     OutputRecord dsRecord = dsHistory.get(0);
     assertEquals("Data source history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
     long deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+    assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[0].output","{\"field1\":-1,\"field2\":\"nothing\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(1);
     assertEquals("Data source history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
+    assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[1].output", "{\"field1\":1,\"field2\":\"Our count is... 1\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(2);
     assertEquals("Data source history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < 5000);
+    assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[2].output", "{\"field1\":2,\"field2\":\"Our count is... 2\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(3);
     assertEquals("Data source history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < 5000);
+    assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[3].output", "{\"field1\":3,\"field2\":\"Our count is... 3\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(4);
     assertEquals("Data source history[4].sequenceNumber", 5, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < 5000);
+    assertTrue("Data source history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[4].output", "{\"field1\":4,\"field2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(5);
     assertEquals("Data source history[5].sequenceNumber", 6, dsRecord.sequenceNumber);
@@ -2097,27 +2097,22 @@ public class AgentSchedulerTest {
 
     // Verify agent output history
     OutputHistory agHistory = agInst.outputHistory;
-    assertEquals("Count of agent history", 4, agHistory.size());
+    assertEquals("Count of agent history", 3, agHistory.size());
     dsRecord = agHistory.get(0);
     assertEquals("Agent history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+    assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Agent history[0].output", "{\"outField1\":-123,\"outField2\":\"not-yet\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(1);
     assertEquals("Agent history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
-    assertEquals("Agent history[1].output", "{\"outField1\":1,\"outField2\":\"Our count is... 1\"}", dsRecord.output.toJson().toString());
+    assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
+    assertEquals("Agent history[1].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(2);
     assertEquals("Agent history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
-    assertEquals("Agent history[2].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
-    dsRecord = agHistory.get(3);
-    assertEquals("Agent history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
-    deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[3].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < 5000);
-    assertEquals("Agent history[3].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6\"}", dsRecord.output.toJson().toString());
+    assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < nearDeltaTime);
+    assertEquals("Agent history[2].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6\"}", dsRecord.output.toJson().toString());
 
     // Tell the scheduler to stop
     agentServer.shutdown();
@@ -2218,7 +2213,7 @@ public class AgentSchedulerTest {
     dsInst.enable();
 
     // Let agents run for awhile
-    Thread.sleep(800);
+    Thread.sleep(1200);
 
     // Now disable the data source instance
     dsInst.disable();
@@ -2256,27 +2251,27 @@ public class AgentSchedulerTest {
     OutputRecord dsRecord = dsHistory.get(0);
     assertEquals("Data source history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
     long deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+    assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[0].output", "{\"field1\":-1,\"field2\":\"nothing\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(1);
     assertEquals("Data source history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
+    assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[1].output", "{\"field1\":1,\"field2\":\"Our count is... 1\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(2);
     assertEquals("Data source history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < 5000);
+    assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[2].output", "{\"field1\":2,\"field2\":\"Our count is... 2\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(3);
     assertEquals("Data source history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < 5000);
+    assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[3].output", "{\"field1\":3,\"field2\":\"Our count is... 3\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(4);
     assertEquals("Data source history[4].sequenceNumber", 5, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Data source history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < 5000);
+    assertTrue("Data source history[4].time delta not near expected: " + deltaTime, deltaTime > 40 && deltaTime < nearDeltaTime);
     assertEquals("Data source history[4].output", "{\"field1\":4,\"field2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
     dsRecord = dsHistory.get(5);
     assertEquals("Data source history[5].sequenceNumber", 6, dsRecord.sequenceNumber);
@@ -2291,22 +2286,17 @@ public class AgentSchedulerTest {
 
     // Verify agent output history
     OutputHistory agHistory = agInst.outputHistory;
-    assertEquals("Count of agent history", 3, agHistory.size());
+    assertEquals("Count of agent history", 2, agHistory.size());
     dsRecord = agHistory.get(0);
     assertEquals("Agent history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+    assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
     assertEquals("Agent history[0].output", "{\"outField1\":-123,\"outField2\":\"not-yet\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(1);
     assertEquals("Agent history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
-    assertEquals("Agent history[1].output", "{\"outField1\":1,\"outField2\":\"Our count is... 1\"}", dsRecord.output.toJson().toString());
-    dsRecord = agHistory.get(2);
-    assertEquals("Agent history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
-    deltaTime = dsRecord.time - startTime;
-    assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
-    assertEquals("Agent history[2].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6\"}", dsRecord.output.toJson().toString());
+    assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
+    assertEquals("Agent history[1].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6\"}", dsRecord.output.toJson().toString());
 
     // Tell the scheduler to stop
     agentServer.shutdown();
@@ -2453,22 +2443,22 @@ public class AgentSchedulerTest {
       OutputRecord dsRecord = dsHistory.get(0);
       assertEquals("Data source history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
       long deltaTime = dsRecord.time - startTime;
-      assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+      assertTrue("Data source history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
       assertEquals("Data source history[0].output", "{\"field1\":-1,\"field2\":\"nothing\"}", dsRecord.output.toJson().toString());
       dsRecord = dsHistory.get(1);
       assertEquals("Data source history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
+      assertTrue("Data source history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
       assertEquals("Data source history[1].output", "{\"field1\":2,\"field2\":\"Our count is... 2\"}", dsRecord.output.toJson().toString());
       dsRecord = dsHistory.get(2);
       assertEquals("Data source history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < 5000);
+      assertTrue("Data source history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < nearDeltaTime);
       assertEquals("Data source history[2].output", "{\"field1\":4,\"field2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
       dsRecord = dsHistory.get(3);
       assertEquals("Data source history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < 5000);
+      assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 30 && deltaTime < nearDeltaTime);
       assertEquals("Data source history[3].output", "{\"field1\":6,\"field2\":\"Our count is... 6\"}", dsRecord.output.toJson().toString());
       assertTrue("Data source history[3].time delta not near expected: " + deltaTime, deltaTime > 60 && deltaTime < 7000);
 
@@ -2478,23 +2468,23 @@ public class AgentSchedulerTest {
       dsRecord = agHistory.get(0);
       assertEquals("Agent history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+      assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
       assertEquals("Agent history[0].output", "{\"outField1\":-123,\"outField2\":\"not-yet\"}", dsRecord.output.toJson().toString());
       dsRecord = agHistory.get(1);
       assertEquals("Agent history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
+      assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
       assertEquals("Agent history[1].output", "{\"outField1\":2,\"outField2\":\"Our count is... 2 ++\"}", dsRecord.output.toJson().toString());
       dsRecord = agHistory.get(2);
-      assertEquals("Agent history[1].sequenceNumber", 3, dsRecord.sequenceNumber);
+      assertEquals("Agent history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < 5000);
-      assertEquals("Agent history[1].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4 ++\"}", dsRecord.output.toJson().toString());
+      assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
+      assertEquals("Agent history[2].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4 ++\"}", dsRecord.output.toJson().toString());
       dsRecord = agHistory.get(3);
-      assertEquals("Agent history[2].sequenceNumber", 4, dsRecord.sequenceNumber);
+      assertEquals("Agent history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < 5000);
-      assertEquals("Agent history[2].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6 ++\"}", dsRecord.output.toJson().toString());
+      assertTrue("Agent history[3].time delta not near expected: " + deltaTime, deltaTime > 20 && deltaTime < nearDeltaTime);
+      assertEquals("Agent history[3].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6 ++\"}", dsRecord.output.toJson().toString());
 
       // Verify memory history of data source
       List<AgentState> states = dsInst.state;
@@ -2603,23 +2593,23 @@ public class AgentSchedulerTest {
       dsRecord = agHistory.get(0);
       assertEquals("Agent history[0].sequenceNumber", 1, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+      assertTrue("Agent history[0].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
       assertEquals("Agent history[0].output", "{\"outField1\":-123,\"outField2\":\"not-yet\"}", dsRecord.output.toJson().toString());
       dsRecord = agHistory.get(1);
       assertEquals("Agent history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
+      assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
       assertEquals("Agent history[1].output", "{\"outField1\":2,\"outField2\":\"Our count is... 2 ++\"}", dsRecord.output.toJson().toString());
       dsRecord = agHistory.get(2);
       assertEquals("Agent history[1].sequenceNumber", 3, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
-      assertEquals("Agent history[1].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4 ++\"}", dsRecord.output.toJson().toString());
+      assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
+      assertEquals("Agent history[2].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4 ++\"}", dsRecord.output.toJson().toString());
       dsRecord = agHistory.get(3);
-      assertEquals("Agent history[2].sequenceNumber", 4, dsRecord.sequenceNumber);
+      assertEquals("Agent history[3].sequenceNumber", 4, dsRecord.sequenceNumber);
       deltaTime = dsRecord.time - startTime;
-      assertTrue("Agent history[2].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < 5000);
-      assertEquals("Agent history[2].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6 ++\"}", dsRecord.output.toJson().toString());
+      assertTrue("Agent history[3].time delta not near expected: " + deltaTime, deltaTime >= 0 && deltaTime < nearDeltaTime);
+      assertEquals("Agent history[3].output", "{\"outField1\":6,\"outField2\":\"Our count is... 6 ++\"}", dsRecord.output.toJson().toString());
       
       // Verify state history for agent
       states = agInst.state;

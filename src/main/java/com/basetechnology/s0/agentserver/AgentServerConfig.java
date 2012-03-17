@@ -135,6 +135,22 @@ public class AgentServerConfig {
   public int getDefaultExecutionLimit(){
     return getExecutionLimit(getDefaultExecutionLevel());
   }
+
+  public String getReportingInterval(){
+    String reportingInterval = get("reporting_interval");
+    if (reportingInterval == null || reportingInterval.trim().length() == 0)
+      return AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION;
+    else
+      return reportingInterval;
+  }
+
+  public String getTriggerInterval(){
+    String triggerInterval = get("trigger_interval");
+    if (triggerInterval == null || triggerInterval.trim().length() == 0)
+      return AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION;
+    else
+      return triggerInterval;
+  }
   
   public void putDefaultExecutionLevel(int level) throws AgentServerException{
     put("execution_limit_default_level", level);

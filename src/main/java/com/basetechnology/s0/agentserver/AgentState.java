@@ -212,11 +212,11 @@ public class AgentState {
       for (Symbol output: outputValues.keySet()){
         String outputName = output.name;
         outputValuesJson.put(outputName, outputValues.get(output).toJsonObject());
-        log.info("AgentState.toJson: outputName: " + outputName + " value: " + outputValues.get(output) + " value.toJson: " + outputValues.get(output).toJsonObject());
+        //log.info("AgentState.toJson: outputName: " + outputName + " value: " + outputValues.get(output) + " value.toJson: " + outputValues.get(output).toJsonObject());
       }
       stateJson.put("outputs", outputValuesJson);
-      log.info("AgentState.toJson: outputs " + outputValuesJson.toString());
-      log.info("AgentState.toJson: " + stateJson.toString());
+      //log.info("AgentState.toJson: outputs " + outputValuesJson.toString());
+      //log.info("AgentState.toJson: " + stateJson.toString());
 
       // Exception history
       JSONArray exceptionsJson = new JSONArray();

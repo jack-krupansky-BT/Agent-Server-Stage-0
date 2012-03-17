@@ -173,9 +173,9 @@ public class AgentServerProperties {
       implicitlyDenyWebAccess = WebAccessManager.DEFAULT_IMPLICITLY_DENY_WEB_ACCESS ? "true" : "false";
     triggerInterval = properties.getProperty("trigger_interval");
     if (triggerInterval == null || triggerInterval.trim().length() == 0)
-      triggerInterval = Integer.toString(AgentDefinition.DEFAULT_TRIGGER_INTERVAL);
+      triggerInterval = AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION;
     reportingInterval = properties.getProperty("reporting_interval");
     if (reportingInterval == null || reportingInterval.trim().length() == 0)
-      reportingInterval = Integer.toString(AgentDefinition.DEFAULT_REPORTING_INTERVAL);
+      reportingInterval = AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION;
   }
 }

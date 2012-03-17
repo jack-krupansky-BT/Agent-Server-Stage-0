@@ -74,7 +74,7 @@ public class AgentActivity {
   public void finishActivity(){
     endTime = System.currentTimeMillis();
     status = StatusTypes.COMPLETED;
-    log.info("Finished activity - " + description);
+    log.info("Finished activity - " + description + " status: " + status + " in " + (endTime - startTime) + " ms.");
     // TODO - Should state capture be done at this point?
   }
   

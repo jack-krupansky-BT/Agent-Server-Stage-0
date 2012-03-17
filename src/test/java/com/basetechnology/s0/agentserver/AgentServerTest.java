@@ -247,7 +247,7 @@ public class AgentServerTest {
 
     // Check default values
     assertEquals("Agent definition description", "", agent.description);
-    assertEquals("Default reporting interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL, agent.reportingInterval);
+    assertEquals("Default reporting interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION, agent.reportingIntervalExpression);
     assertEquals("Number of parameters", 0, agent.parameters.size());
     assertEquals("Number of inputs", 0, agent.inputs.size());
     assertEquals("Number of memory fields", 0, agent.memory.size());
@@ -272,7 +272,7 @@ public class AgentServerTest {
     assertTrue("Script body is missing", scriptScript != null);
     assertEquals("Script body", "return 2+2;", scriptScript);
     assertEquals("Agent definition description", "Test agent definition", agent.description);
-    assertEquals("Default reporting interval", 3000, agent.reportingInterval);
+    assertEquals("Default reporting interval", "3000", agent.reportingIntervalExpression);
     assertEquals("Number of parameters", 0, agent.parameters.size());
     assertEquals("Number of inputs", 0, agent.inputs.size());
     assertEquals("Number of scratchpad fields", 0, agent.scratchpad.size());
@@ -468,7 +468,7 @@ public class AgentServerTest {
 
       // Check default values
       assertEquals("Agent definition description", "", agent.description);
-      assertEquals("Default reporting interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL, agent.reportingInterval);
+      assertEquals("Default reporting interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION, agent.reportingIntervalExpression);
       assertEquals("Number of parameters", 0, agent.parameters.size());
       assertEquals("Number of inputs", 0, agent.inputs.size());
       assertEquals("Number of memory fields", 0, agent.memory.size());
@@ -493,7 +493,7 @@ public class AgentServerTest {
       assertTrue("Script body is missing", scriptScript != null);
       assertEquals("Script body", "return 2+2;", scriptScript);
       assertEquals("Agent definition description", "Test agent definition", agent.description);
-      assertEquals("Default reporting interval", 3000, agent.reportingInterval);
+      assertEquals("Default reporting interval", "3000", agent.reportingIntervalExpression);
       assertEquals("Number of parameters", 0, agent.parameters.size());
       assertEquals("Number of inputs", 0, agent.inputs.size());
       assertEquals("Number of memory fields", 0, agent.memory.size());
@@ -654,7 +654,7 @@ public class AgentServerTest {
       assertEquals("Timer name", "timer-1", timer.name);
       assertTrue("Timer description is missing", timer.description != null);
       assertEquals("Timer description", "10 ms timer", timer.description);
-      assertEquals("Timer interval", 10, timer.interval);
+      assertEquals("Timer interval", 10, Long.parseLong(timer.intervalExpression));
       assertTrue("Timer script is missing", timer.script != null);
       assertEquals("Timer script", "return 'hit timer-10';", timer.script);
       assertEquals("Timer enabled", true, timer.enabled);
@@ -670,7 +670,7 @@ public class AgentServerTest {
           "\"timers\": [{\"name\": \"timer-1\", \"description\": \"10 ms timer\", \"script\": \"return 'hit timer-10';\", \"enabled\": true}]}");
       assertTrue("Missing timer interval not detected", agDef == null);
       } catch (AgentServerException e){
-        assertEquals("addAgentDefinition exception", "Timer interval is missing", e.getMessage());
+        assertEquals("addAgentDefinition exception", "Timer interval expression is missing", e.getMessage());
       }
     }
 
@@ -684,7 +684,7 @@ public class AgentServerTest {
           "\"timers\": [{\"name\": \"timer-1\", \"interval\": 0, \"description\": \"10 ms timer\", \"script\": \"return 'hit timer-10';\", \"enabled\": true}]}");
       assertTrue("Missing timer interval not detected", agDef == null);
       } catch (AgentServerException e){
-        assertEquals("addAgentDefinition exception", "Timer interval may not be zero or negative", e.getMessage());
+        assertEquals("addAgentDefinition exception", "Timer interval expression may not be zero", e.getMessage());
       }
     }
 
@@ -698,7 +698,7 @@ public class AgentServerTest {
           "\"timers\": [{\"name\": \"timer-1\", \"interval\": -10, \"description\": \"10 ms timer\", \"script\": \"return 'hit timer-10';\", \"enabled\": true}]}");
       assertTrue("Missing timer interval not detected", agDef == null);
       } catch (AgentServerException e){
-        assertEquals("addAgentDefinition exception", "Timer interval may not be zero or negative", e.getMessage());
+        assertEquals("addAgentDefinition exception", "Timer interval expression may not be negative", e.getMessage());
       }
     }
 
@@ -715,7 +715,7 @@ public class AgentServerTest {
       assertEquals("Timer name", "timer-1", timer.name);
       assertTrue("Timer description is missing", timer.description != null);
       assertEquals("Timer description", "", timer.description);
-      assertEquals("Timer interval", 10, timer.interval);
+      assertEquals("Timer interval", 10, Long.parseLong(timer.intervalExpression));
       assertTrue("Timer script is missing", timer.script != null);
       assertEquals("Timer script", "return 'hit timer-10';", timer.script);
       assertEquals("Timer enabled", true, timer.enabled);
@@ -734,7 +734,7 @@ public class AgentServerTest {
       assertEquals("Timer name", "", timer.name);
       assertTrue("Timer description is missing", timer.description != null);
       assertEquals("Timer description", "10 ms timer", timer.description);
-      assertEquals("Timer interval", 10, timer.interval);
+      assertEquals("Timer interval", 10, Long.parseLong(timer.intervalExpression));
       assertTrue("Timer script is missing", timer.script != null);
       assertEquals("Timer script", "return 'hit timer-10';", timer.script);
       assertEquals("Timer enabled", true, timer.enabled);
@@ -753,7 +753,7 @@ public class AgentServerTest {
       assertEquals("Timer name", "", timer.name);
       assertTrue("Timer description is missing", timer.description != null);
       assertEquals("Timer description", "", timer.description);
-      assertEquals("Timer interval", 10, timer.interval);
+      assertEquals("Timer interval", 10, Long.parseLong(timer.intervalExpression));
       assertTrue("Timer script is missing", timer.script != null);
       assertEquals("Timer script", "", timer.script);
       assertEquals("Timer enabled", true, timer.enabled);
@@ -772,7 +772,7 @@ public class AgentServerTest {
       assertEquals("Timer name", "", timer.name);
       assertTrue("Timer description is missing", timer.description != null);
       assertEquals("Timer description", "", timer.description);
-      assertEquals("Timer interval", 10, timer.interval);
+      assertEquals("Timer interval", 10, Long.parseLong(timer.intervalExpression));
       assertTrue("Timer script is missing", timer.script != null);
       assertEquals("Timer script", "", timer.script);
       assertEquals("Timer enabled", false, timer.enabled);
@@ -791,7 +791,7 @@ public class AgentServerTest {
       assertEquals("Timer name", "", timer.name);
       assertTrue("Timer description is missing", timer.description != null);
       assertEquals("Timer description", "", timer.description);
-      assertEquals("Timer interval", 10, timer.interval);
+      assertEquals("Timer interval", 10, Long.parseLong(timer.intervalExpression));
       assertTrue("Timer script is missing", timer.script != null);
       assertEquals("Timer script", "", timer.script);
       assertEquals("Timer enabled", true, timer.enabled);
@@ -805,14 +805,15 @@ public class AgentServerTest {
           "\"name\": \"TimerTest\", " +
           "\"timers\": [{\"name\": \"timer-1\", \"interval\": 10, \"description\": \"10 ms timer\", \"script\": \"return 'hit timer-1';\", \"enabled\": true}, " +
           "             {\"name\": \"timer-2\", \"interval\": 2500, \"description\": \"2500 ms timer\", \"script\": \"return 'hit timer-2';\", \"enabled\": false}, " +
-          "             {\"name\": \"timer-3\", \"interval\": 1234567890, \"description\": \"long timer\", \"script\": \"return 'hit timer-3';\", \"enabled\": true}]}");
+          "             {\"name\": \"timer-3\", \"interval\": 1234567890, \"description\": \"long timer\", \"script\": \"return 'hit timer-3';\", \"enabled\": true}], " +
+          "\"enabled\": false}");
       assertEquals("Timer count", 3, agDef.timers.size());
       AgentTimer timer = agDef.timers.get(0).value;
       assertTrue("Timer name is missing", timer.name != null);
       assertEquals("Timer name", "timer-1", timer.name);
       assertTrue("Timer description is missing", timer.description != null);
       assertEquals("Timer description", "10 ms timer", timer.description);
-      assertEquals("Timer interval", 10, timer.interval);
+      assertEquals("Timer interval", 10, Long.parseLong(timer.intervalExpression));
       assertTrue("Timer script is missing", timer.script != null);
       assertEquals("Timer script", "return 'hit timer-1';", timer.script);
       assertEquals("Timer enabled", true, timer.enabled);
@@ -821,7 +822,7 @@ public class AgentServerTest {
       assertEquals("Timer name", "timer-2", timer.name);
       assertTrue("Timer description is missing", timer.description != null);
       assertEquals("Timer description", "2500 ms timer", timer.description);
-      assertEquals("Timer interval", 2500, timer.interval);
+      assertEquals("Timer interval", 2500, Long.parseLong(timer.intervalExpression));
       assertTrue("Timer script is missing", timer.script != null);
       assertEquals("Timer script", "return 'hit timer-2';", timer.script);
       assertEquals("Timer enabled", false, timer.enabled);
@@ -830,13 +831,16 @@ public class AgentServerTest {
       assertEquals("Timer name", "timer-3", timer.name);
       assertTrue("Timer description is missing", timer.description != null);
       assertEquals("Timer description", "long timer", timer.description);
-      assertEquals("Timer interval", 1234567890, timer.interval);
+      assertEquals("Timer interval", 1234567890, Long.parseLong(timer.intervalExpression));
       assertTrue("Timer script is missing", timer.script != null);
       assertEquals("Timer script", "return 'hit timer-3';", timer.script);
       assertEquals("Timer enabled", true, timer.enabled);
 
       // Now create an instance of that agent definition
-      AgentInstance agInst = agentServer.getAgentInstance("{\"user\": \"Test-User\", \"name\": \"TimerTest\", \"definition\": \"TimerTest\"}");
+      AgentInstance agInst = agentServer.getAgentInstance("{\"user\": \"Test-User\", \"name\": \"TimerTest\", \"definition\": \"TimerTest\", \"enabled\": false}");
+
+      // Give any errant timers a chance to trigger
+      Thread.sleep(200);
       
       // Make sure no timer status yet since no timers have run
       assertEquals("Count of timer statuses", 3, agInst.timerStatus.size());

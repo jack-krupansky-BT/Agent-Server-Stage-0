@@ -62,7 +62,7 @@ public class AgentServer {
   public long startTime = 0;
   public AgentScheduler agentScheduler;
   
-  static public String defaultPersistencePath = "C:/cygwin/home/projects/agentserver.pjson";
+  static public String defaultPersistencePath = "agentserver.pjson";
   //static public String defaultPersistencePath = "agentserver.pjson";
   public String persistencePath = defaultPersistencePath;
   public Persistence persistence;
@@ -663,8 +663,8 @@ public class AgentServer {
     if (agentMap.getAgentInstance(user, agentDefinition, parameterValues) != null)
       throw new AgentServerException("Agent instance name already exists: '" + agentInstanceName + "' with paramters " + parameterValues.toString());
 
-    long triggerInterval = agentJson.optLong("trigger_interval", AgentDefinition.DEFAULT_TRIGGER_INTERVAL);
-    long reportingInterval = agentJson.optLong("reporting_interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL);
+    String triggerIntervalExpression = agentJson.optString("trigger_interval", AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION);
+    String reportingIntervalExpression = agentJson.optString("reporting_interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION);
 
     boolean enabled = agentJson.optBoolean("enabled", true);
 
@@ -683,7 +683,7 @@ public class AgentServer {
       throw new AgentServerException("Unable to parse modified date ('" + modified + "') - " + e.getMessage());
     }
 
-    AgentInstance agentInstance = agentMap.put(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerInterval, reportingInterval, enabled, timeCreated, timeModified);
+    AgentInstance agentInstance = agentMap.put(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerIntervalExpression, reportingIntervalExpression, enabled, timeCreated, timeModified);
     
     // Persist the new agent instance
     persistence.put(agentInstance);
@@ -857,12 +857,12 @@ public class AgentServer {
     return agentScheduler.getStatus();
   }
 
-  public long getDefaultReportingInterval(){
-    return config.getLong("reporting_interval");
+  public String getDefaultReportingInterval(){
+    return config.get("reporting_interval");
   }
 
-  public long getDefaultTriggerInterval(){
-    return config.getLong("trigger_interval");
+  public String getDefaultTriggerInterval(){
+    return config.get("trigger_interval");
   }
   
   public void addWebSiteAccessControls(User user, JSONObject accessControlsJson) throws JSONException, AgentServerException{

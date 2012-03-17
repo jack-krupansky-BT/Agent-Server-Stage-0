@@ -119,4 +119,23 @@ public class JsonUtils {
     if (badKeys.length() > 0)
       throw new AgentServerException(objectName + " JSON has invalid keys: " + badKeys);
   }
+  
+  public static String getString(JSONObject objectJson, String key, String defaultString){
+    if (objectJson.has(key)){
+      Object object = objectJson.opt(key);
+      if (object instanceof Boolean)
+        return Boolean.toString((Boolean)object);
+      else if (object instanceof Integer)
+        return Integer.toString((Integer)object);
+      else if (object instanceof Long)
+        return Long.toString((Long)object);
+      else if (object instanceof Float)
+        return Float.toString((Float)object);
+      else if (object instanceof Double)
+        return Double.toString((Double)object);
+      else
+        return (String)object;
+    } else
+      return defaultString;
+  }
 }
