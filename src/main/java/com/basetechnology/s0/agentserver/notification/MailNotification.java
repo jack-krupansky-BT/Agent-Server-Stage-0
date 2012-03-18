@@ -20,12 +20,10 @@ import org.eclipse.jetty.util.log.Log;
 
 import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentServer;
-import com.basetechnology.s0.agentserver.AgentServerConfig;
 import com.basetechnology.s0.agentserver.AgentServerException;
-import com.basetechnology.s0.agentserver.AgentServerProperties;
-import com.basetechnology.s0.agentserver.NotificationDefinition;
-import com.basetechnology.s0.agentserver.NotificationInstance;
 import com.basetechnology.s0.agentserver.User;
+import com.basetechnology.s0.agentserver.config.AgentServerConfig;
+import com.basetechnology.s0.agentserver.config.AgentServerProperties;
 import com.basetechnology.s0.agentserver.mail.AgentMail;
 
 public class MailNotification {

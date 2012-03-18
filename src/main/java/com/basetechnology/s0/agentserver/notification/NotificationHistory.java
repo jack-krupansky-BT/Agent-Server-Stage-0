@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.notification;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -22,6 +22,8 @@ import java.util.List;
 
 import org.json.JSONArray;
 
+import com.basetechnology.s0.agentserver.AgentInstance;
+import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.util.ListMap;
 
@@ -111,7 +113,7 @@ public class NotificationHistory implements Iterable<NotificationRecord> {
     return toJson(notificationHistory.size());
   }
 
-  static NotificationHistory fromJson(AgentInstance agentInstance, JSONArray notificationHistoryJson) throws AgentServerException, SymbolException{
+  public static NotificationHistory fromJson(AgentInstance agentInstance, JSONArray notificationHistoryJson) throws AgentServerException, SymbolException{
     int numHistoryRecords = notificationHistoryJson.length();
     NotificationHistory notificationHistory = new NotificationHistory();
     for (int i = 0; i < numHistoryRecords; i++){

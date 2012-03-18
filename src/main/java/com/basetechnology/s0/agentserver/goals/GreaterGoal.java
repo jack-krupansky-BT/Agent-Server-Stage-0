@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.goals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +23,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.util.JsonUtils;
 
 public class GreaterGoal extends Goal {

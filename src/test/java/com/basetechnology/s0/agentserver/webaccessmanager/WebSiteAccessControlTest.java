@@ -32,6 +32,7 @@ import org.junit.Test;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.appserver.AgentAppServer;
+import com.basetechnology.s0.agentserver.config.AgentServerProperties;
 import com.basetechnology.s0.agentserver.persistence.persistentfile.PersistentFileException;
 import com.basetechnology.s0.agentserver.script.parser.ParserException;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerException;
@@ -54,9 +55,9 @@ public class WebSiteAccessControlTest {
 
   @Before
   public void setUp() throws Exception {
-    File pf = new File(AgentServer.defaultPersistencePath);
+    File pf = new File(AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH);
     pf.delete();
-    assertTrue("Persistent store not deleted: " + AgentServer.defaultPersistencePath, ! pf.exists());
+    assertTrue("Persistent store not deleted: " + AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH, ! pf.exists());
   }
 
   @After
@@ -66,9 +67,9 @@ public class WebSiteAccessControlTest {
       agentAppServer = null;
       agentServer = null;
     }
-    File pf = new File(AgentServer.defaultPersistencePath);
+    File pf = new File(AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH);
     pf.delete();
-    assertTrue("Persistent store not deleted: " + AgentServer.defaultPersistencePath, ! pf.exists());
+    assertTrue("Persistent store not deleted: " + AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH, ! pf.exists());
   }
 
   @Test

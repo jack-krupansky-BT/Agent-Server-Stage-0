@@ -27,14 +27,11 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.basetechnology.s0.agentserver.AgentActivity;
-import com.basetechnology.s0.agentserver.AgentActivityRunScript;
 import com.basetechnology.s0.agentserver.AgentCondition;
 import com.basetechnology.s0.agentserver.AgentConditionStatus;
 import com.basetechnology.s0.agentserver.AgentDefinition;
 import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentInstanceList;
-import com.basetechnology.s0.agentserver.AgentScheduler;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.AgentState;
@@ -43,15 +40,17 @@ import com.basetechnology.s0.agentserver.AgentTimerStatus;
 import com.basetechnology.s0.agentserver.OutputHistory;
 import com.basetechnology.s0.agentserver.OutputRecord;
 import com.basetechnology.s0.agentserver.User;
+import com.basetechnology.s0.agentserver.activities.AgentActivity;
+import com.basetechnology.s0.agentserver.activities.AgentActivityRunScript;
 import com.basetechnology.s0.agentserver.appserver.AgentAppServer;
+import com.basetechnology.s0.agentserver.config.AgentServerProperties;
+import com.basetechnology.s0.agentserver.scheduler.AgentScheduler;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
 import com.basetechnology.s0.agentserver.script.runtime.value.BooleanValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.FloatValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.IntegerValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.StringValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
-import com.basetechnology.s0.agentserver.webaccessmanager.Robot;
-
 import static org.junit.Assert.*;
 
 @Ignore
@@ -101,9 +100,9 @@ public class AgentSchedulerTest {
       agentAppServer = null;
       agentServer = null;
     }
-    File pf = new File(AgentServer.defaultPersistencePath);
+    File pf = new File(AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH);
     pf.delete();
-    assertTrue("Persistent store not deleted: " + AgentServer.defaultPersistencePath, ! pf.exists());
+    assertTrue("Persistent store not deleted: " + AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH, ! pf.exists());
 
     agentAppServer = new AgentAppServer();
     agentServer = agentAppServer.agentServer;
@@ -114,9 +113,9 @@ public class AgentSchedulerTest {
     if (agentAppServer != null){
       agentAppServer.stop();
     }
-    File pf = new File(AgentServer.defaultPersistencePath);
+    File pf = new File(AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH);
     pf.delete();
-    assertTrue("Persistent store not deleted: " + AgentServer.defaultPersistencePath, ! pf.exists());
+    assertTrue("Persistent store not deleted: " + AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH, ! pf.exists());
     agentAppServer = null;
     agentServer = null;
   }
@@ -2107,6 +2106,7 @@ public class AgentSchedulerTest {
     assertEquals("Agent history[1].sequenceNumber", 2, dsRecord.sequenceNumber);
     deltaTime = dsRecord.time - startTime;
     assertTrue("Agent history[1].time delta not near expected: " + deltaTime, deltaTime > 10 && deltaTime < nearDeltaTime);
+    // TODO: Sometimes 4 is 3 - some timing issue - ds is delayed?
     assertEquals("Agent history[1].output", "{\"outField1\":4,\"outField2\":\"Our count is... 4\"}", dsRecord.output.toJson().toString());
     dsRecord = agHistory.get(2);
     assertEquals("Agent history[2].sequenceNumber", 3, dsRecord.sequenceNumber);
@@ -2570,7 +2570,9 @@ public class AgentSchedulerTest {
       // Check that state history was persisted and reloaded properly
       assertEquals("Count of state history for data source", 8, dsInst.state.size());
       state = dsInst.state.get(0);
+      assertTrue("State[0] is null", state != null);
       assertEquals("Data source output values in state history[0]", "{\"field1\":-1,\"field2\":\"nothing\"}", state.outputValues.toJson().toString());
+      assertTrue("agInst.state is null", agInst.state != null);
       assertEquals("Count of state history for agent", 4, agInst.state.size());
       state = agInst.state.get(0);
       assertEquals("Agent output values in state history[0]", "{\"outField1\":-123,\"outField2\":\"not-yet\"}", state.outputValues.toJson().toString());

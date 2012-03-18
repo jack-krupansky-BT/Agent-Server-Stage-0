@@ -32,6 +32,7 @@ import com.basetechnology.s0.agentserver.AgentDefinition;
 import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.appserver.AgentAppServer;
+import com.basetechnology.s0.agentserver.config.AgentServerProperties;
 import com.basetechnology.s0.agentserver.script.intermediate.AddNode;
 import com.basetechnology.s0.agentserver.script.intermediate.AssignmentNode;
 import com.basetechnology.s0.agentserver.script.intermediate.AssignmentStatementNode;
@@ -107,9 +108,9 @@ public class ScriptParserTest {
       agentAppServer = null;
       agentServer = null;
     }
-    File pf = new File(AgentServer.defaultPersistencePath);
+    File pf = new File(AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH);
     pf.delete();
-    assertTrue("Persistent store not deleted: " + AgentServer.defaultPersistencePath, ! pf.exists());
+    assertTrue("Persistent store not deleted: " + AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH, ! pf.exists());
 
     agentAppServer = new AgentAppServer();
     agentServer = agentAppServer.agentServer;
@@ -124,9 +125,9 @@ public class ScriptParserTest {
     if (agentServer != null){
       agentServer.stop();
     }
-    File pf = new File(AgentServer.defaultPersistencePath);
+    File pf = new File(AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH);
     pf.delete();
-    assertTrue("Persistent store not deleted: " + AgentServer.defaultPersistencePath, ! pf.exists());
+    assertTrue("Persistent store not deleted: " + AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH, ! pf.exists());
     agentServer = null;
   }
   

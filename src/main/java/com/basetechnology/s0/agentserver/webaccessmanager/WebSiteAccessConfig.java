@@ -19,13 +19,11 @@ package com.basetechnology.s0.agentserver.webaccessmanager;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
-import com.basetechnology.s0.agentserver.User;
 import com.basetechnology.s0.agentserver.persistence.persistentfile.PersistentFileException;
 import com.basetechnology.s0.agentserver.util.JsonListMap;
 import com.basetechnology.s0.agentserver.util.ListMap;

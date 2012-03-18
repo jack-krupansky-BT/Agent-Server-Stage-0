@@ -29,6 +29,8 @@ import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.field.Field;
 import com.basetechnology.s0.agentserver.field.FieldList;
+import com.basetechnology.s0.agentserver.goals.Goal;
+import com.basetechnology.s0.agentserver.notification.NotificationDefinition;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
@@ -46,8 +48,12 @@ public class AgentDefinition {
 
   public final static long DEFAULT_TRIGGER_INTERVAL = 50;
   public final static String DEFAULT_TRIGGER_INTERVAL_EXPRESSION = Long.toString(DEFAULT_TRIGGER_INTERVAL);
+  public final static long DEFAULT_MINIMUM_TRIGGER_INTERVAL = 5;
+  public final static String DEFAULT_MINIMUM_TRIGGER_INTERVAL_EXPRESSION = Long.toString(DEFAULT_MINIMUM_TRIGGER_INTERVAL);
   public final static long DEFAULT_REPORTING_INTERVAL = 200;
   public final static String DEFAULT_REPORTING_INTERVAL_EXPRESSION = Long.toString(DEFAULT_REPORTING_INTERVAL);
+  public final static long DEFAULT_MINIMUM_REPORTING_INTERVAL = 5;
+  public final static String DEFAULT_MINIMUM_REPORTING_INTERVAL_EXPRESSION = Long.toString(DEFAULT_MINIMUM_REPORTING_INTERVAL);
   public long timeCreated;
   public long timeModified;
   public AgentServer agentServer;

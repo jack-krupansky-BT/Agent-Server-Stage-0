@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.goals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.json.JSONObject;
 
+import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.util.JsonUtils;
 
-public class PercentageGoal extends Goal {
+public class BooleanGoal extends Goal {
   final public static String type = "greater_goal";
-  public String percentageExpression;
-  public int threshold;
+  public String booleanExpression;
 
-  public PercentageGoal(String name, String description, String percentageExpression, int threshold){
+  public BooleanGoal(String name, String description, String booleanExpression){
     super(name, description);
-    this.percentageExpression = percentageExpression;
-    this.threshold = threshold;
+    this.booleanExpression = booleanExpression;
   }
 
   public String getType(){
@@ -39,14 +38,14 @@ public class PercentageGoal extends Goal {
   }
 
   public static Goal fromJson(JSONObject goalJson, String name, String description) throws AgentServerException {
-    String percentageExpression = goalJson.optString("percentage_expression");
-    int threshold = goalJson.optInt("threshold", 100);
-    JsonUtils.validateKeys(goalJson, "Percentage goal", new ArrayList<String>(Arrays.asList(
-        "type", "name", "description", "percentage_expression", "threshold")));
-    return new PercentageGoal(name, description, percentageExpression, threshold);
+    String booleanExpression = goalJson.optString("boolean_expression");
+    JsonUtils.validateKeys(goalJson, "Boolean goal", new ArrayList<String>(Arrays.asList(
+        "type", "name", "description", "boolean_expression")));
+    return new BooleanGoal(name, description, booleanExpression);
   }
   
   public String otherJson(){
-    return "\"percentage_expression\": \"" + percentageExpression + "\", \"threshold\": " + threshold;
+    return "\"boolean_expression\": \"" + booleanExpression + "\"";
   }
+
 }

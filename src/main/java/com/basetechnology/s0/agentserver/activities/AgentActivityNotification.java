@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.activities;
+
+import com.basetechnology.s0.agentserver.AgentInstance;
+import com.basetechnology.s0.agentserver.AgentServerException;
+import com.basetechnology.s0.agentserver.RuntimeException;
+import com.basetechnology.s0.agentserver.notification.NotificationInstance;
 
 public class AgentActivityNotification extends AgentActivity {
   public NotificationInstance notificationInstance;

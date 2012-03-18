@@ -37,6 +37,7 @@ import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.script.parser.ParserException;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerException;
+import com.basetechnology.s0.agentserver.util.ListMap;
 import com.basetechnology.s0.agentserver.util.XmlUtils;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessException;
 
@@ -45,11 +46,47 @@ public class AgentAppServer {
   public static String apiPathPrefix;
   public static String appServerBaseUrl;
   public static String appServerApiBaseUrl;
+  public ListMap<String, String> commandLineproperties;
   public AgentServer agentServer;
 
   public Server server;
 
   public int appServerPort;
+
+  public AgentAppServer() throws RuntimeException, AgentServerException, Exception {
+    this(true);
+  }
+
+  public AgentAppServer(ListMap<String, String> commandLineproperties) throws RuntimeException, AgentServerException, Exception {
+    this(true, commandLineproperties);
+  }
+
+  public AgentAppServer(boolean start) throws RuntimeException, AgentServerException,  Exception {
+    this(start, null);
+  }
+
+  public AgentAppServer(boolean start, ListMap<String, String> commandLineproperties) throws RuntimeException, AgentServerException,  Exception {
+    // Save command line properties
+    this.commandLineproperties = commandLineproperties;
+    
+    // Start the agent server.
+    agentServer = new AgentServer(this);
+
+    // Get the desired port number
+    appServerPort = agentServer.config.agentServerProperties.appServerPort;
+
+    // Build and save the bas API URLs
+    apiPathPrefix = "/API/v0.1";
+    appServerBaseUrl = "http://localhost:" + appServerPort;
+    appServerApiBaseUrl = appServerBaseUrl + apiPathPrefix;
+
+    // Start the Jetty server
+    startJetty();
+
+    // Optionally start the agent app server
+    if (start)
+      start();
+  }
   
   public static void setOutput(HttpInfo httpInfo, JSONObject outputJson){
     HttpServletResponse response = httpInfo.response;
@@ -220,31 +257,6 @@ public class AgentAppServer {
     response.setStatus(statusCode);
     response.setContentType("application/" + type + "; charset=utf-8");
     ((Request)request).setHandled(true);
-  }
-
-  public AgentAppServer() throws RuntimeException, AgentServerException, Exception {
-    this(true);
-  }
-
-  public AgentAppServer(boolean start) throws RuntimeException, AgentServerException,  Exception {
-
-    // Start the agent server.
-    agentServer = new AgentServer(this);
-
-    // Get the desired port number
-    appServerPort = agentServer.config.agentServerProperties.appServerPort;
-
-    // Build and save the bas API URLs
-    apiPathPrefix = "/API/v0.1";
-    appServerBaseUrl = "http://localhost:" + appServerPort;
-    appServerApiBaseUrl = appServerBaseUrl + apiPathPrefix;
-
-    // Start the Jetty server
-    startJetty();
-
-    // Optionally start the agent app server
-    if (start)
-      start();
   }
 
   public void startJetty() throws Exception {

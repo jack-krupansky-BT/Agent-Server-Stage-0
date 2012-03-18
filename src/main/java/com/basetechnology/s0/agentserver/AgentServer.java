@@ -18,23 +18,23 @@ package com.basetechnology.s0.agentserver;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.appserver.AgentAppServer;
-import com.basetechnology.s0.agentserver.field.Field;
-import com.basetechnology.s0.agentserver.field.FieldList;
+import com.basetechnology.s0.agentserver.config.AgentServerConfig;
+import com.basetechnology.s0.agentserver.config.AgentServerProperties;
+import com.basetechnology.s0.agentserver.config.AgentServerWebAccessConfig;
 import com.basetechnology.s0.agentserver.mailaccessmanager.MailAccessManager;
 import com.basetechnology.s0.agentserver.persistence.Persistence;
 import com.basetechnology.s0.agentserver.persistence.persistentfile.PersistentFileException;
+import com.basetechnology.s0.agentserver.scheduler.AgentScheduler;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
@@ -62,14 +62,12 @@ public class AgentServer {
   public long startTime = 0;
   public AgentScheduler agentScheduler;
   
-  static public String defaultPersistencePath = "agentserver.pjson";
-  //static public String defaultPersistencePath = "agentserver.pjson";
-  public String persistencePath = defaultPersistencePath;
   public Persistence persistence;
   public AgentServerConfig config;
   public NameValueList<User> users;
   public NameValueList<AgentDefinitionList> agentDefinitions;
   public NameValueList<AgentInstanceList> agentInstances;
+  public AgentServerProperties agentServerProperties;
   public AgentServerWebAccessConfig webAccessConfig;
   public WebSiteAccessConfig webSiteAccessConfig;
   public WebAccessManager webAccessManager;
@@ -804,6 +802,9 @@ public class AgentServer {
     this.agentDefinitions = new NameValueList<AgentDefinitionList>();
     this.agentInstances = new NameValueList<AgentInstanceList>();
 
+    // Initialize agent server properties
+    agentServerProperties = new AgentServerProperties(agentAppServer.commandLineproperties);
+    
     // Initialize the agent scheduler, but keep it suspended for now
     if (agentScheduler == null)
       agentScheduler = new AgentScheduler(this, false);
@@ -812,7 +813,7 @@ public class AgentServer {
     
     // Initialize persistence
     if (persistence == null)
-      persistence = new Persistence(this, persistencePath);
+      persistence = new Persistence(this, getPersistentStorePath());
     else
       persistence.initialize();
     
@@ -858,11 +859,11 @@ public class AgentServer {
   }
 
   public String getDefaultReportingInterval(){
-    return config.get("reporting_interval");
+    return config.get("default_reporting_interval");
   }
 
   public String getDefaultTriggerInterval(){
-    return config.get("trigger_interval");
+    return config.get("default_trigger_interval");
   }
   
   public void addWebSiteAccessControls(User user, JSONObject accessControlsJson) throws JSONException, AgentServerException{
@@ -880,5 +881,17 @@ public class AgentServer {
   
   public String getAdminPassword(){
     return config.agentServerProperties.adminPassword;
+  }
+  
+  public String getPersistentStorePath(){
+    return agentServerProperties.persistent_store_dir + "/" + AgentServerProperties.DEFAULT_PERSISTENT_STORE_FILE_NAME;
+  }
+  
+  public long getMinimumTriggerInterval(){
+    return config.getLong("minimum_trigger_interval");
+  }
+  
+  public long getMinimumReportingInterval(){
+    return config.getLong("minimum_reporting_interval");
   }
 }

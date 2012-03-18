@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.goals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.json.JSONObject;
 
+import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.util.JsonUtils;
 
 public class Goal {

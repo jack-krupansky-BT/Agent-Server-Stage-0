@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.config;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,14 +25,15 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.basetechnology.s0.agentserver.appserver.HandleGet;
+import com.basetechnology.s0.agentserver.AgentDefinition;
+import com.basetechnology.s0.agentserver.AgentServer;
+import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.mailaccessmanager.MailAccessManager;
 import com.basetechnology.s0.agentserver.persistence.persistentfile.PersistentFileException;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
 import com.basetechnology.s0.agentserver.util.JsonListMap;
 import com.basetechnology.s0.agentserver.util.JsonUtils;
 import com.basetechnology.s0.agentserver.util.ListMap;
-import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessManager;
 
 public class AgentServerConfig {
   static final Logger log = Logger.getLogger(AgentServerConfig.class);
@@ -40,14 +41,13 @@ public class AgentServerConfig {
   public ListMap<String, String> config;
   public boolean batchUpdate;
   public AgentServerProperties agentServerProperties;
-  
+
   public AgentServerConfig(AgentServer agentServer) throws AgentServerException {
     this.agentServer = agentServer;
     this.config = new ListMap<String, String>();
     this.batchUpdate = false;
-
-    // Load agent server properties
-    agentServerProperties = new AgentServerProperties();
+    this.agentServerProperties = agentServer.agentServerProperties == null ?
+        new AgentServerProperties() : agentServer.agentServerProperties;
   }
 
   public void load() throws IOException, PersistentFileException, AgentServerException {
@@ -103,7 +103,9 @@ public class AgentServerConfig {
         "execution_limit_level_1", "execution_limit_level_2",
         "execution_limit_level_3", "execution_limit_level_4",
         "execution_limit_default_level",
-        "trigger_interval", "reporting_interval", "implicitly_deny_web_access",
+        "default_trigger_interval", "default_reporting_interval",
+        "minimum_trigger_interval", "minimum_reporting_interval",
+        "implicitly_deny_web_access",
         "mail_access_enabled", "minimum_mail_access_interval",
         "minimum_host_mail_access_interval", "minimum_address_mail_access_interval",
         "admin_approve_user_create", "mail_confirm_user_create")));
@@ -181,8 +183,10 @@ public class AgentServerConfig {
     put("max_users", agentServerProperties.maxUsers);
     put("max_instances", agentServerProperties.maxInstances);
     put("implicitly_deny_web_access", agentServerProperties.implicitlyDenyWebAccess);
-    put("trigger_interval", agentServerProperties.triggerInterval);
-    put("reporting_interval", agentServerProperties.reportingInterval);
+    put("default_trigger_interval", agentServerProperties.defaultTriggerInterval);
+    put("default_reporting_interval", agentServerProperties.defaultReportingInterval);
+    put("minimum_trigger_interval", agentServerProperties.minimumTriggerInterval);
+    put("minimum_reporting_interval", agentServerProperties.minimumReportingInterval);
     // TODO: How to handle directory since we can't read the config file until we know the directory
     // Probably needs to be a command line or environment variable, maybe both
     

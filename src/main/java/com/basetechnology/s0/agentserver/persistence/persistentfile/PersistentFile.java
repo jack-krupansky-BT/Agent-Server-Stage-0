@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.basetechnology.s0.agentserver.AgentScheduler;
+import com.basetechnology.s0.agentserver.scheduler.AgentScheduler;
 import com.basetechnology.s0.agentserver.util.DateUtils;
 import com.basetechnology.s0.agentserver.util.ListMap;
 
@@ -71,6 +71,12 @@ public class PersistentFile implements Iterable<String> {
     if (pathFile.exists())
       throw new PersistentFileException("Unable to delete file - it still exists - path: " + fullPath);
 
+    // Make sure path exists
+    String dirPath = pathFile.getParent();
+    File dirFile = new File(dirPath);
+    if (! dirFile.exists())
+      dirFile.mkdirs();
+    
     // Create and open the file
     RandomAccessFile file = new RandomAccessFile(fullPath, "rw");
 

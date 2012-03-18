@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.activities;
 
 import org.apache.log4j.Logger;
 

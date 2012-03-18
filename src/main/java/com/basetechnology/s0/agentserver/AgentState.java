@@ -20,14 +20,13 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.basetechnology.s0.agentserver.appserver.HandleGet;
+import com.basetechnology.s0.agentserver.notification.NotificationHistory;
+import com.basetechnology.s0.agentserver.notification.NotificationInstance;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
@@ -35,7 +34,6 @@ import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
 import com.basetechnology.s0.agentserver.script.runtime.ExceptionInfo;
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 import com.basetechnology.s0.agentserver.util.DateUtils;
-import com.basetechnology.s0.agentserver.util.JsonListMap;
 import com.basetechnology.s0.agentserver.util.JsonUtils;
 import com.basetechnology.s0.agentserver.util.ListMap;
 
@@ -111,13 +109,15 @@ public class AgentState {
     else
       inputs = new SymbolValues();
 
+/*
     // Parse input values
     SymbolValues events = null;
     if (stateJson.has("events"))
       events = SymbolValues.fromJson(symbolManager.getSymbolTable("events"), stateJson.optJSONObject("events"));
     else
       events = new SymbolValues();
-
+*/
+    
     // Parse memory values
     SymbolValues memory = null;
     if (stateJson.has("memory"))
@@ -165,7 +165,7 @@ public class AgentState {
 
     // Validate keys
     JsonUtils.validateKeys(stateJson, "Agent state", new ArrayList<String>(Arrays.asList(
-        "time", "parameters", "inputs", "events", "memory", "outputs",
+        "time", "parameters", "inputs", "memory", "outputs",
         "exceptions", "last_dismissed_exception", "notifications", "notification_history")));
 
     // Generate the agent state object

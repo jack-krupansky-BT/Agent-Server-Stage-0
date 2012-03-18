@@ -29,8 +29,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.basetechnology.s0.agentserver.activities.AgentActivityNotification;
+import com.basetechnology.s0.agentserver.activities.AgentActivityTriggerInputChanged;
 import com.basetechnology.s0.agentserver.field.Field;
+import com.basetechnology.s0.agentserver.goals.Goal;
 import com.basetechnology.s0.agentserver.notification.MailNotification;
+import com.basetechnology.s0.agentserver.notification.NotificationDefinition;
+import com.basetechnology.s0.agentserver.notification.NotificationHistory;
+import com.basetechnology.s0.agentserver.notification.NotificationInstance;
+import com.basetechnology.s0.agentserver.notification.NotificationRecord;
+import com.basetechnology.s0.agentserver.scheduler.AgentScheduler;
 import com.basetechnology.s0.agentserver.script.intermediate.ExpressionNode;
 import com.basetechnology.s0.agentserver.script.intermediate.MapTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
@@ -540,11 +548,11 @@ public class AgentInstance {
   }
   
   public long evaluateExpressionLong(String expression) throws AgentServerException {
-    return evaluateExpression(expression, true).getLongValue();
+    return evaluateExpression(expression, false).getLongValue();
   }
   
   public Value evaluateExpression(String expression) throws AgentServerException {
-    return evaluateExpression(expression, true);
+    return evaluateExpression(expression, false);
   }
   
   public Value evaluateExpression(String expression, boolean captureInputs) throws AgentServerException {
@@ -980,8 +988,32 @@ public class AgentInstance {
     return agentInstance;
   }
   
+  public long getReportingInterval() throws AgentServerException {
+    // Get the desired reporting interval
+    long reportingInterval = evaluateExpressionLong(reportingIntervalExpression);
+    
+    // May need to throttle it down
+    long minimumReportingInterval = agentServer.getMinimumReportingInterval();
+    if (reportingInterval < minimumReportingInterval){
+      log.info("Throttling reporting_interval " + reportingInterval + " for " + name +
+          " down to minimum of " + minimumReportingInterval);
+      reportingInterval = minimumReportingInterval;
+    }
+    return reportingInterval;
+  }
+  
   public long getTriggerInterval() throws AgentServerException {
-    return evaluateExpressionLong(triggerIntervalExpression);
+    // Get the desired trigger interval
+    long triggerInterval = evaluateExpressionLong(triggerIntervalExpression);
+    
+    // May need to throttle it down
+    long minimumTriggerInterval = agentServer.getMinimumTriggerInterval();
+    if (triggerInterval < minimumTriggerInterval){
+      log.info("Throttling trigger_interval " + triggerInterval + " for " + name +
+          " down to minimum of " + minimumTriggerInterval);
+      triggerInterval = minimumTriggerInterval;
+    }
+    return triggerInterval;
   }
   
   public long getTriggerTime() throws AgentServerException {

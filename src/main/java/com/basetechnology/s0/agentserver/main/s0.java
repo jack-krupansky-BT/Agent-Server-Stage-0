@@ -19,6 +19,7 @@ package com.basetechnology.s0.agentserver.main;
 import org.apache.log4j.Logger;
 
 import com.basetechnology.s0.agentserver.appserver.AgentAppServer;
+import com.basetechnology.s0.agentserver.util.ListMap;
 
 public class s0 {
   static final Logger log = Logger.getLogger(s0.class);
@@ -29,9 +30,27 @@ public class s0 {
    * @param args
    */
   public static void main(String[] args) throws Exception {
+    // Gather all the "-D" optins to override properties
+    ListMap<String, String> commandLineproperties = new ListMap<String, String>();
+    for (String arg: args){
+      if (arg.startsWith("-D")){
+        int i = arg.indexOf('=');
+        if (i < 0){
+          System.err.println("Missing '=' for -D command line option: " + arg);
+          System.exit(1);
+        }
+        String propertyName = arg.substring(2, i);
+        String propertyValue = arg.substring(i + 1);
+        commandLineproperties.put(propertyName, propertyValue);
+      } else {
+        System.err.println("Unknown command line option: " + arg);
+        System.exit(1);
+      }
+    }
+    
     // Create a new agent app server
     log.info("Creating new agent app server");
-    AgentAppServer server = new AgentAppServer();
+    AgentAppServer server = new AgentAppServer(commandLineproperties);
 
     // Start it
     log.info("Starting new agent app server");

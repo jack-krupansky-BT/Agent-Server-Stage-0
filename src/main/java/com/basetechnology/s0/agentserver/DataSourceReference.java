@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.basetechnology.s0.agentserver.activities.AgentActivityTriggerInputChanged;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
 import com.basetechnology.s0.agentserver.script.parser.ParserException;

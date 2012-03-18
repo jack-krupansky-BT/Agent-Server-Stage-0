@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.config;
 
+import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessConfig;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessManager;
 

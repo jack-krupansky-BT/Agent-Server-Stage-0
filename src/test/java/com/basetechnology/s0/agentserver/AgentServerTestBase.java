@@ -44,6 +44,7 @@ import org.junit.BeforeClass;
 
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.appserver.AgentAppServer;
+import com.basetechnology.s0.agentserver.config.AgentServerProperties;
 import com.basetechnology.s0.agentserver.util.JsonListMap;
 
 public class AgentServerTestBase {
@@ -99,13 +100,13 @@ public class AgentServerTestBase {
   }
   
   public void cleanupPersistentStore() throws Exception {
-    String path = AgentServer.defaultPersistencePath;
+    String path = AgentServerProperties.DEFAULT_PERSISTENT_STORE_PATH;
     if (server != null){
       // Make sure server is stopped
       server.stop();
       
       // Get path
-      path = server.agentServer.persistencePath;
+      path = server.agentServer.getPersistentStorePath();
     }
 
     // Get rid of old persistent store

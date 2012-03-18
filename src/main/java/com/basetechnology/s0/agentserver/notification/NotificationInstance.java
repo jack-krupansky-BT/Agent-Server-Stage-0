@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.notification;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -25,6 +25,8 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.basetechnology.s0.agentserver.AgentInstance;
+import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;

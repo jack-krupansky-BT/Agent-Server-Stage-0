@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package com.basetechnology.s0.agentserver;
+package com.basetechnology.s0.agentserver.activities;
 
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 
+import com.basetechnology.s0.agentserver.AgentInstance;
+import com.basetechnology.s0.agentserver.AgentServerException;
+import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 
 public class AgentActivity {
