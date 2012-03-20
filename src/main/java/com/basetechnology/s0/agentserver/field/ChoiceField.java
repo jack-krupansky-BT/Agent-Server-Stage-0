@@ -24,12 +24,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.script.intermediate.IntegerTypeNode;
-import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolTable;
 import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
-import com.basetechnology.s0.agentserver.script.runtime.value.FloatValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.StringValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 
@@ -52,17 +50,20 @@ public class ChoiceField extends Field {
     this.defaultValue = this.choices.get(0);
   }
 
-  public ChoiceField(SymbolTable symbolTable, String name, String label, String description, String defaultValue, List<String> choices, int nominalWidth){
+  public ChoiceField(SymbolTable symbolTable, String name, String label, String description,
+      String defaultValue, List<String> choices, int nominalWidth, String compute){
     this.symbol = new Symbol(symbolTable, name, IntegerTypeNode.one);
     this.label = label;
     this.description = description;
     this.defaultValue = defaultValue;
     this.choices = choices;
     this.nominalWidth = nominalWidth;
+    this.compute = compute;
   }
 
   public Field clone(){
-    return new ChoiceField(symbol.symbolTable, symbol.name, label, description, defaultValue, choices, nominalWidth);
+    return new ChoiceField(symbol.symbolTable, symbol.name, label, description, defaultValue,
+        choices, nominalWidth, compute);
   }
 
   public Object getDefaultValue(){
@@ -93,7 +94,9 @@ public class ChoiceField extends Field {
         choices.add(choicesJson.optString(i));
     }
     int nominalWidth = fieldJson.has("nominal_width") ? fieldJson.optInt("nominal_width") : 0;
-    return new ChoiceField(symbolTable, name, label, description, defaultValue, choices, nominalWidth);
+    String compute = fieldJson.has("compute") ? fieldJson.optString("compute") : null;
+    return new ChoiceField(symbolTable, name, label, description, defaultValue, choices,
+        nominalWidth, compute);
   }
 
   public JSONObject toJson() throws JSONException {
@@ -115,6 +118,8 @@ public class ChoiceField extends Field {
     }
     if (nominalWidth != 0)
       json.put("nominal_width", nominalWidth);
+    if (compute != null)
+      json.put("compute", compute);
     return json;
   }
   
@@ -122,6 +127,7 @@ public class ChoiceField extends Field {
     return "[Choice field symbol: " + symbol + " label: " + label +
         " description: '" + description + "'" + " default value: " + defaultValue +
         " nominal width: " + nominalWidth + " choices: " + choices.toString() +
+        " compute: (" + compute + ")" +
         "]";
   }
 }

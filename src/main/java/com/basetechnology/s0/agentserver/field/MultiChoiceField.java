@@ -49,18 +49,20 @@ public class MultiChoiceField extends Field {
     this.choices = Arrays.asList(choices.split(","));
   }
 
-  public MultiChoiceField(SymbolTable symbolTable, String name, String label, String description, String defaultValue, List<String> choices, int nominalWidth){
+  public MultiChoiceField(SymbolTable symbolTable, String name, String label, String description,
+      String defaultValue, List<String> choices, int nominalWidth, String compute){
     this.symbol = new Symbol(symbolTable, name, IntegerTypeNode.one);
     this.label = label;
     this.description = description;
     this.defaultValue = defaultValue;
-
     this.choices = choices;
     this.nominalWidth = nominalWidth;
+    this.compute = compute;
   }
 
   public Field clone(){
-    return new MultiChoiceField(symbol.symbolTable, symbol.name, label, description, defaultValue, choices, nominalWidth);
+    return new MultiChoiceField(symbol.symbolTable, symbol.name, label, description, defaultValue,
+        choices, nominalWidth, compute);
   }
 
   public Object getDefaultValue(){
@@ -91,7 +93,9 @@ public class MultiChoiceField extends Field {
         choices.add(choicesJson.optString(i));
     }
     int nominalWidth = fieldJson.has("nominal_width") ? fieldJson.optInt("nominal_width") : 0;
-    return new MultiChoiceField(symbolTable, name, label, description, defaultValue, choices, nominalWidth);
+    String compute = fieldJson.has("compute") ? fieldJson.optString("compute") : null;
+    return new MultiChoiceField(symbolTable, name, label, description, defaultValue, choices,
+        nominalWidth, compute);
   }
 
   public JSONObject toJson() throws JSONException {
@@ -112,6 +116,8 @@ public class MultiChoiceField extends Field {
     json.put("choices", choicesJson);
     if (nominalWidth != 0)
       json.put("nominal_width", nominalWidth);
+    if (compute != null)
+      json.put("compute", compute);
     return json;
   }
   
@@ -119,6 +125,7 @@ public class MultiChoiceField extends Field {
     return "[Choice field symbol: " + symbol + " label: " + label +
         " description: '" + description + "'" + " default value: " + defaultValue +
         " nominal width: " + nominalWidth + " choices: " + choices.toString() +
+        " compute: (" + compute + ")" +
         "]";
   }
 }

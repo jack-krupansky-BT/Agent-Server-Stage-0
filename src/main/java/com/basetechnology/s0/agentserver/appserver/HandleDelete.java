@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 
+import com.basetechnology.s0.agentserver.AgentDefinition;
 import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
@@ -88,37 +89,62 @@ public class HandleDelete extends HandleHttp {
         ((Request)request).setHandled(true);
         return true;
       }
+    } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agent_definitions/[a-zA-Z0-9_.@\\-]*$")){
+      String userId = pathParts[2];
+      String password = request.getParameter("password");
+      String agentDefinitionName = pathParts[4];
+
+      if (userId == null)
+        throw new AgentAppServerBadRequestException("Missing user Id path parameter");
+      if (userId.trim().length() == 0)
+        throw new AgentAppServerBadRequestException("Empty user Id path parameter");
+      if (password == null)
+        throw new AgentAppServerBadRequestException("Missing password query parameter");
+      if (password.trim().length() == 0)
+        throw new AgentAppServerBadRequestException("Empty password query parameter");
+      if (! agentServer.users.containsKey(userId) ||
+          ! agentServer.users.get(userId).password.equals(password))
+        throw new AgentAppServerBadRequestException("Unknown user name or invalid password");
+      if (agentDefinitionName == null)
+        throw new AgentAppServerBadRequestException("Missing agent definition name path parameter");
+      if (agentDefinitionName.trim().length() == 0)
+        throw new AgentAppServerBadRequestException("Empty agent definition name path parameter");
+      if (! agentServer.agentDefinitions.get(userId).containsKey(agentDefinitionName))
+        throw new AgentAppServerBadRequestException("No agent definition with that name for that user");
+
+      // Delete the agent definition
+      log.info("Deleting agent definition named: " + agentDefinitionName + " for user: " + userId);
+      User user = agentServer.getUser(userId);
+      AgentDefinition agentDefinition = agentServer.getAgentDefinition(user, agentDefinitionName);
+      agentServer.removeAgentDefinition(agentDefinition);
+
+      // Delete was successful
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*$")){
       String userId = pathParts[2];
+      String password = request.getParameter("password");
       String agentInstanceName = pathParts[4];
 
-      if (userId == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing user name path parameter");
-        ((Request)request).setHandled(true);
-      } else if (userId.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty user name path parameter");
-        ((Request)request).setHandled(true);
-      } else if (agentInstanceName == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing agent name path parameter");
-        ((Request)request).setHandled(true);
-      } else if (agentInstanceName.trim().length() == 0){
-        throw new AgentAppServerBadRequestException("Empty agent name path parameter");
-      }
+      if (userId == null)
+        throw new AgentAppServerBadRequestException("Missing user Id path parameter");
+      if (userId.trim().length() == 0)
+        throw new AgentAppServerBadRequestException("Empty user Id path parameter");
+      if (password == null)
+        throw new AgentAppServerBadRequestException("Missing password query parameter");
+      if (password.trim().length() == 0)
+        throw new AgentAppServerBadRequestException("Empty password query parameter");
+      if (! agentServer.users.containsKey(userId) ||
+          ! agentServer.users.get(userId).password.equals(password))
+        throw new AgentAppServerBadRequestException("Unknown user name or invalid password");
+      if (agentInstanceName == null)
+        throw new AgentAppServerBadRequestException("Missing agent instance name path parameter");
+      if (agentInstanceName.trim().length() == 0)
+        throw new AgentAppServerBadRequestException("Empty agent instance name path parameter");
+      if (! agentServer.agentInstances.get(userId).containsKey(agentInstanceName))
+        throw new AgentAppServerBadRequestException("No agent definition with that name for that user");
+
       User user = agentServer.getUser(userId);
-      if (user == null)
-        throw new AgentAppServerBadRequestException("No user with id '" + userId + "'");
+
       AgentInstance agentInstance = agentServer.getAgentInstance(user, agentInstanceName);
       if (agentInstance == null)
         throw new AgentAppServerBadRequestException("No agent instance named '" + agentInstanceName + " for user '" + userId + "'");

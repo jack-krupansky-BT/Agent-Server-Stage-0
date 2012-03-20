@@ -568,7 +568,7 @@ public class AgentServer {
     return getAgentInstance(user, agentDefinition, parameters, true);
   }
   
-  public AgentInstance getAgentInstance(User user, AgentDefinition agentDefinition, SymbolValues parameters, boolean create) throws RuntimeException, SymbolException, AgentServerException, JSONException, TokenizerException, ParserException {
+  public AgentInstance getAgentInstance(User user, AgentDefinition agentDefinition, SymbolValues parameters, boolean create) throws AgentServerException {
     // Get instance list for the user
     AgentInstanceList agentInstanceList = agentInstances.get(user.id);
     if (agentInstanceList == null){
@@ -664,6 +664,10 @@ public class AgentServer {
     String triggerIntervalExpression = agentJson.optString("trigger_interval", AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION);
     String reportingIntervalExpression = agentJson.optString("reporting_interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION);
 
+    boolean publicOutput = agentJson.optBoolean("public_output", false);
+
+    int limitInstanceStatesStored = agentJson.optInt("limit_instance_states_stored", -1);
+
     boolean enabled = agentJson.optBoolean("enabled", true);
 
     String created = agentJson.optString("created", null);
@@ -681,7 +685,7 @@ public class AgentServer {
       throw new AgentServerException("Unable to parse modified date ('" + modified + "') - " + e.getMessage());
     }
 
-    AgentInstance agentInstance = agentMap.put(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerIntervalExpression, reportingIntervalExpression, enabled, timeCreated, timeModified);
+    AgentInstance agentInstance = agentMap.put(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerIntervalExpression, reportingIntervalExpression, publicOutput, limitInstanceStatesStored, enabled, timeCreated, timeModified);
     
     // Persist the new agent instance
     persistence.put(agentInstance);

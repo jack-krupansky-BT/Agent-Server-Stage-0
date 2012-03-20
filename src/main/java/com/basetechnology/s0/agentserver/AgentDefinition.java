@@ -114,23 +114,24 @@ public class AgentDefinition {
       String reportingIntervalExpression,
       long timeCreated,
       long timeModified,
-      Boolean enabled) throws SymbolException, RuntimeException  {
-    this.timeCreated = timeCreated > 0 ? timeCreated : System.currentTimeMillis();
-    this.timeModified = timeModified > 0 ? timeModified : this.timeCreated;
+      Boolean enabled,
+      boolean update) throws SymbolException, RuntimeException  {
+    this.timeCreated = update ? timeCreated : (timeCreated > 0 ? timeCreated : System.currentTimeMillis());
+    this.timeModified = update? timeModified : (timeModified > 0 ? timeModified : this.timeCreated);
     this.agentServer = agentServer;
-    this.user = user == null ? User.noUser : user;
+    this.user = user != null ? user : update ? null : User.noUser;
     this.name = name;
     this.description = description;
-    this.parameters = parameters == null ? new FieldList() : parameters;
-    this.inputs = inputs == null ? new DataSourceReferenceList() : inputs;
-    this.timers = timers == null ? new NameValueList<AgentTimer>() : timers;
-    this.conditions = conditions == null ? new NameValueList<AgentCondition>() : conditions;
-    this.scripts = scripts;
-    this.scratchpad = scratchpad == null ? new FieldList() : scratchpad;
-    this.memory = memory == null ? new FieldList() : memory;
-    this.notifications = notifications == null ? new NameValueList<NotificationDefinition>() : notifications;
-    this.outputs = outputs == null ? new FieldList() : outputs;
-    this.goals = goals == null ? new ArrayList<Goal>() : goals;
+    this.parameters = parameters != null ? parameters : update ? null : new FieldList();
+    this.inputs = inputs != null ? inputs : update ? null : new DataSourceReferenceList();
+    this.timers = timers != null ? timers : update ? null : new NameValueList<AgentTimer>();
+    this.conditions = conditions != null ? conditions : update ? null : new NameValueList<AgentCondition>();
+    this.scripts = scripts != null ? scripts : update ? null : new NameValueList<ScriptDefinition>();
+    this.scratchpad = scratchpad != null ? scratchpad : update ? null : new FieldList();
+    this.memory = memory != null ? memory : update ? null : new FieldList();
+    this.notifications = notifications != null ? notifications : update ? null : new NameValueList<NotificationDefinition>();
+    this.outputs = outputs != null ? outputs : update ? null : new FieldList();
+    this.goals = goals != null ? goals : update ? null : new ArrayList<Goal>();
     this.triggerIntervalExpression = triggerIntervalExpression;
     this.reportingIntervalExpression = reportingIntervalExpression;
     this.enabled = enabled;
@@ -163,14 +164,14 @@ public class AgentDefinition {
 
     // Parse agent definition name
     String agentDefinitionName = agentJson.optString("name");
-    if (agentDefinitionName == null || agentDefinitionName.trim().length() == 0)
+    if (agentDefinitionName == null || agentDefinitionName.trim().length() == 0 && ! update)
       throw new AgentServerException("Agent definition name ('name') is missing");
 
     // Parse agent definition description
     String agentDescription = agentJson.optString("description");
     if (agentDescription == null || agentDescription.trim().length() == 0)
       agentDescription = "";
-    log.info("Adding new agent definition named: " + agentDefinitionName + " for user: " + user.id);
+    //log.info("Adding new agent definition named: " + agentDefinitionName + " for user: " + user.id);
     
     // TODO: Parse comment
     
@@ -189,8 +190,6 @@ public class AgentDefinition {
     SymbolManager symbolManager = new SymbolManager();
 
     String invalidParameterNames = "";
-    String invalidDataSourceNames = "";
-    String invalidEventNames = "";
 
     // Parse 'parameter' fields
     FieldList parameters = null;
@@ -282,8 +281,9 @@ public class AgentDefinition {
     }
 
     // Parse 'timers' list
-    NameValueList<AgentTimer> timers = new NameValueList<AgentTimer>();
+    NameValueList<AgentTimer> timers = null;
     if (agentJson.has("timers")){
+      timers = new NameValueList<AgentTimer>();
       JSONArray timersJson = agentJson.optJSONArray("timers");
       if (timersJson != null){
         int numScripts = timersJson.length();
@@ -302,8 +302,9 @@ public class AgentDefinition {
     }
 
     // Parse 'conditions' list
-    NameValueList<AgentCondition> conditions = new NameValueList<AgentCondition>();
+    NameValueList<AgentCondition> conditions = null;
     if (agentJson.has("conditions")){
+      conditions = new NameValueList<AgentCondition>();
       JSONArray conditionsJson = agentJson.optJSONArray("conditions");
       if (conditionsJson != null){
         int numScripts = conditionsJson.length();
@@ -322,8 +323,9 @@ public class AgentDefinition {
     }
 
     // Parse 'notifications' list
-    NameValueList<NotificationDefinition> notifications = new NameValueList<NotificationDefinition>();
+    NameValueList<NotificationDefinition> notifications = null;
     if (agentJson.has("notifications")){
+      notifications = new NameValueList<NotificationDefinition>();
       JSONArray notificationsJson = agentJson.optJSONArray("notifications");
       if (notificationsJson != null){
         int numScripts = notificationsJson.length();
@@ -342,8 +344,9 @@ public class AgentDefinition {
     }
 
     // Parse 'scripts' list
-    NameValueList<ScriptDefinition> scripts = new NameValueList<ScriptDefinition>();
+    NameValueList<ScriptDefinition> scripts = null;
     if (agentJson.has("scripts")){
+      scripts = new NameValueList<ScriptDefinition>();
       JSONArray scriptsJson = agentJson.optJSONArray("scripts");
       if (scriptsJson != null){
         int numScripts = scriptsJson.length();
@@ -435,8 +438,10 @@ public class AgentDefinition {
       }
     }
 
-    String reportingIntervalExpression = agentJson.optString("reporting_interval", agentServer.getDefaultReportingInterval());
-    String triggerIntervalExpression = agentJson.optString("trigger_interval", agentServer.getDefaultTriggerInterval());
+    String reportingIntervalExpression = agentJson.has("reporting_interval") ? agentJson.optString("reporting_interval") :
+      update ? null : agentServer.getDefaultReportingInterval();
+    String triggerIntervalExpression = agentJson.has("trigger_interval") ? agentJson.optString("trigger_interval") :
+      update ? null : agentServer.getDefaultTriggerInterval();
 
     String created = agentJson.optString("created", null);
     long timeCreated = -1;
@@ -466,7 +471,7 @@ public class AgentDefinition {
     // TODO: Differentiate create vs. recreate vs. update - handling of SHA
     agent = new AgentDefinition(agentServer, user, agentDefinitionName, agentDescription, parameters,
         inputs, timers, conditions, scripts, scratchpad, memory, notifications, outputsList,
-        goalsList, triggerIntervalExpression, reportingIntervalExpression, timeCreated, timeModified, enabled);
+        goalsList, triggerIntervalExpression, reportingIntervalExpression, timeCreated, timeModified, enabled, update);
 
     // Return the created agent definition
     return agent;
@@ -553,31 +558,65 @@ public class AgentDefinition {
   }
   
   public void update(AgentServer agentServer, AgentDefinition updated) throws AgentServerException {
-    // TODO: Only update time if there are any actual changes
-    this.timeModified = this.timeCreated;
-    if (updated.description != null)
+    boolean modified = false;
+
+    if (updated.description != null && ! this.description.equals(updated.description)){
+      modified = true;
       this.description = updated.description;
-    if (updated.inputs != null)
+    }
+
+    if (updated.inputs != null){
       this.inputs = updated.inputs;
-    if (updated.timers != null)
+    }
+
+    if (updated.timers != null){
+      modified = true;
       this.timers = updated.timers;
-    if (updated.conditions != null)
+    }
+
+    if (updated.conditions != null){
+      modified = true;
       this.conditions = updated.conditions;
-    if (updated.scripts != null)
+    }
+
+    if (updated.scripts != null){
+      modified = true;
       this.scripts = updated.scripts;
-    if (updated.memory != null)
+    }
+
+    if (updated.memory != null){
+      modified = true;
       this.memory = updated.memory;
-    if (updated.outputs != null)
-      this.outputs = updated.outputs;
-    if (updated.goals != null)
-      this.goals = updated.goals;
-    if (updated.triggerIntervalExpression != null)
-      this.triggerIntervalExpression = updated.triggerIntervalExpression;
-    if (updated.reportingIntervalExpression != null)
-      this.reportingIntervalExpression = updated.reportingIntervalExpression;
+    }
     
-    // Persist the changes
-    agentServer.persistence.put(this);
+    if (updated.outputs != null){
+      modified = true;
+      this.outputs = updated.outputs;
+    }
+
+    if (updated.goals != null){
+      modified = true;
+      this.goals = updated.goals;
+    }
+    
+    if (updated.triggerIntervalExpression != null && ! this.triggerIntervalExpression.equals(updated.triggerIntervalExpression)){
+      modified = true;
+      this.triggerIntervalExpression = updated.triggerIntervalExpression;
+    }
+    
+    if (updated.reportingIntervalExpression != null && ! this.reportingIntervalExpression.equals(updated.reportingIntervalExpression)){
+      modified = true;
+      this.reportingIntervalExpression = updated.reportingIntervalExpression;
+    }
+
+    // Did anything actually change?
+    if (modified){
+      // Yes, record time of modification
+      this.timeModified = System.currentTimeMillis();
+
+      // Persist the changes
+      agentServer.persistence.put(this);
+    }
   }
   
   public String toString(){

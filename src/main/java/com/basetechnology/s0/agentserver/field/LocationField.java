@@ -43,7 +43,8 @@ public class LocationField extends Field {
     this.label = label;
   }
 
-  public LocationField(SymbolTable symbolTable, String name, String label, String description, String defaultValue, String minValue, String maxValue, int nominalWidth){
+  public LocationField(SymbolTable symbolTable, String name, String label, String description,
+      String defaultValue, String minValue, String maxValue, int nominalWidth, String compute){
     this.symbol = new Symbol(symbolTable, name, IntegerTypeNode.one);
     this.label = label;
     this.description = description;
@@ -51,10 +52,12 @@ public class LocationField extends Field {
     this.minValue = minValue;
     this.maxValue = maxValue;
     this.nominalWidth = nominalWidth;
+    this.compute = compute;
   }
 
   public Field clone(){
-    return new LocationField(symbol.symbolTable, symbol.name, label, description, defaultValue, minValue, maxValue, nominalWidth);
+    return new LocationField(symbol.symbolTable, symbol.name, label, description, defaultValue,
+        minValue, maxValue, nominalWidth, compute);
   }
 
   public Object getDefaultValue(){
@@ -80,7 +83,9 @@ public class LocationField extends Field {
     String minValue = fieldJson.has("min_value") ? fieldJson.optString("min_value") : null;
     String maxValue = fieldJson.has("max_value") ? fieldJson.optString("max_value") : null;
     int nominalWidth = fieldJson.has("nominal_width") ? fieldJson.optInt("nominal_width") : 0;
-    return new LocationField(symbolTable, name, label, description, defaultValue, minValue, maxValue, nominalWidth);
+    String compute = fieldJson.has("compute") ? fieldJson.optString("compute") : null;
+    return new LocationField(symbolTable, name, label, description, defaultValue, minValue, maxValue,
+        nominalWidth, compute);
   }
 
   public JSONObject toJson() throws JSONException {
@@ -100,6 +105,8 @@ public class LocationField extends Field {
       json.put("max_value", maxValue);
     if (nominalWidth != 0)
       json.put("nominal_width", nominalWidth);
+    if (compute != null)
+      json.put("compute", compute);
     return json;
   }
   
@@ -107,7 +114,7 @@ public class LocationField extends Field {
     return "[Location field symbol: " + symbol + " label: " + label +
         " description: '" + description + "'" + " default value: " + defaultValue +
         " min value: " + minValue + " max value: " + maxValue +
-        " nominal width: " + nominalWidth +
+        " nominal width: " + nominalWidth + " compute: (" + compute + ")" +
         "]";
   }
 }

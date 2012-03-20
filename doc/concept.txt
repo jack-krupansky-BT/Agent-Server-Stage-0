@@ -1,0 +1,45 @@
+TBD
+
+The term "agent" has been tossed around and abused in so many contexts in recent decades that it
+almost ceases to have a clear meaning. There are "system agents", "intelligent agents", "dumb agents",
+"bidding agents", "recommendation agents", etc., in addition to other, more traditional concepts that
+have agent-like qualities, such as email alerts and database triggers.
+
+See parts_of_an_agent.
+
+---
+
+What are agents
+- small programs optimzed for distributed operation in the web
+ - data-driven
+  - change-driven
+   - quiet and idle henever data is not changing
+
+- closest analogy
+ - database triggers
+  - But not limited to a local database
+ - alerts
+  - But can trigger off of any data change, not simply the data for a particular vendor's proprietary system
+
+- Define/declare the conditions upon which agents will take action
+ - Timers at the low level
+ - Data dependencis at the higher levels
+
+- Composition: Agents can depend on the output of other agents
+ - Dependency graph
+ - Agents sit back and wait; no need to manually and explicitly check for whether data changed
+
+- Very long-life execution
+ - "Fire and forget"
+ - Agents contunue on their "mission" without any direct human supervision
+  - Yes, the user can periodically check in to monitor progress
+
+Goals:
+ - Very safe
+ - Very reliable
+ - Very secure
+ - Very simple
+ - Very scalable
+ - Very distributable
+ - Focused on the web the way a traditional app focuses on the local/LAN file system or databases
+

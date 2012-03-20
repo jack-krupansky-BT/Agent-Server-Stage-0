@@ -64,13 +64,6 @@ public class AgentActivityTimer extends AgentActivity {
 
         // Record the script return value
         status.scriptReturnValue = returnValueNode;
-      } catch (TokenizerException e){
-        // TODO: Record an exception status for the timer misfire
-        gotException(e);
-        return false;
-      } catch (ParserException e){
-        gotException(e);
-        return false;
       } catch (RuntimeException e){
         gotException(e);
         return false;

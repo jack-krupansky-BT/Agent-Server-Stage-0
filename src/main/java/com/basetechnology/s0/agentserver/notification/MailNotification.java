@@ -15,9 +15,8 @@
  */
 
 package com.basetechnology.s0.agentserver.notification;
-import org.apache.log4j.Logger;
-import org.eclipse.jetty.util.log.Log;
 
+import org.apache.log4j.Logger;
 import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
@@ -67,33 +66,39 @@ public class MailNotification {
     AgentServer agentServer = agentInstance.agentServer;
     AgentServerConfig agentServerConfig = agentServer.config;
     
-    // TODO How to get server's URL - from app server?
-    String serverUrl = agentServer.agentAppServer.appServerApiBaseUrl;
-    String responseUrl = serverUrl + "/users/" + userId + "/agents/" + agentName +
-        "/notifications/" + notificationName +
-        "?password=" + user.password + "&response=";
-    String toEmail = user.email;
-    String toName = user.displayName;
-    String subject = notificationInstance.definition.description;
-    String message = "Notification of " + notificationName + " (" + notificationDescription + ")" +
-        (notificationInstance.details != null ? "\n\nDetails:\n\n" + notificationInstance.details.toString() : "") +
-        "\n\n";
-    String notificationType = notificationDefinition.type;
-    if (notificationType.equals("notify_only"))
-      message += "No response necessary";
-    else if (notificationType.equals("confirm"))
-      message += "Confirm by clicking on this link:\n\n\t" + responseUrl + "confirm";
-    else if (notificationType.equals("yes_no"))
-      message += "Accept by clicking on this link:\n\n\t" + responseUrl + "accept" +
-          "\n\nOr decline by checking on this link:\n\n\t" + responseUrl + "decline";
-    String messageTrailer1 = "\n\n----------\nFrom Agent Server - Message Id #";
-    String messageTrailer2 = "\n" +
+    // Check whether email is being suppressed
+    if (agentInstance.suppressEmail)
+      log.warn("Email notification suppressed due to suppressEmail flag for instance " + agentInstance.name);
+    else if (! agentServerConfig.getMailAccessEnabled())
+      log.warn("Email notification suppression due to mail_access_enabled = false for instance " + agentInstance.name);
+    else {
+      String serverUrl = agentServer.agentAppServer.appServerApiBaseUrl;
+      String responseUrl = serverUrl + "/users/" + userId + "/agents/" + agentName +
+          "/notifications/" + notificationName +
+          "?password=" + user.password + "&response=";
+      String toEmail = user.email;
+      String toName = user.displayName;
+      String subject = notificationInstance.definition.description;
+      String message = "Notification of " + notificationName + " (" + notificationDescription + ")" +
+          (notificationInstance.details != null ? "\n\nDetails:\n\n" + notificationInstance.details.toString() : "") +
+          "\n\n";
+      String notificationType = notificationDefinition.type;
+      if (notificationType.equals("notify_only"))
+        message += "No response necessary";
+      else if (notificationType.equals("confirm"))
+        message += "Confirm by clicking on this link:\n\n\t" + responseUrl + "confirm";
+      else if (notificationType.equals("yes_no"))
+        message += "Accept by clicking on this link:\n\n\t" + responseUrl + "accept" +
+            "\n\nOr decline by checking on this link:\n\n\t" + responseUrl + "decline";
+      String messageTrailer1 = "\n\n----------\nFrom Agent Server - Message Id #";
+      String messageTrailer2 = "\n" +
           "For support contact " + agentServerConfig.getContact() + "\n" +
           "Or visit " + agentServerConfig.getWebsite() + "\n";
 
-    int messageId = agentMail.sendMessage(user, toEmail, toName, subject, message,
-        messageTrailer1, messageTrailer2);
-    log.info("Sent message for notification " + notificationInstance.definition.name +
-        " with message Id " + messageId);
+      int messageId = agentMail.sendMessage(user, toEmail, toName, subject, message,
+          messageTrailer1, messageTrailer2);
+      log.info("Sent message for notification " + notificationInstance.definition.name +
+          " with message Id " + messageId);
+    }
   }
 }

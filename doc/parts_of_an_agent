@@ -1,0 +1,11 @@
+Every agent consists of a collection of parts:
+
+1. Parameters - needed to parameterize the behavior of each agent
+2. Inputs - other agents upon whose outputs this agent depends
+3. Timers - to control periodic behavior of the agent (its "heartbeat", so to speak)
+4. Conditions - Expressions which must be true for the agents to take action
+5. Scripts - Procedural code to respond to specific events
+6. Memory - Internal storage that perists for the life of the agent
+7. Scratchpad - Temporary storage that is not guaranteed to persist, such as if a server is rebooted
+8. Outputs - A collection of data fields to be made available to the environment and other agents
+9. Notifications - Conditions under which the user will be notified of events.

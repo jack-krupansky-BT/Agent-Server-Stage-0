@@ -19,7 +19,6 @@ package com.basetechnology.s0.agentserver.field;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolTable;
@@ -44,7 +43,7 @@ public class StringField extends Field {
     this.label = label;
   }
 
-  public StringField(SymbolTable symbolTable, String name, String label, String description, String defaultValue, int minLength, int maxLength, int nominalWidth, String validRegex){
+  public StringField(SymbolTable symbolTable, String name, String label, String description, String defaultValue, int minLength, int maxLength, int nominalWidth, String validRegex, String compute){
     this.symbol = new Symbol(symbolTable, name, StringTypeNode.one);
     this.label = label;
     this.description = description;
@@ -53,10 +52,11 @@ public class StringField extends Field {
     this.maxLength = maxLength;
     this.nominalWidth = nominalWidth;
     this.validRegex = validRegex;
+    this.compute = compute;
   }
 
   public Field clone(){
-    return new StringField(symbol.symbolTable, symbol.name, label, description, defaultValue, minLength, maxLength, nominalWidth, validRegex);
+    return new StringField(symbol.symbolTable, symbol.name, label, description, defaultValue, minLength, maxLength, nominalWidth, validRegex, compute);
   }
 
   public Object getDefaultValue(){
@@ -83,7 +83,8 @@ public class StringField extends Field {
     int maxLength = fieldJson.has("max_length") ? fieldJson.optInt("max_length") : 0;
     int nominalWidth = fieldJson.has("nominal_width") ? fieldJson.optInt("nominal_width") : 0;
     String validRegex = fieldJson.has("valid_regex") ? fieldJson.optString("valid_regex") : null;
-    return new StringField(symbolTable, name, label, description, defaultValue, minLength, maxLength, nominalWidth, validRegex);
+    String compute = fieldJson.has("compute") ? fieldJson.optString("compute") : null;
+    return new StringField(symbolTable, name, label, description, defaultValue, minLength, maxLength, nominalWidth, validRegex, compute);
   }
 
   public JSONObject toJson() throws JSONException {
@@ -105,6 +106,8 @@ public class StringField extends Field {
       json.put("nominal_length", nominalWidth);
     if (validRegex != null)
       json.put("valid_regex", validRegex);
+    if (compute != null)
+      json.put("compute", compute);
     return json;
   }
   
@@ -113,6 +116,7 @@ public class StringField extends Field {
         " description: '" + description + "'" + " default value: " + defaultValue +
         " min length: " + minLength + " max length: " + maxLength +
         " nominal width: " + nominalWidth + " regex: '" + validRegex + "'" +
+        " compute: (" + compute + ")" +
         "]";
   }
 }

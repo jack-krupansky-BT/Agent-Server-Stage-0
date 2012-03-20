@@ -1788,7 +1788,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("User approved", true, userJson.getBoolean("approved"));
     assertEquals("User id SHA", "68e7bea5149cf79298f3a6369bd9c459", userJson.getString("sha_id"));
     assertEquals("User password SHA", "87d435059558808d06f480d9c0aaf35c", userJson.getString("sha_password"));
-    assertJsonSourceEquals("User JSON", "{\"id\":\"Test.User\",\"password\":\"my-pwd\",\"password_hint\":\"\",\"full_name\":\"\",\"display_name\":\"\",\"nick_name\":\"\",\"bio\":\"\",\"interests\":\"\",\"incognito\":false,\"email\":\"\",\"comment\":\"\", \"approved\": true,\"sha_id\":\"68e7bea5149cf79298f3a6369bd9c459\",\"sha_password\":\"87d435059558808d06f480d9c0aaf35c\"}", userJson);
+    assertJsonSourceEquals("User JSON", "{\"id\":\"Test.User\",\"password\":\"my-pwd\",\"password_hint\":\"\",\"full_name\":\"\",\"display_name\":\"\",\"nick_name\":\"\",\"bio\":\"\",\"interests\":\"\",\"incognito\":false,\"email\":\"\",\"comment\":\"\", \"approved\": true,\"sha_id\":\"68e7bea5149cf79298f3a6369bd9c459\",\"sha_password\":\"87d435059558808d06f480d9c0aaf35c\", \"organization\":\"\"}", userJson);
 
     // Test addition of a user with an email address for user name/id 
     String expectedId2 = "mary.jones@att.com";
@@ -1872,7 +1872,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     log.info("Users: " + userJson + " Users array: " + usersArrayJson + " numUsers: " + numUsers);
 
     // Now test all the rest of the user parameters
-    url = baseUrl + "/users?id=jsmith&password=catylack&password_hint=What+is+my+pet%3F&full_name=John+W.+Smith,+Jr.&display_name=John+Smith&nick_name=John&bio=Hacker+and+Slacker&interests=hacking,+slacking&email=jsmith@example.com&incognito=yes&comment=just+a+test";
+    url = baseUrl + "/users?id=jsmith&password=catylack&password_hint=What+is+my+pet%3F&full_name=John+W.+Smith,+Jr.&display_name=John+Smith&nick_name=John&bio=Hacker+and+Slacker&interests=hacking,+slacking&email=jsmith@example.com&incognito=yes&comment=just+a+test&organization=MyCo,+Inc.";
     userJson = doPostJson(url, (JSONObject)null, 201);
     
     url = baseUrl + "/users";
@@ -1903,6 +1903,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("display_name field", "John Smith", userJson.getString("display_name"));
     assertTrue("nick_name field is not present", userJson.has("nick_name"));
     assertEquals("nick_name field", "John", userJson.getString("nick_name"));
+    assertTrue("organization field is not present", userJson.has("organization"));
+    assertEquals("organization field", "MyCo, Inc.", userJson.getString("organization"));
     assertTrue("bio field is not present", userJson.has("bio"));
     assertEquals("bio field", "Hacker and Slacker", userJson.getString("bio"));
     assertTrue("interests field is not present", userJson.has("interests"));
@@ -1919,8 +1921,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("sha id field", "39ce7e2a8573b41ce73b5ba41617f8f7", userJson.getString("sha_id"));
     assertTrue("sha password field is not present", userJson.has("sha_password"));
     assertEquals("sha password field", "48948d0a35f82adb133e57cc62a81e5a", userJson.getString("sha_password"));
-    assertJsonSourceEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"catylack\",\"password_hint\":\"What is my pet?\",\"full_name\":\"John W. Smith, Jr.\",\"display_name\":\"John Smith\",\"nick_name\":\"John\",\"bio\":\"Hacker and Slacker\",\"interests\":\"hacking, slacking\",\"incognito\":true,\"email\":\"jsmith@example.com\",\"comment\":\"just a test\",\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"48948d0a35f82adb133e57cc62a81e5a\", \"approved\": true}", userJson.toString());
-    assertEquals("Number of fields in user JSON", 14, userJson.length());
+    assertJsonSourceEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"catylack\",\"password_hint\":\"What is my pet?\",\"full_name\":\"John W. Smith, Jr.\",\"display_name\":\"John Smith\",\"nick_name\":\"John\",\"bio\":\"Hacker and Slacker\",\"interests\":\"hacking, slacking\",\"incognito\":true,\"email\":\"jsmith@example.com\",\"comment\":\"just a test\",\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"48948d0a35f82adb133e57cc62a81e5a\", \"approved\": true, \"organization\": \"MyCo, Inc.\"}", userJson.toString());
+    assertEquals("Number of fields in user JSON", 15, userJson.length());
 
     // Test no-op update - no field changes
     url = baseUrl + "/users/jsmith?password=catylack";
@@ -1940,6 +1942,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("display_name field", "John Smith", userJson.getString("display_name"));
     assertTrue("nick_name field is not present", userJson.has("nick_name"));
     assertEquals("nick_name field", "John", userJson.getString("nick_name"));
+    assertTrue("organization field is not present", userJson.has("organization"));
+    assertEquals("organization field", "MyCo, Inc.", userJson.getString("organization"));
     assertTrue("bio field is not present", userJson.has("bio"));
     assertEquals("bio field", "Hacker and Slacker", userJson.getString("bio"));
     assertTrue("interests field is not present", userJson.has("interests"));
@@ -1956,8 +1960,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("sha id field", "39ce7e2a8573b41ce73b5ba41617f8f7", userJson.getString("sha_id"));
     assertTrue("sha password field is not present", userJson.has("sha_password"));
     assertEquals("sha password field", "48948d0a35f82adb133e57cc62a81e5a", userJson.getString("sha_password"));
-    assertJsonSourceEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"catylack\",\"password_hint\":\"What is my pet?\",\"full_name\":\"John W. Smith, Jr.\",\"display_name\":\"John Smith\",\"nick_name\":\"John\",\"bio\":\"Hacker and Slacker\",\"interests\":\"hacking, slacking\",\"incognito\":true,\"email\":\"jsmith@example.com\",\"comment\":\"just a test\", \"approved\": true,\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"48948d0a35f82adb133e57cc62a81e5a\"}", userJson.toString());
-    assertEquals("Number of fields in user JSON", 14, userJson.length());
+    assertJsonSourceEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"catylack\",\"password_hint\":\"What is my pet?\",\"full_name\":\"John W. Smith, Jr.\",\"display_name\":\"John Smith\",\"nick_name\":\"John\",\"bio\":\"Hacker and Slacker\",\"interests\":\"hacking, slacking\",\"incognito\":true,\"email\":\"jsmith@example.com\",\"comment\":\"just a test\", \"approved\": true,\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"48948d0a35f82adb133e57cc62a81e5a\", \"organization\": \"MyCo, Inc.\"}", userJson.toString());
+    assertEquals("Number of fields in user JSON", 15, userJson.length());
 
     // Test change of password update - no other field changes
     url = baseUrl + "/users/jsmith?password=catylack";
@@ -1977,6 +1981,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("display_name field", "John Smith", userJson.getString("display_name"));
     assertTrue("nick_name field is not present", userJson.has("nick_name"));
     assertEquals("nick_name field", "John", userJson.getString("nick_name"));
+    assertTrue("organization field is not present", userJson.has("organization"));
+    assertEquals("organization field", "MyCo, Inc.", userJson.getString("organization"));
     assertTrue("bio field is not present", userJson.has("bio"));
     assertEquals("bio field", "Hacker and Slacker", userJson.getString("bio"));
     assertTrue("interests field is not present", userJson.has("interests"));
@@ -1993,8 +1999,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("sha id field", "39ce7e2a8573b41ce73b5ba41617f8f7", userJson.getString("sha_id"));
     assertTrue("sha password field is not present", userJson.has("sha_password"));
     assertEquals("sha password field", "80493da6699540fe8d5077bb2f2c5aad", userJson.getString("sha_password"));
-    assertJsonSourceEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"new-caty\",\"password_hint\":\"What is my pet?\",\"full_name\":\"John W. Smith, Jr.\",\"display_name\":\"John Smith\",\"nick_name\":\"John\",\"bio\":\"Hacker and Slacker\",\"interests\":\"hacking, slacking\",\"incognito\":true,\"email\":\"jsmith@example.com\",\"comment\":\"just a test\",\"approved\":true,\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"80493da6699540fe8d5077bb2f2c5aad\"}", userJson.toString());
-    assertEquals("Number of fields in user JSON", 14, userJson.length());
+    assertJsonSourceEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"new-caty\",\"password_hint\":\"What is my pet?\",\"full_name\":\"John W. Smith, Jr.\",\"display_name\":\"John Smith\",\"nick_name\":\"John\",\"bio\":\"Hacker and Slacker\",\"interests\":\"hacking, slacking\",\"incognito\":true,\"email\":\"jsmith@example.com\",\"comment\":\"just a test\",\"approved\":true,\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"80493da6699540fe8d5077bb2f2c5aad\", \"organization\": \"MyCo, Inc.\"}", userJson.toString());
+    assertEquals("Number of fields in user JSON", 15, userJson.length());
 
     // Test change of all fields update
     url = baseUrl + "/users/jsmith?password=new-caty";
@@ -2030,8 +2036,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("sha id field", "39ce7e2a8573b41ce73b5ba41617f8f7", userJson.getString("sha_id"));
     assertTrue("sha password field is not present", userJson.has("sha_password"));
     assertEquals("sha password field", "66ae87a1f83faf23ee6d66291b3d61b5", userJson.getString("sha_password"));
-    assertJsonSourceEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"new-catyxx\",\"password_hint\":\"What is my pet?xx\",\"full_name\":\"John W. Smith, Jr.xx\",\"display_name\":\"John Smithxx\",\"nick_name\":\"Johnxx\",\"bio\":\"Hacker and Slackerxx\",\"interests\":\"hacking, slackingxx\",\"incognito\":false,\"email\":\"jsmith@example.comxx\",\"comment\":\"just a testxx\",\"approved\":true,\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"66ae87a1f83faf23ee6d66291b3d61b5\"}", userJson.toString());
-    assertEquals("Number of fields in user JSON", 14, userJson.length());
+    assertJsonSourceEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"new-catyxx\",\"password_hint\":\"What is my pet?xx\",\"full_name\":\"John W. Smith, Jr.xx\",\"display_name\":\"John Smithxx\",\"nick_name\":\"Johnxx\",\"bio\":\"Hacker and Slackerxx\",\"interests\":\"hacking, slackingxx\",\"incognito\":false,\"email\":\"jsmith@example.comxx\",\"comment\":\"just a testxx\",\"approved\":true,\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"66ae87a1f83faf23ee6d66291b3d61b5\", \"organization\": \"MyCo, Inc.\"}", userJson.toString());
+    assertEquals("Number of fields in user JSON", 15, userJson.length());
 
     // Test update of only the comment and interests fields
     url = baseUrl + "/users/jsmith?password=new-catyxx";
@@ -2051,6 +2057,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("display_name field", "John Smithxx", userJson.getString("display_name"));
     assertTrue("nick_name field is not present", userJson.has("nick_name"));
     assertEquals("nick_name field", "Johnxx", userJson.getString("nick_name"));
+    assertTrue("organization field is not present", userJson.has("organization"));
+    assertEquals("organization field", "MyCo, Inc.", userJson.getString("organization"));
     assertTrue("bio field is not present", userJson.has("bio"));
     assertEquals("bio field", "Hacker and Slackerxx", userJson.getString("bio"));
     assertTrue("interests field is not present", userJson.has("interests"));
@@ -2067,8 +2075,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("sha id field", "39ce7e2a8573b41ce73b5ba41617f8f7", userJson.getString("sha_id"));
     assertTrue("sha password field is not present", userJson.has("sha_password"));
     assertEquals("sha password field", "66ae87a1f83faf23ee6d66291b3d61b5", userJson.getString("sha_password"));
-    assertEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"new-catyxx\",\"password_hint\":\"What is my pet?xx\",\"full_name\":\"John W. Smith, Jr.xx\",\"display_name\":\"John Smithxx\",\"nick_name\":\"Johnxx\",\"bio\":\"Hacker and Slackerxx\",\"interests\":\"work, leisure, play\",\"incognito\":false,\"email\":\"jsmith@example.comxx\",\"comment\":\"Just updated comment and interests\",\"approved\":true,\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"66ae87a1f83faf23ee6d66291b3d61b5\"}", userJson.toString());
-    assertEquals("Number of fields in user JSON", 14, userJson.length());
+    assertJsonSourceEquals("User JSON", "{\"id\":\"jsmith\",\"password\":\"new-catyxx\",\"password_hint\":\"What is my pet?xx\",\"full_name\":\"John W. Smith, Jr.xx\",\"display_name\":\"John Smithxx\",\"nick_name\":\"Johnxx\",\"bio\":\"Hacker and Slackerxx\",\"interests\":\"work, leisure, play\",\"incognito\":false,\"email\":\"jsmith@example.comxx\",\"comment\":\"Just updated comment and interests\",\"approved\":true,\"sha_id\":\"39ce7e2a8573b41ce73b5ba41617f8f7\",\"sha_password\":\"66ae87a1f83faf23ee6d66291b3d61b5\", \"organization\": \"MyCo, Inc.\"}", userJson.toString());
+    assertEquals("Number of fields in user JSON", 15, userJson.length());
 
     // Test if users reflected in /status
     url = baseUrl + "/status";
@@ -2114,7 +2122,10 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Setup common info
     String baseUrl = AgentAppServer.appServerApiBaseUrl;
 
-    int numConfigKeys = 29;
+    // Determine if mail access is enabled
+    boolean mailAccessEnabled =server.agentServer.config.getMailAccessEnabled();
+    
+    int numConfigKeys = 33;
     
     // Test reading of config settings
     String url = baseUrl + "/config";
@@ -2150,7 +2161,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertTrue("implicitly_deny_web_access is not present", configJson.has("implicitly_deny_web_access"));
     assertEquals("implicitly_deny_web_access", "false", configJson.getString("implicitly_deny_web_access"));
     assertTrue("mail_access_enabled not present", configJson.has("mail_access_enabled"));
-    assertEquals("mail_access_enabled", Boolean.toString(MailAccessManager.DEFAULT_MAIL_ACCESS_ENABLED), configJson.getString("mail_access_enabled"));
+    assertEquals("mail_access_enabled", Boolean.toString(server.agentServer.config.getMailAccessEnabled()), configJson.getString("mail_access_enabled"));
     assertTrue("minimum_mail_access_interval is not present", configJson.has("minimum_mail_access_interval"));
     assertEquals("minimum_mail_access_interval", Long.toString(MailAccessManager.DEFAULT_MINIMUM_MAIL_ACCESS_INTERVAL), configJson.getString("minimum_mail_access_interval"));
     assertTrue("minimum_host_mail_access_interval is not present", configJson.has("minimum_host_mail_access_interval"));
@@ -2169,6 +2180,14 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("minimum_trigger_interval", AgentDefinition.DEFAULT_MINIMUM_TRIGGER_INTERVAL_EXPRESSION, configJson.getString("minimum_trigger_interval"));
     assertTrue("minimum_reporting_interval is not present", configJson.has("minimum_reporting_interval"));
     assertEquals("minimum_reporting_interval", AgentDefinition.DEFAULT_MINIMUM_REPORTING_INTERVAL_EXPRESSION, configJson.getString("minimum_reporting_interval"));
+    assertTrue("default_limit_instance_states_stored is not present", configJson.has("default_limit_instance_states_stored"));
+    assertEquals("default_limit_instance_states_stored", AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_STORED, configJson.getInt("default_limit_instance_states_stored"));
+    assertTrue("maximum_limit_instance_states_stored is not present", configJson.has("maximum_limit_instance_states_stored"));
+    assertEquals("maximum_limit_instance_states_stored", AgentInstance.DEFAULT_MAXIMUM_LIMIT_INSTANCE_STATES_STORED, configJson.getInt("maximum_limit_instance_states_stored"));
+    assertTrue("default_limit_instance_states_returned is not present", configJson.has("default_limit_instance_states_returned"));
+    assertEquals("default_limit_instance_states_returned", AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_RETURNED, configJson.getInt("default_limit_instance_states_returned"));
+    assertTrue("maximum_limit_instance_states_returned is not present", configJson.has("maximum_limit_instance_states_returned"));
+    assertEquals("maximum_limit_instance_states_returned", AgentInstance.DEFAULT_MAXIMUM_LIMIT_INSTANCE_STATES_RETURNED, configJson.getInt("maximum_limit_instance_states_returned"));
     String initialConfigJsonExpected =
         "{\"name\":\"MyTestAgentServer-0001\"," +
             "\"software\":\"s0\",\"version\":\"0.1.0\"," +
@@ -2176,6 +2195,10 @@ public class AgentAppServerTest extends AgentServerTestBase {
             "\"contact\":\"agent-server-1-admin@basetechnology.com\"," +
             "\"default_trigger_interval\":\"50\"," +
             "\"minimum_trigger_interval\":\"5\"," +
+            "\"default_limit_instance_states_stored\":\"25\"," +
+            "\"maximum_limit_instance_states_stored\":\"1000\"," +
+            "\"default_limit_instance_states_returned\":\"10\"," +
+            "\"maximum_limit_instance_states_returned\":\"1000\"," +
             "\"max_users\":\"100\"," +
             "\"max_instances\":\"1000\"," +
             "\"website\":\"http://basetechnology.com/agentserver\"," +
@@ -2192,7 +2215,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
             "\"execution_limit_level_2\": \"100\"," +
             "\"execution_limit_level_3\": \"1000\"," +
             "\"execution_limit_level_4\": \"10000\"," +
-            "\"mail_access_enabled\": \"true\"," +
+            "\"mail_access_enabled\": \"" + mailAccessEnabled + "\"," +
             "\"minimum_mail_access_interval\": \"2000\"," +
             "\"minimum_host_mail_access_interval\": \"2000\"," +
             "\"minimum_address_mail_access_interval\": \"10000\"," +
@@ -2256,6 +2279,10 @@ public class AgentAppServerTest extends AgentServerTestBase {
             "\"contact\":\"agent-server-1-admin@basetechnology.com\"," +
             "\"default_trigger_interval\":\"50\"," +
             "\"minimum_trigger_interval\":\"5\"," +
+            "\"default_limit_instance_states_stored\":\"25\"," +
+            "\"maximum_limit_instance_states_stored\":\"1000\"," +
+            "\"default_limit_instance_states_returned\":\"10\"," +
+            "\"maximum_limit_instance_states_returned\":\"1000\"," +
             "\"max_users\":\"125\"," +
             "\"max_instances\":\"1000\"," +
             "\"website\":\"http://basetechnology.com/agentserver\"," +
@@ -2272,7 +2299,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
             "\"execution_limit_level_2\": \"100\"," +
             "\"execution_limit_level_3\": \"1000\"," +
             "\"execution_limit_level_4\": \"10000\"," +
-            "\"mail_access_enabled\": \"true\"," +
+            "\"mail_access_enabled\": \"" + mailAccessEnabled + "\"," +
             "\"minimum_mail_access_interval\": \"2000\"," +
             "\"minimum_host_mail_access_interval\": \"2000\"," +
             "\"minimum_address_mail_access_interval\": \"10000\"," +
@@ -2281,7 +2308,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertJsonSourceEquals("config JSON", someUpdatedConfigJsonExpected, configJson.toString());
     
     // Update all values
-    configJson = doPutJson(url + "?password=abracadabra", "{\"name\":\"ZZ-MyTestAgentServer-0001\",\"software\":\"zz-s0\",\"version\":\"zz-0.1.0\",\"description\":\"zz-Test server for Agent Server - Stage 0\",\"contact\":\"zz-jack@basetechnology.com\",\"default_trigger_interval\":\"1200\",\"max_users\":\"1100\",\"max_instances\":\"11000\",\"website\":\"zzhttp://basetechnology.com/agentserver\",\"default_web_page_refresh_interval\":\"160000\",\"minimum_web_page_refresh_interval\":\"100000\",\"minimum_web_site_access_interval\":\"90000\",\"minimum_web_access_interval\":\"75\",\"user_agent_name\":\"zz-AgentServer\",\"default_reporting_interval\":\"150\",\"implicitly_deny_web_access\":\"false\", \"execution_limit_default_level\": \"2\", \"execution_limit_level_1\": \"11\", \"execution_limit_level_2\": \"220\", \"execution_limit_level_3\": \"3300\", \"execution_limit_level_4\": \"44000\", \"mail_access_enabled\": \"false\", \"minimum_mail_access_interval\": \"3300\", \"minimum_host_mail_access_interval\": \"4400\", \"minimum_address_mail_access_interval\": \"44000\", \"admin_approve_user_create\": \"true\", \"mail_confirm_user_create\": \"true\", \"minimum_trigger_interval\": \"55\", \"minimum_reporting_interval\": \"56\"}", 204);
+    configJson = doPutJson(url + "?password=abracadabra", "{\"name\":\"ZZ-MyTestAgentServer-0001\",\"software\":\"zz-s0\",\"version\":\"zz-0.1.0\",\"description\":\"zz-Test server for Agent Server - Stage 0\",\"contact\":\"zz-jack@basetechnology.com\",\"default_trigger_interval\":\"1200\",\"max_users\":\"1100\",\"max_instances\":\"11000\",\"website\":\"zzhttp://basetechnology.com/agentserver\",\"default_web_page_refresh_interval\":\"160000\",\"minimum_web_page_refresh_interval\":\"100000\",\"minimum_web_site_access_interval\":\"90000\",\"minimum_web_access_interval\":\"75\",\"user_agent_name\":\"zz-AgentServer\",\"default_reporting_interval\":\"150\",\"implicitly_deny_web_access\":\"false\", \"execution_limit_default_level\": \"2\", \"execution_limit_level_1\": \"11\", \"execution_limit_level_2\": \"220\", \"execution_limit_level_3\": \"3300\", \"execution_limit_level_4\": \"44000\", \"mail_access_enabled\": \"false\", \"minimum_mail_access_interval\": \"3300\", \"minimum_host_mail_access_interval\": \"4400\", \"minimum_address_mail_access_interval\": \"44000\", \"admin_approve_user_create\": \"true\", \"mail_confirm_user_create\": \"true\", \"minimum_trigger_interval\": \"55\", \"minimum_reporting_interval\": \"56\", \"default_limit_instance_states_stored\":\"257\",\"maximum_limit_instance_states_stored\":\"10007\",\"default_limit_instance_states_returned\":\"107\",\"maximum_limit_instance_states_returned\":\"10007\"}", 204);
     assertEquals("JSON returned", null, configJson);
     configJson = doGetJson(url, 200);
     assertTrue("Config JSON not returned", configJson != null);
@@ -2294,6 +2321,10 @@ public class AgentAppServerTest extends AgentServerTestBase {
         "\"contact\":\"zz-jack@basetechnology.com\"," +
         "\"default_trigger_interval\":\"1200\"," +
         "\"minimum_trigger_interval\":\"55\"," +
+        "\"default_limit_instance_states_stored\":\"257\"," +
+        "\"maximum_limit_instance_states_stored\":\"10007\"," +
+        "\"default_limit_instance_states_returned\":\"107\"," +
+        "\"maximum_limit_instance_states_returned\":\"10007\"," +
         "\"max_users\":\"1100\"," +
         "\"max_instances\":\"11000\"," +
         "\"website\":\"zzhttp://basetechnology.com/agentserver\"," +
@@ -2562,6 +2593,46 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertTrue("Edit time too far in the past: " + (now - modifiedTime), now - modifiedTime < 5000);
     String modified = DateUtils.toRfcString(modifiedTime);
     assertEquals("Agent definition status", "{\"created\":\"" + created + "\",\"modified\":\"" + modified + "\",\"name\":\"test-definition\",\"num_active_instances\":0,\"user_id\":\"test-user\"}", statusJson.toString());
+
+    // Update an agent definition
+    url = baseUrl + "/users/test-user/agent_definitions?password=test-pwd";
+    agDefJson = doPostJson(url, "{\"name\": \"test-definition-3\", \"outputs\": [{\"name\": \"output1\", \"type\": \"string\", \"default_value\": \"abc\"}]}", 204);
+    assertTrue("Unexpected response entity", agDefJson == null);
+    url = baseUrl + "/users/test-user/agent_definitions/test-definition-3?password=test-pwd";
+    agDefJson = doGetJson(url, 200);
+    AgentDefinition agDef = server.agentServer.agentDefinitions.get("test-user").get("test-definition-3");
+    createdTime = agDef.timeCreated;
+    now = System.currentTimeMillis();
+    assertTrue("Creation time is not set - zero", createdTime != 0);
+    assertTrue("Creation time is in the future", createdTime <= now);
+    assertTrue("Creation time too far in the past: " + (now - createdTime), now - createdTime < 5000);
+    created = DateUtils.toRfcString(createdTime);
+    modifiedTime = agDef.timeModified;
+    assertTrue("Modification time is not set - zero", modifiedTime != 0);
+    assertTrue("Modification time is in the future", modifiedTime <= now);
+    assertTrue("Modification time too far in the past: " + (now - modifiedTime), now - modifiedTime < 5000);
+    modified = DateUtils.toRfcString(modifiedTime);
+    assertJsonSourceEquals("Agent definition", "{\"user\": \"test-user\", \"name\": \"test-definition-3\", \"description\": \"\",\"created\": \"" + created + "\", \"modified\": \"" + modified + "\", \"parameters\": [], \"inputs\": [], \"timers\": [], \"conditions\": [], \"notifications\": [], \"scripts\": [], \"scratchpad\": [], \"memory\": [], \"outputs\": [{\"default_value\": \"abc\", \"name\": \"output1\", \"type\": \"string\"}], \"goals\": [], \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"enabled\": true}", agDefJson);
+
+    // Now update the description
+    agDefJson = doPutJson(url, "{\"description\": \"Our test definition\"}", 204);
+    assertTrue("Unexpected response entity", agDefJson == null);
+
+    url = baseUrl + "/users/test-user/agent_definitions/test-definition-3?password=test-pwd";
+    agDefJson = doGetJson(url, 200);
+    agDef = server.agentServer.agentDefinitions.get("test-user").get("test-definition-3");
+    createdTime = agDef.timeCreated;
+    now = System.currentTimeMillis();
+    assertTrue("Creation time is not set - zero", createdTime != 0);
+    assertTrue("Creation time is in the future", createdTime <= now);
+    assertTrue("Creation time too far in the past: " + (now - createdTime), now - createdTime < 5000);
+    created = DateUtils.toRfcString(createdTime);
+    modifiedTime = agDef.timeModified;
+    assertTrue("Modification time is not set - zero", modifiedTime != 0);
+    assertTrue("Modification time is in the future", modifiedTime <= now);
+    assertTrue("Modification time too far in the past: " + (now - modifiedTime), now - modifiedTime < 5000);
+    modified = DateUtils.toRfcString(modifiedTime);
+    assertJsonSourceEquals("Agent definition", "{\"user\": \"test-user\", \"name\": \"test-definition-3\", \"description\": \"Our test definition\",\"created\": \"" + created + "\", \"modified\": \"" + modified + "\", \"parameters\": [], \"inputs\": [], \"timers\": [], \"conditions\": [], \"notifications\": [], \"scripts\": [], \"scratchpad\": [], \"memory\": [], \"outputs\": [{\"default_value\": \"abc\", \"name\": \"output1\", \"type\": \"string\"}], \"goals\": [], \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"enabled\": true}", agDefJson);
 
   }
   
@@ -2859,107 +2930,168 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check detail for all instances
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/test-instance-1?password=test-pwd-1", 200);
     assertTrue("Response entity is missing", statusJson != null);
-    assertEquals("Count of keys for agent instance status", 10, statusJson.length());
+    int countExpectedInstanceKeys = 16;
+    assertEquals("Count of keys for agent instance status", countExpectedInstanceKeys, statusJson.length());
     assertTrue("user key is missing", statusJson.has("user"));
     assertTrue("name key is missing", statusJson.has("name"));
     assertTrue("instantiated key is missing", statusJson.has("instantiated"));
     assertTrue("updated key is missing", statusJson.has("updated"));
     assertTrue("definition key is missing", statusJson.has("definition"));
     assertTrue("description key is missing", statusJson.has("description"));
+    assertTrue("trigger_interval key is missing", statusJson.has("trigger_interval"));
+    assertTrue("reporting_interval key is missing", statusJson.has("reporting_interval"));
+    assertTrue("public_output key is missing", statusJson.has("public_output"));
+    assertTrue("limit_instance_states_stored key is missing", statusJson.has("limit_instance_states_stored"));
+    assertTrue("inputs_changed key is missing", statusJson.has("inputs_changed"));
+    assertTrue("triggered key is missing", statusJson.has("triggered"));
+    assertTrue("outputs_changed key is missing", statusJson.has("outputs_changed"));
+    assertTrue("status key is missing", statusJson.has("status"));
+    assertTrue("enabled key is missing", statusJson.has("enabled"));
+    assertTrue("parameter_values key is missing", statusJson.has("parameter_values"));
+
     assertEquals("user", "test-user-1", statusJson.getString("user"));
     assertEquals("name", "test-instance-1", statusJson.getString("name"));
-    long createdTime = server.agentServer.agentInstances.get("test-user-1").get("test-instance-1").timeInstantiated;
+    AgentInstance agInst = server.agentServer.agentInstances.get("test-user-1").get("test-instance-1");
+    long createdTime = agInst.timeInstantiated;
     String created = DateUtils.toRfcString(createdTime);
     assertEquals("instantiated", created, statusJson.getString("instantiated"));
-    long modifiedTime = server.agentServer.agentInstances.get("test-user-1").get("test-instance-1").timeUpdated;
+    long modifiedTime = agInst.timeUpdated;
     String modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
     assertEquals("updated", modified, statusJson.getString("updated"));
     assertEquals("definition", "test-definition-1", statusJson.getString("definition"));
     assertEquals("description", "Test instance #1", statusJson.getString("description"));
-    assertEquals("Agent instance JSON #1", "{\"user\":\"test-user-1\",\"name\":\"test-instance-1\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #1\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":123}}", statusJson.toString());
+    int outputHistorySize = agInst.outputHistory.size();
+    long outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    String outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #1", "{\"user\":\"test-user-1\",\"name\":\"test-instance-1\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #1\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":123}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/test-instance-2?password=test-pwd-1", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-1").get("test-instance-2").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-1").get("test-instance-2");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-1").get("test-instance-2").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #2", "{\"user\":\"test-user-1\",\"name\":\"test-instance-2\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #2\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":12399}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #2", "{\"user\":\"test-user-1\",\"name\":\"test-instance-2\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #2\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":12399}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/test-instance-3?password=test-pwd-1", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-1").get("test-instance-3").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-1").get("test-instance-3");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-1").get("test-instance-3").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #3", "{\"user\":\"test-user-1\",\"name\":\"test-instance-3\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #3\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":\"abc\"}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #3", "{\"user\":\"test-user-1\",\"name\":\"test-instance-3\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #3\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":\"abc\"}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/test-instance-4?password=test-pwd-1", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-1").get("test-instance-4").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-1").get("test-instance-4");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-1").get("test-instance-4").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #4", "{\"user\":\"test-user-1\",\"name\":\"test-instance-4\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #4\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":\"abc99\"}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #4", "{\"user\":\"test-user-1\",\"name\":\"test-instance-4\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #4\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":\"abc99\"}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-2/agents/test-instance-5?password=test-pwd-2", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-2").get("test-instance-5").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-2").get("test-instance-5");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-2").get("test-instance-5").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #5", "{\"user\":\"test-user-2\",\"name\":\"test-instance-5\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #5\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":456}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #5", "{\"user\":\"test-user-2\",\"name\":\"test-instance-5\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #5\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":456}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-2/agents/test-instance-6?password=test-pwd-2", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-2").get("test-instance-6").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-2").get("test-instance-6");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-2").get("test-instance-6").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #6", "{\"user\":\"test-user-2\",\"name\":\"test-instance-6\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #6\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":45699}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #6", "{\"user\":\"test-user-2\",\"name\":\"test-instance-6\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #6\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":45699}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-2/agents/test-instance-7?password=test-pwd-2", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-2").get("test-instance-7").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-2").get("test-instance-7");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-2").get("test-instance-7").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #7", "{\"user\":\"test-user-2\",\"name\":\"test-instance-7\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #7\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":\"def\"}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #7", "{\"user\":\"test-user-2\",\"name\":\"test-instance-7\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #7\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":\"def\"}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-2/agents/test-instance-8?password=test-pwd-2", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-2").get("test-instance-8").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-2").get("test-instance-8");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-2").get("test-instance-8").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #8", "{\"user\":\"test-user-2\",\"name\":\"test-instance-8\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #8\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":\"def99\"}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #8", "{\"user\":\"test-user-2\",\"name\":\"test-instance-8\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #8\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":\"def99\"}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-9?password=test-pwd-3", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-9").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-3").get("test-instance-9");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-9").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #9", "{\"user\":\"test-user-3\",\"name\":\"test-instance-9\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #9\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":789}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #9", "{\"user\":\"test-user-3\",\"name\":\"test-instance-9\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #9\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":789}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-10?password=test-pwd-3", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-10").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-3").get("test-instance-10");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-10").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #10", "{\"user\":\"test-user-3\",\"name\":\"test-instance-10\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #10\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":78999}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #10", "{\"user\":\"test-user-3\",\"name\":\"test-instance-10\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #10\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":78999}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-11?password=test-pwd-3", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-11").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-3").get("test-instance-11");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-11").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #11", "{\"user\":\"test-user-3\",\"name\":\"test-instance-11\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #11\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":\"ghi\"}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #11", "{\"user\":\"test-user-3\",\"name\":\"test-instance-11\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #11\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":\"ghi\"}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-12?password=test-pwd-3", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-12").timeInstantiated;
+    agInst = server.agentServer.agentInstances.get("test-user-3").get("test-instance-12");
+    createdTime = agInst.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-12").timeUpdated;
+    modifiedTime = agInst.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
-    assertEquals("Agent instance JSON #12", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":\"ghi99\"}}", statusJson.toString());
+    outputHistorySize = agInst.outputHistory.size();
+    outputsChangedTime = agInst.outputHistory.size() > 0 ? agInst.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON #12", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"public_output\":false,\"limit_instance_states_stored\":25,\"enabled\":true,\"parameter_values\":{\"p1\":\"ghi99\"}, \"status\": \"active\", \"inputs_changed\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"triggered\": \"\"}", statusJson.toString());
 
     // Check status of all instances
     url = baseUrl + "/users/test-user-1/agents/test-instance-1/status?password=test-pwd-1";
     statusJson = doGetJson(url, 200);
     assertTrue("Response entity is missing", statusJson != null);
-    assertEquals("Count of keys for agent instance status", 10, statusJson.length());
+    int countExpectedInstanceStatusKeys = 16;
+    assertEquals("Count of keys for agent instance status", countExpectedInstanceStatusKeys, statusJson.length());
     assertTrue("user key is missing", statusJson.has("user"));
     assertTrue("name key is missing", statusJson.has("name"));
     assertTrue("instantiated key is missing", statusJson.has("instantiated"));
@@ -2970,6 +3102,13 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertTrue("updated key is missing", statusJson.has("updated"));
     assertTrue("definition key is missing", statusJson.has("definition"));
     assertTrue("description key is missing", statusJson.has("description"));
+    assertTrue("trigger_interval key is missing", statusJson.has("trigger_interval"));
+    assertTrue("reporting_interval key is missing", statusJson.has("reporting_interval"));
+    assertTrue("public_output key is missing", statusJson.has("public_output"));
+    assertTrue("limit_instance_states_stored key is missing", statusJson.has("limit_instance_states_stored"));
+    assertTrue("enabled key is missing", statusJson.has("enabled"));
+    assertTrue("parameter_values key is missing", statusJson.has("parameter_values"));
+
     assertEquals("user", "test-user-1", statusJson.getString("user"));
     assertEquals("name", "test-instance-1", statusJson.getString("name"));
     assertEquals("status", "active", statusJson.getString("status"));
@@ -2988,13 +3127,13 @@ public class AgentAppServerTest extends AgentServerTestBase {
     long triggeredTime = instance.lastTriggered;
     String triggered = triggeredTime > 0 ? DateUtils.toRfcString(triggeredTime) : "";
     assertEquals("triggered", triggered, statusJson.getString("triggered"));
-    int outputHistorySize = instance.outputHistory.size();
-    long outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
-    String outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    outputHistorySize = instance.outputHistory.size();
+    outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
     assertEquals("outputs_changed", outputsChanged, statusJson.getString("outputs_changed"));
     assertEquals("definition", "test-definition-1", statusJson.getString("definition"));
     assertEquals("description", "Test instance #1", statusJson.getString("description"));
-    assertJsonSourceEquals("Agent instance JSON #1", "{\"user\":\"test-user-1\",\"name\":\"test-instance-1\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #1\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #1", "{\"user\":\"test-user-1\",\"name\":\"test-instance-1\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #1\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": 123}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/test-instance-2/status?password=test-pwd-1", 200);
     instance = server.agentServer.agentInstances.get("test-user-1").get("test-instance-2");
@@ -3005,7 +3144,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #2", "{\"user\":\"test-user-1\",\"name\":\"test-instance-2\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #2\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #2", "{\"user\":\"test-user-1\",\"name\":\"test-instance-2\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #2\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": 12399}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/test-instance-3/status?password=test-pwd-1", 200);
     instance = server.agentServer.agentInstances.get("test-user-1").get("test-instance-3");
@@ -3016,7 +3155,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #3", "{\"user\":\"test-user-1\",\"name\":\"test-instance-3\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #3\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #3", "{\"user\":\"test-user-1\",\"name\":\"test-instance-3\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #3\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"abc\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/test-instance-4/status?password=test-pwd-1", 200);
     instance = server.agentServer.agentInstances.get("test-user-1").get("test-instance-4");
@@ -3027,7 +3166,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #4", "{\"user\":\"test-user-1\",\"name\":\"test-instance-4\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #4\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #4", "{\"user\":\"test-user-1\",\"name\":\"test-instance-4\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #4\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"abc99\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-2/agents/test-instance-5/status?password=test-pwd-2", 200);
     instance = server.agentServer.agentInstances.get("test-user-2").get("test-instance-5");
@@ -3038,7 +3177,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #5", "{\"user\":\"test-user-2\",\"name\":\"test-instance-5\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #5\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #5", "{\"user\":\"test-user-2\",\"name\":\"test-instance-5\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #5\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": 456}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-2/agents/test-instance-6/status?password=test-pwd-2", 200);
     instance = server.agentServer.agentInstances.get("test-user-2").get("test-instance-6");
@@ -3049,7 +3188,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #6", "{\"user\":\"test-user-2\",\"name\":\"test-instance-6\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #6\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #6", "{\"user\":\"test-user-2\",\"name\":\"test-instance-6\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #6\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": 45699}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-2/agents/test-instance-7/status?password=test-pwd-2", 200);
     instance = server.agentServer.agentInstances.get("test-user-2").get("test-instance-7");
@@ -3060,7 +3199,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #7", "{\"user\":\"test-user-2\",\"name\":\"test-instance-7\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #7\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #7", "{\"user\":\"test-user-2\",\"name\":\"test-instance-7\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #7\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"def\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-2/agents/test-instance-8/status?password=test-pwd-2", 200);
     instance = server.agentServer.agentInstances.get("test-user-2").get("test-instance-8");
@@ -3071,7 +3210,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #8", "{\"user\":\"test-user-2\",\"name\":\"test-instance-8\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #8\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #8", "{\"user\":\"test-user-2\",\"name\":\"test-instance-8\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #8\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"def99\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-9/status?password=test-pwd-3", 200);
     instance = server.agentServer.agentInstances.get("test-user-3").get("test-instance-9");
@@ -3082,7 +3221,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #9", "{\"user\":\"test-user-3\",\"name\":\"test-instance-9\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #9\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #9", "{\"user\":\"test-user-3\",\"name\":\"test-instance-9\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #9\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": 789}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-10/status?password=test-pwd-3", 200);
     instance = server.agentServer.agentInstances.get("test-user-3").get("test-instance-10");
@@ -3093,7 +3232,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #10", "{\"user\":\"test-user-3\",\"name\":\"test-instance-10\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #10\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #10", "{\"user\":\"test-user-3\",\"name\":\"test-instance-10\",\"definition\":\"test-definition-1\",\"description\":\"Test instance #10\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": 78999}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-11/status?password=test-pwd-3", 200);
     instance = server.agentServer.agentInstances.get("test-user-3").get("test-instance-11");
@@ -3104,7 +3243,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #11", "{\"user\":\"test-user-3\",\"name\":\"test-instance-11\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #11\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #11", "{\"user\":\"test-user-3\",\"name\":\"test-instance-11\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #11\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"ghi\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-12/status?password=test-pwd-3", 200);
     instance = server.agentServer.agentInstances.get("test-user-3").get("test-instance-12");
@@ -3115,7 +3254,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputHistorySize = instance.outputHistory.size();
     outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
     outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
-    assertJsonSourceEquals("Agent instance JSON #12", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON #12", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"ghi99\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     // Test update of instance info
     // First an empty change that changes nothing - should not change modified time stamp
@@ -3124,26 +3263,33 @@ public class AgentAppServerTest extends AgentServerTestBase {
     long prevCreatedTime = createdTime;
     Thread.sleep(1);
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-12?password=test-pwd-3", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-12").timeInstantiated;
+    instance = server.agentServer.agentInstances.get("test-user-3").get("test-instance-12");
+    createdTime = instance.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-12").timeUpdated;
+    modifiedTime = instance.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
     assertEquals("Creation time", prevCreatedTime, createdTime);
     assertEquals("Modified time", prevModifiedTime, modifiedTime);
-    assertEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":\"ghi99\"}}", statusJson.toString());
+    outputHistorySize = instance.outputHistory.size();
+    outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\",\"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"ghi99\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
     statusJson = doPutJson(baseUrl + "/users/test-user-3/agents/test-instance-12?password=test-pwd-3",
         "{}", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-12/status?password=test-pwd-3", 200);
-    createdTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-12").timeInstantiated;
+    createdTime = instance.timeInstantiated;
     created = DateUtils.toRfcString(createdTime);
-    modifiedTime = server.agentServer.agentInstances.get("test-user-3").get("test-instance-12").timeUpdated;
+    modifiedTime = instance.timeUpdated;
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
     assertEquals("Creation time", prevCreatedTime, createdTime);
     assertTrue("Modified time is unchanged", prevModifiedTime != modifiedTime);
-    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    outputHistorySize = instance.outputHistory.size();
+    outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"ghi99\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-12?password=test-pwd-3", 200);
-    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":\"ghi99\"}}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Test instance #12\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"ghi99\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     prevModifiedTime = modifiedTime;
     prevCreatedTime = createdTime;
@@ -3158,9 +3304,12 @@ public class AgentAppServerTest extends AgentServerTestBase {
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
     assertEquals("Creation time", prevCreatedTime, createdTime);
     assertTrue("Modified time is unchanged", prevModifiedTime != modifiedTime);
-    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Revised description\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\"}", statusJson.toString());
+    outputHistorySize = instance.outputHistory.size();
+    outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Revised description\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"ghi99\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
     statusJson = doGetJson(baseUrl + "/users/test-user-3/agents/test-instance-12?password=test-pwd-3", 200);
-    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Revised description\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"200\",\"enabled\":true,\"parameter_values\":{\"p1\":\"ghi99\"}}", statusJson.toString());
+    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Revised description\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"ghi99\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"200\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     Thread.sleep(1);
     statusJson = doPutJson(baseUrl + "/users/test-user-3/agents/test-instance-12?password=test-pwd-3",
@@ -3173,14 +3322,17 @@ public class AgentAppServerTest extends AgentServerTestBase {
     modified = modifiedTime > 0 ? DateUtils.toRfcString(modifiedTime) : "";
     assertEquals("Creation time", prevCreatedTime, createdTime);
     assertTrue("Modified time is unchanged", prevModifiedTime != modifiedTime);
-    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Revised description\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\",\"trigger_interval\":\"50\",\"reporting_interval\":\"350\",\"enabled\":true,\"parameter_values\":{\"p1\":\"ghi99\"}}", statusJson.toString());
+    outputHistorySize = instance.outputHistory.size();
+    outputsChangedTime = outputHistorySize > 0 ? instance.outputHistory.get(outputHistorySize - 1).time : 0;
+    outputsChanged = outputsChangedTime > 0 ? DateUtils.toRfcString(outputsChangedTime) : "";
+    assertJsonSourceEquals("Agent instance JSON", "{\"user\":\"test-user-3\",\"name\":\"test-instance-12\",\"definition\":\"test-definition-2\",\"description\":\"Revised description\",\"instantiated\":\"" + created + "\",\"updated\":\"" + modified + "\", \"status\": \"active\", \"inputs_changed\": \"\", \"triggered\": \"\", \"outputs_changed\": \"" + outputsChanged + "\", \"public_output\": false, \"enabled\": true, \"parameter_values\": {\"p1\": \"ghi99\"}, \"trigger_interval\": \"50\", \"reporting_interval\": \"350\", \"limit_instance_states_stored\": 25}", statusJson.toString());
 
     // Test remove of instance - one from each user
     statusJson = doDeleteJson(baseUrl + "/users/test-user-1/agents/test-instance-2?password=test-pwd-1", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
-    statusJson = doDeleteJson(baseUrl + "/users/test-user-2/agents/test-instance-6?password=test-pwd-1", 204);
+    statusJson = doDeleteJson(baseUrl + "/users/test-user-2/agents/test-instance-6?password=test-pwd-2", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
-    statusJson = doDeleteJson(baseUrl + "/users/test-user-3/agents/test-instance-10?password=test-pwd-1", 204);
+    statusJson = doDeleteJson(baseUrl + "/users/test-user-3/agents/test-instance-10?password=test-pwd-3", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
     url = baseUrl + "/agents?password=abracadabra";
     instancesJson = doGetJson(url, 200);
@@ -3201,13 +3353,13 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertTrue("Unexpected return JSON", statusJson == null);
     statusJson = doDeleteJson(baseUrl + "/users/test-user-1/agents/test-instance-4?password=test-pwd-1", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
-    statusJson = doDeleteJson(baseUrl + "/users/test-user-2/agents/test-instance-7?password=test-pwd-1", 204);
+    statusJson = doDeleteJson(baseUrl + "/users/test-user-2/agents/test-instance-7?password=test-pwd-2", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
-    statusJson = doDeleteJson(baseUrl + "/users/test-user-2/agents/test-instance-8?password=test-pwd-1", 204);
+    statusJson = doDeleteJson(baseUrl + "/users/test-user-2/agents/test-instance-8?password=test-pwd-2", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
-    statusJson = doDeleteJson(baseUrl + "/users/test-user-3/agents/test-instance-11?password=test-pwd-1", 204);
+    statusJson = doDeleteJson(baseUrl + "/users/test-user-3/agents/test-instance-11?password=test-pwd-3", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
-    statusJson = doDeleteJson(baseUrl + "/users/test-user-3/agents/test-instance-12?password=test-pwd-1", 204);
+    statusJson = doDeleteJson(baseUrl + "/users/test-user-3/agents/test-instance-12?password=test-pwd-3", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
     url = baseUrl + "/agents?password=abracadabra";
     instancesJson = doGetJson(url, 200);
@@ -3247,9 +3399,9 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Delete remaining instances
     statusJson = doDeleteJson(baseUrl + "/users/test-user-1/agents/test-instance-1?password=test-pwd-1", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
-    statusJson = doDeleteJson(baseUrl + "/users/test-user-2/agents/test-instance-5?password=test-pwd-1", 204);
+    statusJson = doDeleteJson(baseUrl + "/users/test-user-2/agents/test-instance-5?password=test-pwd-2", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
-    statusJson = doDeleteJson(baseUrl + "/users/test-user-3/agents/test-instance-9?password=test-pwd-1", 204);
+    statusJson = doDeleteJson(baseUrl + "/users/test-user-3/agents/test-instance-9?password=test-pwd-3", 204);
     assertTrue("Unexpected return JSON", statusJson == null);
     url = baseUrl + "/agents?password=abracadabra";
     instancesJson = doGetJson(url, 200);
@@ -3755,7 +3907,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Make sure state is only present if requested for an instance
     JSONObject instanceJson = doGetJson(baseUrl + "/users/test-user-1/agents/" + dsInstanceName + "?password=test-pwd-1", 200);
     assertTrue("Agent instance info is missing", instanceJson != null);
-    assertEquals("Count of fields in agent instance info", 10, instanceJson.length());
+    int countExpectedInstanceKeys = 16;
+    assertEquals("Count of fields in agent instance info", countExpectedInstanceKeys, instanceJson.length());
     assertTrue("State is unexpectedly present", ! instanceJson.has("state"));
     assertTrue("Agent instance name is missing", instanceJson.has("name"));
     assertEquals("Agent instance name", "DataSource_1", instanceJson.getString("name"));
@@ -3781,7 +3934,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check the full data source instance state history
     instanceJson = doGetJson(baseUrl + "/users/test-user-1/agents/" + dsInstanceName + "?password=test-pwd-1&state=yes", 200);
     assertTrue("Agent instance info is missing", instanceJson != null);
-    assertEquals("Count of fields in agent instance info", 15, instanceJson.length());
+    assertEquals("Count of fields in agent instance info", 17, instanceJson.length());
     assertTrue("State is missing", instanceJson.has("state"));
     assertTrue("Agent instance name is missing", instanceJson.has("name"));
     assertEquals("Agent instance name", "DataSource_1", instanceJson.getString("name"));
@@ -3811,6 +3964,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertTrue("Agent instance reporting_interval is missing", instanceJson.has("reporting_interval"));
     assertEquals("Agent instance reporting_interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION, instanceJson.getString("reporting_interval"));
     assertTrue("Agent instance enabled is missing", instanceJson.has("enabled"));
+    assertTrue("Agent instance limit_instance_states_stored is missing", instanceJson.has("limit_instance_states_stored"));
+    assertEquals("Agent instance limit_instance_states_stored", AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_STORED, instanceJson.getInt("limit_instance_states_stored"));
     assertEquals("Agent instance name", true, instanceJson.getBoolean("enabled"));
     assertTrue("Agent instance parameter_values is missing", instanceJson.has("parameter_values"));
     assertEquals("Agent instance parameter_values", "{}", instanceJson.get("parameter_values").toString());
@@ -3875,7 +4030,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     AgentInstance agInstance = server.agentServer.getAgentInstance("test-user-1", "HelloWorld");
     instanceJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld?password=test-pwd-1", 200);
     assertTrue("Agent instance info is missing", instanceJson != null);
-    assertEquals("Count of fields in agent instance info", 10, instanceJson.length());
+    assertEquals("Count of fields in agent instance info", countExpectedInstanceKeys, instanceJson.length());
     assertTrue("State is unexpectedly present", ! instanceJson.has("state"));
     assertTrue("Agent instance name is missing", instanceJson.has("name"));
     assertEquals("Agent instance name", "HelloWorld", instanceJson.getString("name"));
@@ -3898,12 +4053,61 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertTrue("Agent instance parameter_values is missing", instanceJson.has("parameter_values"));
     assertEquals("Agent instance parameter_values", "{}", instanceJson.get("parameter_values").toString());
 
+    // Check instance state with an explicit count, &count=1 to get only latest state
+    instanceJson = doGetJson(baseUrl + "/users/test-user-1/agents/" + dsInstanceName + "?password=test-pwd-1&state=yes&count=1", 200);
+    assertTrue("Agent instance info is missing", instanceJson != null);
+    assertEquals("Count of fields in agent instance info", 17, instanceJson.length());
+    assertTrue("State is missing", instanceJson.has("state"));
+    assertTrue("Agent instance name is missing", instanceJson.has("name"));
+    assertEquals("Agent instance name", "DataSource_1", instanceJson.getString("name"));
+    assertTrue("Agent instance user id is missing", instanceJson.has("user"));
+    assertEquals("Agent instance user id", "test-user-1", instanceJson.getString("user"));
+    assertTrue("Agent instance definition is missing", instanceJson.has("definition"));
+    assertEquals("Agent instance definition", "DataSource", instanceJson.getString("definition"));
+    assertTrue("Agent instance description is missing", instanceJson.has("description"));
+    assertEquals("Agent instance description", "", instanceJson.getString("description"));
+    assertTrue("Agent instance created is missing", instanceJson.has("instantiated"));
+    assertEquals("Agent instance created", DateUtils.toRfcString(dsInstance.timeInstantiated), instanceJson.getString("instantiated"));
+    assertTrue("Agent instance modified is missing", instanceJson.has("updated"));
+    assertEquals("Agent instance modified", dsInstance.timeUpdated > 0 ? DateUtils.toRfcString(dsInstance.timeUpdated) : "", instanceJson.getString("updated"));
+    assertTrue("Agent instance status is missing", instanceJson.has("status"));
+    assertEquals("Agent instance status", "active", instanceJson.getString("status"));
+    assertTrue("Agent instance inputs_changed is missing", instanceJson.has("inputs_changed"));
+    assertEquals("Agent instance inputs_changed", dsInstance.lastInputsChanged > 0 ? DateUtils.toRfcString(dsInstance.lastInputsChanged) : "", instanceJson.getString("inputs_changed"));
+    assertTrue("Agent instance triggered is missing", instanceJson.has("triggered"));
+    assertEquals("Agent instance triggered", dsInstance.lastTriggered > 0 ? DateUtils.toRfcString(dsInstance.lastTriggered) : "", instanceJson.getString("triggered"));
+    assertTrue("Agent instance outputs_changed is missing", instanceJson.has("outputs_changed"));
+    outputHistory = dsInstance.outputHistory;
+    numOutputs = outputHistory.size();
+    timeOutputsChanged = outputHistory.get(numOutputs - 1).time;
+    assertEquals("Agent instance outputs_changed", timeOutputsChanged > 0 ? DateUtils.toRfcString(timeOutputsChanged) : "", instanceJson.getString("outputs_changed"));
+    assertTrue("Agent instance trigger_interval is missing", instanceJson.has("trigger_interval"));
+    assertEquals("Agent instance trigger_interval", AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION, instanceJson.getString("trigger_interval"));
+    assertTrue("Agent instance reporting_interval is missing", instanceJson.has("reporting_interval"));
+    assertEquals("Agent instance reporting_interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION, instanceJson.getString("reporting_interval"));
+    assertTrue("Agent instance enabled is missing", instanceJson.has("enabled"));
+    assertTrue("Agent instance limit_instance_states_stored is missing", instanceJson.has("limit_instance_states_stored"));
+    assertEquals("Agent instance limit_instance_states_stored", AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_STORED, instanceJson.getInt("limit_instance_states_stored"));
+    assertEquals("Agent instance name", true, instanceJson.getBoolean("enabled"));
+    assertTrue("Agent instance parameter_values is missing", instanceJson.has("parameter_values"));
+    assertEquals("Agent instance parameter_values", "{}", instanceJson.get("parameter_values").toString());
+    assertTrue("Agent instance state is missing", instanceJson.has("state"));
+    stateObject = instanceJson.get("state");
+    assertTrue("Agent instance state is not a JSONArray: " + stateObject.getClass().getSimpleName(), stateObject instanceof JSONArray);
+    stateArrayJson = (JSONArray)stateObject;
+    assertEquals("Count of data source instance states", 1, stateArrayJson.length());
+    stateJson = stateArrayJson.getJSONObject(0);
+    int stateHistorySize = dsInstance.state.size();
+    long stateTime = dsInstance.state.get(stateHistorySize - 1).time;
+    String stateTimeString = DateUtils.toIsoString(stateTime); 
+    assertEquals("State", "{\"exceptions\":[],\"time\":\"" + stateTimeString + "\",\"notification_history\":[],\"inputs\":{},\"notifications\":[],\"parameters\":{},\"outputs\":{\"field4\":true,\"field3\":3.14,\"field2\":132,\"field1\":\"Hello World\"},\"memory\":{\"countm\":3},\"last_dismissed_exception\":\"\"}", stateJson.toString());
+
     // Check instance state with an explicit count, &count=3, to get latest 3
 
     // Check the full data source instance state history
     instanceJson = doGetJson(baseUrl + "/users/test-user-1/agents/" + dsInstanceName + "?password=test-pwd-1&state=yes&count=3", 200);
     assertTrue("Agent instance info is missing", instanceJson != null);
-    assertEquals("Count of fields in agent instance info", 15, instanceJson.length());
+    assertEquals("Count of fields in agent instance info", 17, instanceJson.length());
     assertTrue("State is missing", instanceJson.has("state"));
     assertTrue("Agent instance name is missing", instanceJson.has("name"));
     assertEquals("Agent instance name", "DataSource_1", instanceJson.getString("name"));
@@ -3960,7 +4164,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check the agent instance state history
     instanceJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld?password=test-pwd-1&state=yes", 200);
     assertTrue("Agent instance info is missing", instanceJson != null);
-    assertEquals("Count of fields in agent instance info", 15, instanceJson.length());
+    assertEquals("Count of fields in agent instance info", 17, instanceJson.length());
     assertTrue("State is missing", instanceJson.has("state"));
     assertTrue("Agent instance name is missing", instanceJson.has("name"));
     assertEquals("Agent instance name", "HelloWorld", instanceJson.getString("name"));
@@ -3989,6 +4193,10 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("Agent instance trigger_interval", AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION, instanceJson.getString("trigger_interval"));
     assertTrue("Agent instance reporting_interval is missing", instanceJson.has("reporting_interval"));
     assertEquals("Agent instance reporting_interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION, instanceJson.getString("reporting_interval"));
+    assertTrue("Agent instance public_output is missing", instanceJson.has("public_output"));
+    assertEquals("Agent instance public_output", AgentInstance.DEFAULT_PUBLIC_OUTPUT, instanceJson.getBoolean("public_output"));
+    assertTrue("Agent instance limit_instance_states_stored is missing", instanceJson.has("limit_instance_states_stored"));
+    assertEquals("Agent instance limit_instance_states_stored", AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_STORED, instanceJson.getInt("limit_instance_states_stored"));
     assertTrue("Agent instance enabled is missing", instanceJson.has("enabled"));
     assertEquals("Agent instance name", true, instanceJson.getBoolean("enabled"));
     assertTrue("Agent instance parameter_values is missing", instanceJson.has("parameter_values"));
@@ -4006,7 +4214,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check the agent instance state history
     instanceJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld?password=test-pwd-1&state=yes", 200);
     assertTrue("Agent instance info is missing", instanceJson != null);
-    assertEquals("Count of fields in agent instance info", 15, instanceJson.length());
+    assertEquals("Count of fields in agent instance info", 17, instanceJson.length());
     assertTrue("State is missing", instanceJson.has("state"));
     assertTrue("Agent instance name is missing", instanceJson.has("name"));
     assertEquals("Agent instance name", "HelloWorld", instanceJson.getString("name"));
@@ -4035,6 +4243,10 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("Agent instance trigger_interval", AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION, instanceJson.getString("trigger_interval"));
     assertTrue("Agent instance reporting_interval is missing", instanceJson.has("reporting_interval"));
     assertEquals("Agent instance reporting_interval", AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION, instanceJson.getString("reporting_interval"));
+    assertTrue("Agent instance public_output is missing", instanceJson.has("public_output"));
+    assertEquals("Agent instance public_output", AgentInstance.DEFAULT_PUBLIC_OUTPUT, instanceJson.getBoolean("public_output"));
+    assertTrue("Agent instance limit_instance_states_stored is missing", instanceJson.has("limit_instance_states_stored"));
+    assertEquals("Agent instance limit_instance_states_stored", AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_STORED, instanceJson.getInt("limit_instance_states_stored"));
     assertTrue("Agent instance enabled is missing", instanceJson.has("enabled"));
     assertEquals("Agent instance name", true, instanceJson.getBoolean("enabled"));
     assertTrue("Agent instance parameter_values is missing", instanceJson.has("parameter_values"));
@@ -4325,7 +4537,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check the agent's status
     JSONObject statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld.mine/status?password=test-pwd-1", 200);
     assertTrue("Status not returned", statusJson != null);
-    assertEquals("Count of status fields", 10, statusJson.length());
+    int countExpectedInstanceKeys = 16;
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
     assertTrue("Name field is missing", statusJson.has("name"));
     assertEquals("Name", "HelloWorld.mine", statusJson.get("name"));
     assertTrue("Definition field is missing", statusJson.has("definition"));
@@ -4344,7 +4557,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
         "{\"user\": \"Test-User\", \"name\": \"Bad1.mine\", \"description\": \"Test agent\", \"definition\": \"Bad1\"}", 204);
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/Bad1.mine/status?password=test-pwd-1", 200);
 /*    assertTrue("Status not returned", statusJson != null);
-    assertEquals("Count of status fields", 10, statusJson.length());
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
     assertTrue("Name field is missing", statusJson.has("name"));
     assertEquals("Name", "Bad1.mine", statusJson.get("name"));
     assertTrue("Definition field is missing", statusJson.has("definition"));
@@ -4361,7 +4574,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/Bad1.mine/status?password=test-pwd-1", 200);
     assertTrue("Status not returned", statusJson != null);
-    assertEquals("Count of status fields", 10, statusJson.length());
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
     assertTrue("Name field is missing", statusJson.has("name"));
     assertEquals("Name", "Bad1.mine", statusJson.get("name"));
     assertTrue("Definition field is missing", statusJson.has("definition"));
@@ -4375,7 +4588,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     statusJson = doPutJson(baseUrl + "/users/test-user-1/agents/Bad1.mine/dismiss_exceptions?password=test-pwd-1", 204);
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/Bad1.mine/status?password=test-pwd-1", 200);
     assertTrue("Status not returned", statusJson != null);
-    assertEquals("Count of status fields", 10, statusJson.length());
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
     assertTrue("Name field is missing", statusJson.has("name"));
     assertEquals("Name", "Bad1.mine", statusJson.get("name"));
     assertTrue("Definition field is missing", statusJson.has("definition"));
@@ -4410,7 +4623,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check the agent's status
     JSONObject statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld.mine/status?password=test-pwd-1", 200);
     assertTrue("Status not returned", statusJson != null);
-    assertEquals("Count of status fields", 10, statusJson.length());
+    int countExpectedInstanceKeys = 16;
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
     assertTrue("Name field is missing", statusJson.has("name"));
     assertEquals("Name", "HelloWorld.mine", statusJson.get("name"));
     assertTrue("Definition field is missing", statusJson.has("definition"));
@@ -4458,7 +4672,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check the agent's status
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/status?password=test-pwd-1", 200);
     assertTrue("Status not returned", statusJson != null);
-    assertEquals("Count of status fields", 10, statusJson.length());
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
     assertTrue("Name field is missing", statusJson.has("name"));
     assertEquals("Name", "HelloWorld2.mine", statusJson.get("name"));
     assertTrue("Definition field is missing", statusJson.has("definition"));
@@ -4593,7 +4807,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check to see that agent is now suspended waiting for notification
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/status?password=test-pwd-1", 200);
     assertTrue("Status not returned", statusJson != null);
-    assertEquals("Count of status fields", 10, statusJson.length());
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
     assertTrue("Name field is missing", statusJson.has("name"));
     assertEquals("Name", "HelloWorld2.mine", statusJson.get("name"));
     assertTrue("Definition field is missing", statusJson.has("definition"));
@@ -4780,7 +4994,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check to see that agent is now active again
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/status?password=test-pwd-1", 200);
     assertTrue("Status not returned", statusJson != null);
-    assertEquals("Count of status fields", 10, statusJson.length());
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
     assertTrue("Name field is missing", statusJson.has("name"));
     assertEquals("Name", "HelloWorld2.mine", statusJson.get("name"));
     assertTrue("Definition field is missing", statusJson.has("definition"));
@@ -4930,7 +5144,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Check to see that agent is now active again
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/status?password=test-pwd-1", 200);
     assertTrue("Status not returned", statusJson != null);
-    assertEquals("Count of status fields", 10, statusJson.length());
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
     assertTrue("Name field is missing", statusJson.has("name"));
     assertEquals("Name", "HelloWorld2.mine", statusJson.get("name"));
     assertTrue("Definition field is missing", statusJson.has("definition"));

@@ -3,21 +3,31 @@
 
 1. Download the zip file from github:
 
-2. Unzip
+2. Unzip to a directory of your choice
 
-3. Run the agent server
+3. Edit agentserver.properties to change or fill in any blank values that you wish to set 
+
+For the most part you can skip this step unless you want agents to be able to send email notifications.
+
+4. Run the agent server
 
 ant test-zip
+(If you have cloned the source code from github.)
 
 or
 
 java -jar AgentServer-0.1.jar
 
+or to put the server in the background:
+
+java -jar AgentServer-0.1.jar &
+
 The server will remain running until it is shut down.
 
-To communicate with the server, open a new command window.
+If you use the java command without the & you will need to open a new command window to communicate
+with the server.
 
-4. Ping the agent server to see that it is running
+5. Ping the agent server to see that it is running
 
 curl http://localhost:8980/API/v0.1/status
 
@@ -30,6 +40,8 @@ curl http://localhost:8980/API/v0.1/status
     "num_active_agents": 0
 }
 
+6. Check the "About" info for the server
+
 curl http://localhost:8980/API/v0.1/about
 
 {
@@ -40,6 +52,8 @@ curl http://localhost:8980/API/v0.1/about
     "website": "http://your-website.com",
     "contact": "jack@basetechnology.com"
 }
+
+7. Check the "Config" settings for the server
 
 curl http://localhost:8980/API/v0.1/config
 
@@ -73,6 +87,19 @@ curl http://localhost:8980/API/v0.1/config
     "minimum_address_mail_access_interval": "10000"
 }
 
-5. Shut the server down
+8. Work through the Intro
+
+The agent server now appears to be up and running, so now you can proceed to actually create and work
+with some agents. It is time to jump to intro.txt
+
+
+99. Shut the server down
+
+Once you are done using the server you can either simply leave it running, which is how it supposed
+to operate in "production", or go ahead and shut the server down:
 
 curl -X put http://localhost:8980/API/v0.1/shutdown?password=your-admin-password
+
+Or, just use the "ant stop" target if you have the source from github.
+
+TBD: Using github.

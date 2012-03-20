@@ -54,6 +54,11 @@ public class FunctionCallNode extends ExpressionNode {
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);
       return new IntegerValue((long)(value * 10 * 365 * 24 * 60 * 60 * 1000));
+    } if (functionName.equals("eval") && numArgs == 1){
+      Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
+      String expression = arg1.getStringValue();
+      Value returnValue = scriptState.agentInstance.evaluateExpression(expression);
+      return returnValue;
     } if (functionName.equals("hours") && numArgs == 1){
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);
@@ -75,6 +80,11 @@ public class FunctionCallNode extends ExpressionNode {
       String notificationName = arg1.getStringValue(scriptState);
       scriptState.agentInstance.queueNotify(notificationName);
       return NullValue.one;
+    } if (functionName.equals("runScript") && numArgs == 1){
+      Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
+      String scriptString = arg1.getStringValue();
+      Value returnValue = scriptState.agentInstance.runScriptString(scriptString);
+      return returnValue;
     } if (functionName.equals("seconds") && numArgs == 1){
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);

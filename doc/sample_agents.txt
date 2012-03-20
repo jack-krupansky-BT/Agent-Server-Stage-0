@@ -1,0 +1,7 @@
+Simplest agent - does nothing - no-op
+
+
+Hello World agent - does nothing, but produces "Hello World" as its output
+
+- Add some test web pages on basetechnology.com
+

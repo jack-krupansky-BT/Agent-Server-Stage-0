@@ -1,0 +1,938 @@
+Introduction to the Base Technology Agent Server
+
+Unless you are simply previewing the doc, please run through the installation process first, install.txt.
+
+This introduction is only a "light" introduction to agents and does not delves into the deep
+conceptual basis or fine details of the agent model supported by the agent server. See concept.txt
+for that deeper conceptual basis for agents.
+
+To put it as simply as possible, an agent is a very simple, lightweight computer program that acts
+(semi-)autonomously on behalf of a user.
+
+The agents supported by the agent server are smaller and more lightweight than traditional computer
+programs or processes, and smaller and lighter-weight than even threads.
+
+In fact, agents are generally completely idle or "quiescent", but always vigilant to changes in their
+environment that may interest their user.
+
+This idleness comes from the fact that agents are primarily declarative and the agent server
+infrastructure takes care of all the bookkeeping to assure that the state of an agent is updated
+whenever any of the agent's declared dependencies changes. In other words, the server takes care
+of propagating changes.
+
+There are three concepts you need to be aware of to develop your own agents
+
+1. Users. Agents belong to users.
+2. Agent definitions. This is the "source code" for an agent.
+3. Agent instances. These are running, active instances of the agent.
+
+The agent server supports any number of users, each with their own user "Id".
+
+The user defines or declares whatever types of agents they need.
+
+The user instantiates agent types as needed. Each instance of the same agent definition would
+typically have different parameter values (e..g., a URL, the name of a person or place or product.)
+
+The agent server is supports a REST API that uses JSON as its primary information format.
+
+The curl command is probably the simplest and best way to experiment with the agent server. 
+
+Once you have downloaded and installed the agent server as detailed in install.txt you are ready to
+actually start working with agents.
+
+1. Create a new new user
+
+- See that there are currently no users registered
+
+curl http://localhost:8980/API/v0.1/users
+
+{"users": []}
+
+- Register new user
+
+curl -X POST 'http://localhost:8980/API/v0.1/users?id=test-user-1&password=test-pwd-1'
+
+Note: In this case the URL needs to be in quotes to prevent BASH from interpreting the '&'.
+
+- See that the new user is now registered
+
+curl http://localhost:8980/API/v0.1/users
+
+{"users": [{
+    "display_name": "",
+    "id": "test-user-1"
+}]}
+
+Note that the display name is blank. We could have specified the display name on the POST URL with
+'&display_name=Your+Name', but lets update the use to have a display name:
+
+curl -X PUT http://localhost:8980/API/v0.1/users/test-user-1?password=test-pwd-1 -H Content-type:application/json -d '{"display_name": "Your Name"}'
+
+That all fit on one line, but more verbose JSON can be entered on any number of lines, for example:
+
+curl -X PUT http://localhost:8980/API/v0.1/users/test-user-1?password=test-pwd-1 -H Content-type:application/json -d '
+{"display_name": "Your Name",
+ "full_name": "Your Full Name",
+ "email": "you@example.com",
+ "nickname": "Youri",
+ "company": "Your company"
+ "bio": "Your bio",
+ "interests": "Your interests"
+ }'
+
+Note the apostrophes before and after the JSON.
+
+Oops, that gave us an error:
+
+{"errors": [{
+    "message": "Exception parsing JSON - Expected a ',' or '}' at character 143",
+    "type": "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException"
+}]}
+Ah, we were missing a comma after the "company" entry. Here is the corrected command:
+
+curl -X PUT http://localhost:8980/API/v0.1/users/test-user-1?password=test-pwd-1 -H Content-type:application/json -d '
+{"display_name": "Your Name",
+ "full_name": "Your Full Name",
+ "email": "you@example.com",
+ "nickname": "Youri",
+ "company": "Your company",
+ "bio": "Your bio",
+ "interests": "Your interests"
+ }'
+
+Oops, again, that still has problems:
+
+{"errors": [{
+    "message": "User JSON has invalid keys: company, nickname",
+    "type": "com.basetechnology.s0.agentserver.AgentServerException"
+}]}
+
+Right - "nickname" should be "nick_name" and "company" is supposed to be "organization".
+So, let's try again:
+
+curl -X PUT http://localhost:8980/API/v0.1/users/test-user-1?password=test-pwd-1 -H Content-type:application/json -d '
+{"display_name": "Your Name",
+ "full_name": "Your Full Name",
+ "email": "you@example.com",
+ "nick_name": "Youri",
+ "organization": "Your company",
+ "bio": "Your bio",
+ "interests": "Your interests"
+ }'
+
+That worked.
+
+And here is the updated user list:
+
+{"users": [{
+    "display_name": "Your Name",
+    "id": "test-user-1"
+}]}
+
+That only gives us a minimal subset of the info for each user. Let's get the full info for one user:
+
+curl http://localhost:8980/API/v0.1/users/test-user-1?password=test-pwd-1
+
+{
+    "approved": true,
+    "bio": "Your bio",
+    "comment": "",
+    "display_name": "Your Name",
+    "email": "you@example.com",
+    "full_name": "Your Full Name",
+    "id": "test-user-1",
+    "incognito": false,
+    "interests": "Your interests",
+    "nick_name": "Youri",
+    "organization": "Your company",
+    "password": "test-pwd-1",
+    "password_hint": "",
+    "sha_id": "5c0533500f0dc351421d2c6c50717252",
+    "sha_password": "f678318ac54a4bff2e3b8a7341245cfb"
+}
+
+9. Create a new agent definition
+
+We went through all of that trouble creating a new user because agents are owned by or associated
+with a specific user.
+
+So, here's the command to create a simple "Hello World" agent associated with the new user
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions&password=test-pwd-1' -d'
+{
+ "name": "HelloWorld",
+ "outputs": [
+  {
+   "name": "output1",
+   "type": "string",
+   "default_value": "Hello World"
+  },
+ ]
+}'
+
+Oops, that fails with an error:
+
+{"errors": [{
+    "message": "Path does not address any existing object",
+    "type": "com.basetechnology.s0.agentserver.appserver.AgentAppServerException"
+}]}
+
+Ah, the cause is that I used '&' rather than '?' before the first query parameter, so the '&' and
+password got treated as part of the path and hence not recognized. Changing the '&' to '?':
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1' -d'
+{
+ "name": "HelloWorld",
+ "outputs": [
+  {
+   "name": "output1",
+   "type": "string",
+   "default_value": "Hello World"
+  },
+ ]
+}'
+
+Now we get THIS error:
+
+{"errors": [{
+    "message": "Unable to read JSON from request - STREAMED",
+    "type": "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException"
+}]}
+
+That is an odd one and I don't really understand what it is really all about, other than that to
+resolve it we need to include an HTTP request header of "Content-type:application/json":
+ 
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "HelloWorld",
+ "outputs": [
+  {
+   "name": "output1",
+   "type": "string",
+   "default_value": "Hello World"
+  },
+ ]
+}'
+
+Okay, that worked. Let's query what the server thinks it has:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1'
+
+{"agent_definitions": [{
+    "user": "test-user-1",
+    "name": "HelloWorld",
+    "description": ""
+}]}
+
+That's fine as a quick summary, but doesn't give much detail. Lets request the details:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions/HelloWorld?password=test-pwd-1'
+
+{
+    "user": "test-user-1",
+    "name": "HelloWorld",
+    "description": "",
+    "created": "Mon, 19 Mar 2012 11:20:29 -0400",
+    "modified": "Mon, 19 Mar 2012 11:20:29 -0400",
+    "parameters": [],
+    "inputs": [],
+    "timers": [],
+    "conditions": [],
+    "notifications": [],
+    "scripts": [],
+    "scratchpad": [],
+    "memory": [],
+    "outputs": [{
+        "default_value": "Hello World",
+        "name": "output1",
+        "type": "string"
+    }],
+    "goals": [],
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "enabled": true
+}
+
+That's more than we expected, but everything we expected is there, including the 'output1' field.
+
+Before we forget, lets add the 'description'. We could have supplied it with the original definition,
+but we can change any of the agent definition fields at any time. So, this adds the description:
+
+curl -X PUT 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions/HelloWorld?password=test-pwd-1' -H Content-type:application/json -d'
+{"description": "Our first test of an agent definition"}'
+
+And lets query the details again
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions/HelloWorld?password=test-pwd-1'
+
+{
+    "user": "test-user-1",
+    "name": "HelloWorld",
+    "description": "Our first test of an agent definition",
+    "created": "Mon, 19 Mar 2012 17:18:10 -0400",
+    "modified": "Mon, 19 Mar 2012 17:18:50 -0400",
+    "parameters": [],
+    "inputs": [],
+    "timers": [],
+    "conditions": [],
+    "notifications": [],
+    "scripts": [],
+    "scratchpad": [],
+    "memory": [],
+    "outputs": [{
+        "default_value": "Hello World",
+        "name": "output1",
+        "type": "string"
+    }],
+    "goals": [],
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "enabled": true
+}
+
+Note that the agent definition is tied to a particular user.
+
+And here is the updated summary of agent definitions:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1'
+
+{"agent_definitions": [{
+    "user": "test-user-1",
+    "name": "HelloWorld",
+    "description": "Our first test of an agent definition"
+}]}
+
+At this stage nothing is actually running. All we have is the "definition" for the agent, which is
+essentially the source code for the agent.
+
+10. Instantiate an agent or instance of an agent definition
+
+To create a running instance of our new agent definition:
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "MyHelloWorld-1",
+ "definition": "HelloWorld"
+}'
+
+Now lets query what agents are running:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1'
+
+{"agent_instances": [{
+    "user": "test-user-1",
+    "name": "MyHelloWorld-1",
+    "definition": "HelloWorld",
+    "description": ""
+}]}
+
+Again, that is just a quick summary with minimal detail. Once again, we failed to provide a
+description, so let's add one:
+
+curl -X PUT 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1?password=test-pwd-1' -H Content-type:application/json -d'
+{"description": "Our first test instance of an agent definition"}'
+
+Let's just check to see that the new description is in the summary:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1'
+
+{"agent_instances": [{
+    "user": "test-user-1",
+    "name": "MyHelloWorld-1",
+    "definition": "HelloWorld",
+    "description": "Our first test instance of an agent definition"
+}]}
+
+Now lets query for the full detail and status of the agent instance:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1?password=test-pwd-1'
+
+{
+    "user": "test-user-1",
+    "name": "MyHelloWorld-1",
+    "definition": "HelloWorld",
+    "description": "Our first test instance of an agent definition",
+    "instantiated": "Tue, 20 Mar 2012 18:43:52 -0400",
+    "updated": "Tue, 20 Mar 2012 18:43:58 -0400",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Tue, 20 Mar 2012 18:43:52 -0400",
+    "status": "active"
+}
+
+An agent instance is tied to both a user and an agent definition.
+
+The status command gives similar information:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1/status?password=test-pwd-1'
+
+{
+    "user": "test-user-1",
+    "name": "MyHelloWorld-1",
+    "definition": "HelloWorld",
+    "description": "Our first test instance of an agent definition",
+    "instantiated": "Tue, 20 Mar 2012 18:43:52 -0400",
+    "updated": "Tue, 20 Mar 2012 18:43:58 -0400",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Tue, 20 Mar 2012 18:43:52 -0400",
+    "status": "active"
+}
+
+Basically, the only thing that matters there is when the agent started running and that it is "active".
+
+Since this agent doesn't really do anything but produce some output by default, let's query that output:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1/output?password=test-pwd-1'
+
+{"output1": "Hello World"}
+
+That's it, the output of the agent is "Hello World".
+
+By default, all agent server communication is in the JSON format, but you can request other formats.
+For example, here is the same output but in XML:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1/output.xml?password=test-pwd-1'
+
+<?xml version="1.0" encoding="UTF-8"?><output1>Hello World</output1>
+
+Here's an alternate form for requesting that same output:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1/output?password=test-pwd-1&format=xml'
+
+We can also request plain text:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1/output.text?password=test-pwd-1'
+
+Hello World
+
+That's closer to what people might expect
+
+And here is the alternate request format for the same output:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1/output?password=test-pwd-1&format=text'
+
+And just in case you want to view the output of an agent in a web browser, use HTML format:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1/output.html?password=test-pwd-1'
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyHelloWorld-1/output?password=test-pwd-1&format=html'
+
+Generally, real agents work in one of two manners:
+
+1. Ping a web resource based on a timer.
+2. Process the output of another agent (or agents) and produce new output.
+
+Let's define a very simple timer-based agent:
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "Counter",
+ "memory": [
+  {
+   "name": "counter",
+   "type": "int"
+  }
+ ],
+ "timers": [
+  {
+   "name": "count",
+   "interval": "seconds(3)",
+   "script": "counter++;"
+  }
+ ],
+ "outputs": [
+  {
+   "name": "output1",
+   "type": "string",
+   "compute": "\"Count is \" + counter"
+  },
+ ]
+}'
+
+Now instantiate the counter agent:
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "MyCounter-1",
+ "definition": "Counter"
+}'
+
+Now lets query what agents are running:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1'
+
+{"agent_instances": [
+    {
+        "user": "test-user-1",
+        "name": "MyHelloWorld-1",
+        "definition": "HelloWorld",
+        "description": "Our first test instance of an agent definition"
+    },
+    {
+        "user": "test-user-1",
+        "name": "MyCounter-1",
+        "definition": "Counter",
+        "description": ""
+    }
+]}
+
+And the status of the new agent:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/status?password=test-pwd-1'
+
+{
+    "user": "test-user-1",
+    "name": "MyCounter-1",
+    "definition": "Counter",
+    "description": "",
+    "instantiated": "Tue, 20 Mar 2012 18:48:49 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Tue, 20 Mar 2012 18:49:07 -0400",
+    "status": "active"
+}
+
+And finally its current output:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/output?password=test-pwd-1'
+
+{"output1": "Count is 23"}
+
+Wait a few seconds and try that again...
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/output?password=test-pwd-1'
+
+{"output1": "Count is 34"}
+
+Basically, the count increments every three seconds.
+
+We can pause the agent, which freezes the timer:
+
+curl -X PUT 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/pause?password=test-pwd-1'
+
+Check status again and see that counter has not changed:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/output?password=test-pwd-1'
+
+{"output1": "Count is 34"}
+
+Now resume the agent
+
+curl -X PUT 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/resume?password=test-pwd-1'
+
+And see that counter is indeed counting again:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/output?password=test-pwd-1'
+
+{"output1": "Count is 55"}
+
+We can also query the full internal state of the agent with the "&state=yes" parameter:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/status?password=test-pwd-1&state=yes&count=1'
+
+{
+    "user": "test-user-1",
+    "name": "MyCounter-1",
+    "definition": "Counter",
+    "description": "",
+    "instantiated": "Tue, 20 Mar 2012 18:48:49 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Tue, 20 Mar 2012 18:52:22 -0400",
+    "status": "active",
+    "state": [{
+        "exceptions": [],
+        "inputs": {},
+        "last_dismissed_exception": "",
+        "memory": {"counter": 71},
+        "notification_history": [],
+        "notifications": [],
+        "outputs": {"output1": "Count is 70"},
+        "parameters": {},
+        "time": "2012-03-20T18:52:22.915-0400"
+    }]
+}
+
+Note that we used the "&count=1" parameter. The agent server actually keeps a history of state changes
+for each agent instance (that's what the 'limit_instance_states_stored' property controls), but we just
+wanted to see the latest. Use "&count=-1" to see the full history (25 states or whatever you set the
+limit to be.
+
+Let's look at the most recent 3 states:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/status?password=test-pwd-1&state=yes&count=3'
+
+{
+    "user": "test-user-1",
+    "name": "MyCounter-1",
+    "definition": "Counter",
+    "description": "",
+    "instantiated": "Tue, 20 Mar 2012 18:48:49 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Tue, 20 Mar 2012 18:58:29 -0400",
+    "status": "active",
+    "state": [
+        {
+            "exceptions": [],
+            "inputs": {},
+            "last_dismissed_exception": "",
+            "memory": {"counter": 191},
+            "notification_history": [],
+            "notifications": [],
+            "outputs": {"output1": "Count is 190"},
+            "parameters": {},
+            "time": "2012-03-20T18:58:23.854-0400"
+        },
+        {
+            "exceptions": [],
+            "inputs": {},
+            "last_dismissed_exception": "",
+            "memory": {"counter": 192},
+            "notification_history": [],
+            "notifications": [],
+            "outputs": {"output1": "Count is 191"},
+            "parameters": {},
+            "time": "2012-03-20T18:58:26.854-0400"
+        },
+        {
+            "exceptions": [],
+            "inputs": {},
+            "last_dismissed_exception": "",
+            "memory": {"counter": 193},
+            "notification_history": [],
+            "notifications": [],
+            "outputs": {"output1": "Count is 192"},
+            "parameters": {},
+            "time": "2012-03-20T18:58:29.854-0400"
+        }
+    ]
+}
+
+In addition to the output changing, we can see the memory counter incrementing and we have a time stamp
+for every state change of our agent instance.
+
+Finally, if we decide we no longer need the running agent we can kill it by deleting it:
+
+curl -X DELETE 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1?password=test-pwd-1'
+
+Check status to see that the agent is no longer in the list of agents:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1'
+
+{"agent_instances": [{
+    "user": "test-user-1",
+    "name": "MyHelloWorld-1",
+    "definition": "HelloWorld",
+    "description": "Our first test instance of an agent definition"
+}]}
+
+Now, let's enhance our counter agent so the the timer interval is a parameter so that the timer
+can be set when the agent is instantiated. Let's also include both the timer expression and the
+actual timer value in milliseconds in the output. And finally, lets make the output text an
+optional parameter as well.
+
+Although we can simply update the existing agent definition (with PUT), lets delete it and start fresh:
+
+curl -X DELETE 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions/Counter?password=test-pwd-1'
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "Counter",
+ "parameters": [
+  {
+   "name": "timer_interval_expression",
+   "type": "string",
+   "default_value": "seconds(3)"
+  },
+  {
+   "name": "output_text",
+   "type": "string",
+   "default_value": "The count is "
+  },
+ ],
+ "memory": [
+  {
+   "name": "counter",
+   "type": "int"
+  }
+ ],
+ "timers": [
+  {
+   "name": "count",
+   "interval": "eval(timer_interval_expression)",
+   "script": "counter++;"
+  }
+ ],
+ "outputs": [
+  {
+   "name": "output1",
+   "type": "string",
+   "compute": "output_text + counter"
+  },
+  {
+   "name": "output2",
+   "type": "string",
+   "compute": "\"Timer interval expression: \" + timer_interval_expression + \" (\" + eval(timer_interval_expression) + \" ms.)\""
+  },
+  {
+   "name": "output3",
+   "type": "string",
+   "compute": "\"Timer interval: \" + eval(timer_interval_expression) + \" ms.\""
+  },
+ ]
+}'
+
+Although the definition has two parameters, they each have reasonable default values so that we can
+easily instantiate the agent without the bother of supplying any parameter values. So, let's do that:
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "MyCounter-1",
+ "definition": "Counter",
+ "description": "Counter with default parameter values"
+}'
+
+And let's see if the output is what we would expect:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/output?password=test-pwd-1'
+
+{
+    "output1": "The count is 21",
+    "output2": "Timer interval expression: seconds(3)",
+    "output3": "Timer interval: 3000 ms."
+}
+
+Looks good. Now, lets instantiate a second agent while the first is still running. This one will have
+a different timer interval, which is accomplished with explicit parameter values: 
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "MyCounter-2",
+ "definition": "Counter",
+ "description": "Counter with explicit time expression parameter, but default text",
+ "parameter_values": {"timer_interval_expression": "minutes(0.1)"}
+}'
+
+Note: We only specified one of the parameters, the other remains with its default value.
+
+Also note that we need to name the instances to distinguish them.
+
+Lets check to see how the parameter setting modified the behavvior of the agent definition:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-2/output?password=test-pwd-1'
+
+{
+    "output1": "The count is 18",
+    "output2": "Timer interval expression: minutes(0.1)",
+    "output3": "Timer interval: 6000 ms."
+}
+
+Note the distinct timer expression and interval value.
+
+Meanwhile, lets see how the other agent instance is doing:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/output?password=test-pwd-1'
+
+{
+    "output1": "The count is 259",
+    "output2": "Timer interval expression: seconds(3)",
+    "output3": "Timer interval: 3000 ms."
+}
+
+Now, let's instantiate a third instance that also supplies output text via parameter as well:
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "MyCounter-3",
+ "definition": "Counter",
+ "description": "Counter with explicit time expression and output text parameters",
+ "parameter_values": {"timer_interval_expression": "hours(0.000555)", "output_text": "Our count: "}
+}'
+
+And let's check up on that agent instance:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-3/output?password=test-pwd-1'
+
+{
+    "output1": "Our count: 31",
+    "output2": "Timer interval expression: hours(0.000555)",
+    "output3": "Timer interval: 1998 ms."
+}
+
+And the other two instances of the same agent definition are each doing their own thing as well:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-1/output?password=test-pwd-1'
+
+{
+    "output1": "The count is 453",
+    "output2": "Timer interval expression: seconds(3)",
+    "output3": "Timer interval: 3000 ms."
+}
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-2/output?password=test-pwd-1'
+
+{
+    "output1": "The count is 147",
+    "output2": "Timer interval expression: minutes(0.1)",
+    "output3": "Timer interval: 6000 ms."
+}
+
+And lets look at the summary of all of the agents for this user:
+
+curl http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1
+
+{"agent_instances": [
+    {
+        "user": "test-user-1",
+        "name": "MyHelloWorld-1",
+        "definition": "HelloWorld",
+        "description": "Our first test instance of an agent definition"
+    },
+    {
+        "user": "test-user-1",
+        "name": "MyCounter-1",
+        "definition": "Counter",
+        "description": "Counter with default parameter values"
+    },
+    {
+        "user": "test-user-1",
+        "name": "MyCounter-2",
+        "definition": "Counter",
+        "description": "Counter with explicit time expression parameter, but default text"
+    },
+    {
+        "user": "test-user-1",
+        "name": "MyCounter-3",
+        "definition": "Counter",
+        "description": "Counter with explicit time expression and output text parameters"
+    }
+]}
+
+And the detailed status for our last agent instance:
+
+curl http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-3/status?password=test-pwd-1
+
+{
+    "user": "test-user-1",
+    "name": "MyCounter-3",
+    "definition": "Counter",
+    "description": "Counter with explicit time expression and output text parameters",
+    "instantiated": "Tue, 20 Mar 2012 19:13:37 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {
+        "timer_interval_expression": "hours(0.000555)",
+        "output_text": "Our count: "
+    },
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Tue, 20 Mar 2012 19:14:15 -0400",
+    "status": "active"
+}
+
+We can also query the detailed state of the agent instance to see what the actual values are for
+parameters, memory, outputs, etc.:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-3/status?password=test-pwd-1&state=yes&count=2'
+
+{
+    "user": "test-user-1",
+    "name": "MyCounter-3",
+    "definition": "Counter",
+    "description": "Counter with explicit time expression and output text parameters",
+    "instantiated": "Tue, 20 Mar 2012 19:13:37 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {
+        "timer_interval_expression": "hours(0.000555)",
+        "output_text": "Our count: "
+    },
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Tue, 20 Mar 2012 19:19:32 -0400",
+    "status": "active",
+    "state": [
+        {
+            "exceptions": [],
+            "inputs": {},
+            "last_dismissed_exception": "",
+            "memory": {"counter": 176},
+            "notification_history": [],
+            "notifications": [],
+            "outputs": {
+                "output1": "Our count: 175",
+                "output2": "Timer interval expression: hours(0.000555) (1998 ms.)",
+                "output3": "Timer interval: 1998 ms."
+            },
+            "parameters": {
+                "output_text": "Our count: ",
+                "timer_interval_expression": "hours(0.000555)"
+            },
+            "time": "2012-03-20T19:19:30.204-0400"
+        },
+        {
+            "exceptions": [],
+            "inputs": {},
+            "last_dismissed_exception": "",
+            "memory": {"counter": 177},
+            "notification_history": [],
+            "notifications": [],
+            "outputs": {
+                "output1": "Our count: 176",
+                "output2": "Timer interval expression: hours(0.000555) (1998 ms.)",
+                "output3": "Timer interval: 1998 ms."
+            },
+            "parameters": {
+                "output_text": "Our count: ",
+                "timer_interval_expression": "hours(0.000555)"
+            },
+            "time": "2012-03-20T19:19:32.204-0400"
+        }
+    ]
+}
+
+You can see how the counter is incrementing at each step and the time stamp for each step.
+

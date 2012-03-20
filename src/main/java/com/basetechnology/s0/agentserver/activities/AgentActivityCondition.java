@@ -84,13 +84,6 @@ public class AgentActivityCondition extends AgentActivity {
 
           // Record the script return value
           status.scriptReturnValue = returnValueNode;
-        } catch (TokenizerException e){
-          // TODO: Record an exception status for the condition misfire
-          gotException(e);
-          return false;
-        } catch (ParserException e){
-          gotException(e);
-          return false;
         } catch (RuntimeException e){
           gotException(e);
           return false;

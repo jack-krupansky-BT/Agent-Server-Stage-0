@@ -123,7 +123,7 @@ public class Persistence {
   }
 
   public void put(User user) throws AgentServerException {
-    put("users", user.id, user.toJson());
+    put("users", user.id, user.toJson().toString());
   }
 
   public void put(AgentDefinition agentDefinition) throws AgentServerException {

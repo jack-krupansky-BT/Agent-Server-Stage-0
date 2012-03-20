@@ -116,13 +116,21 @@
   </target>
 
   <target name="test" depends="compile,compile-test,build-zip">
+    <property name="mail.enable" value="true" />
+    <antcall target="test-no-dep" />
+  </target>
+
+  <target name="test-no-mail" depends="compile,compile-test,build-zip">
+    <property name="mail.enable" value="false" />
     <antcall target="test-no-dep" />
   </target>
 
   <target name="test-no-dep" depends="compile,compile-test">
     <delete dir="${test.reports.dir}" />
     <mkdir dir="${test.reports.dir}" />
+  	<echo> mail.enable: ${mail.enable} </echo>
     <junit printsummary="on" showoutput="true" haltonfailure="no" haltonerror="no" errorproperty="junit.failed" failureproperty="junit.failed">
+    	<env key = "mail_access_enabled" value="${mail.enable}" />
       <formatter type="xml" />
       <classpath>
         <path refid="junit.classpath" />
@@ -145,7 +153,18 @@
     <unzip dest="${test.dir}" src="${test.zip.file}" />
   	<!-- Run the agent app server -->
 		<!-- <java jar="${test.jar.file}" fork="true" spawn="true" dir="${test.dir}" /> -->
-		<java jar="${test.jar.file}" fork="true" spawn="false" dir="${test.dir}" />
+		<java jar="${test.jar.file}" fork="true" spawn="true" dir="${test.dir}" />
+  	<echo>Agent server spawned - use ant stop to stop it</echo>
+  </target>
+
+  <target name="stop">
+  	<exec executable="curl">
+			<arg value="-s"/>
+			<arg value="-#"/>
+  		<arg value="-X" />
+  		<arg value="PUT" />
+  		<arg value="http://localhost:8980/API/v0.1/shutdown?password=your-admin-password" />
+  	</exec>
   </target>
 
 	<!-- TODO: Add 'run' target -->

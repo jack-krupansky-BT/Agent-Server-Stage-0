@@ -31,6 +31,7 @@ public abstract class Field {
   public String description;
   public static String[] types = {"string", "int", "float", "money", "date", "location",
     "text", "help", "option", "choice", "multi_choice"};
+  public String compute;
 
   public abstract Field clone();
 
@@ -46,6 +47,8 @@ public abstract class Field {
     String type = fieldJson.optString("type").toLowerCase();
     if (type == null)
       throw new AgentServerException("'type' is missing from field definition");
+    else if (type.trim().length() == 0)
+      throw new AgentServerException("'type' is empty in field definition");
     else if (type.equals("string"))
       return StringField.fromJson(symbolTable, fieldJson);
     else if (type.equals("int") || type.equals("integer"))
@@ -78,6 +81,6 @@ public abstract class Field {
   }
   
   public String toString(){
-    return "[" + this.getClass().getSimpleName() + " field symbol: " + symbol + " label: " + label + " description: '" + description + "']";
+    return "[" + this.getClass().getSimpleName() + " field symbol: " + symbol + " label: " + label + " description: '" + description + "' compute: (" + compute + ")]";
   }
 }

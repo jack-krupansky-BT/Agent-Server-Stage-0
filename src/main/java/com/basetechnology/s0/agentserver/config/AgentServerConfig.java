@@ -26,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.AgentDefinition;
+import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.mailaccessmanager.MailAccessManager;
@@ -108,7 +109,9 @@ public class AgentServerConfig {
         "implicitly_deny_web_access",
         "mail_access_enabled", "minimum_mail_access_interval",
         "minimum_host_mail_access_interval", "minimum_address_mail_access_interval",
-        "admin_approve_user_create", "mail_confirm_user_create")));
+        "admin_approve_user_create", "mail_confirm_user_create",
+        "default_limit_instance_states_stored", "maximum_limit_instance_states_stored",
+        "default_limit_instance_states_returned", "maximum_limit_instance_states_returned")));
     
     // Now simply copy the keys to the config map
     for (Iterator<String> it = json.keys(); it.hasNext(); ){
@@ -137,6 +140,10 @@ public class AgentServerConfig {
   public int getDefaultExecutionLimit(){
     return getExecutionLimit(getDefaultExecutionLevel());
   }
+  
+  public boolean getMailAccessEnabled(){
+    return getBoolean("mail_access_enabled");
+  }
 
   public String getReportingInterval(){
     String reportingInterval = get("reporting_interval");
@@ -152,6 +159,38 @@ public class AgentServerConfig {
       return AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION;
     else
       return triggerInterval;
+  }
+
+  public int getDefaultLimitInstanceStatesStored() {
+    String defaultLimitInstanceStatesStoredString = get("default_limit_instance_states_stored");
+    if (defaultLimitInstanceStatesStoredString == null || defaultLimitInstanceStatesStoredString.trim().length() == 0)
+      return AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_STORED;
+    else
+      return Integer.parseInt(defaultLimitInstanceStatesStoredString);
+  }
+
+  public int getMaximumLimitInstanceStatesStored() {
+    String maximumLimitInstanceStatesStoredString = get("maximum_limit_instance_states_stored");
+    if (maximumLimitInstanceStatesStoredString == null || maximumLimitInstanceStatesStoredString.trim().length() == 0)
+      return AgentInstance.DEFAULT_MAXIMUM_LIMIT_INSTANCE_STATES_STORED;
+    else
+      return Integer.parseInt(maximumLimitInstanceStatesStoredString);
+  }
+
+  public int getDefaultLimitInstanceStatesReturned() {
+    String defaultLimitInstanceStatesReturnedString = get("default_limit_instance_states_returned");
+    if (defaultLimitInstanceStatesReturnedString == null || defaultLimitInstanceStatesReturnedString.trim().length() == 0)
+      return AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_RETURNED;
+    else
+      return Integer.parseInt(defaultLimitInstanceStatesReturnedString);
+  }
+
+  public int getMaximumLimitInstanceStatesReturned() {
+    String maximumLimitInstanceStatesReturnedString = get("maximum_limit_instance_states_returned");
+    if (maximumLimitInstanceStatesReturnedString == null || maximumLimitInstanceStatesReturnedString.trim().length() == 0)
+      return AgentInstance.DEFAULT_MAXIMUM_LIMIT_INSTANCE_STATES_RETURNED;
+    else
+      return Integer.parseInt(maximumLimitInstanceStatesReturnedString);
   }
   
   public void putDefaultExecutionLevel(int level) throws AgentServerException{
@@ -187,6 +226,10 @@ public class AgentServerConfig {
     put("default_reporting_interval", agentServerProperties.defaultReportingInterval);
     put("minimum_trigger_interval", agentServerProperties.minimumTriggerInterval);
     put("minimum_reporting_interval", agentServerProperties.minimumReportingInterval);
+    put("default_limit_instance_states_stored", agentServerProperties.defaultLimitInstanceStatesStored);
+    put("maximum_limit_instance_states_stored", agentServerProperties.maximumLimitInstanceStatesStored);
+    put("default_limit_instance_states_returned", agentServerProperties.defaultLimitInstanceStatesReturned);
+    put("maximum_limit_instance_states_returned", agentServerProperties.maximumLimitInstanceStatesReturned);
     // TODO: How to handle directory since we can't read the config file until we know the directory
     // Probably needs to be a command line or environment variable, maybe both
     

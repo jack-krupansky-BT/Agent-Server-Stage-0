@@ -45,7 +45,9 @@ public class TextField extends Field {
     this.label = name;
   }
 
-  public TextField(SymbolTable symbolTable, String name, String label, String description, String defaultValue, int minLength, int maxLength, int nominalWidth, int nominalHeight){
+  public TextField(SymbolTable symbolTable, String name, String label, String description,
+      String defaultValue, int minLength, int maxLength, int nominalWidth, int nominalHeight,
+      String compute){
     this.symbol = new Symbol(symbolTable, name, IntegerTypeNode.one);
     this.label = label;
     this.description = description;
@@ -54,10 +56,12 @@ public class TextField extends Field {
     this.maxLength = maxLength;
     this.nominalWidth = nominalWidth;
     this.nominalHeight = nominalHeight;
+    this.compute = compute;
   }
 
   public Field clone(){
-    return new TextField(symbol.symbolTable, symbol.name, label, description, defaultValue, minLength, maxLength, nominalWidth, nominalHeight);
+    return new TextField(symbol.symbolTable, symbol.name, label, description, defaultValue, minLength,
+        maxLength, nominalWidth, nominalHeight, compute);
   }
 
   public Object getDefaultValue(){
@@ -84,7 +88,9 @@ public class TextField extends Field {
     int maxLength = fieldJson.has("max_length") ? fieldJson.optInt("max_length") : 0;
     int nominalWidth = fieldJson.has("nominal_width") ? fieldJson.optInt("nominal_width") : 0;
     int nominalHeight = fieldJson.has("nominal_height") ? fieldJson.optInt("nominal_height") : 0;
-    return new TextField(symbolTable, name, label, description, defaultValue, minLength, maxLength, nominalWidth, nominalHeight);
+    String compute = fieldJson.has("compute") ? fieldJson.optString("compute") : null;
+    return new TextField(symbolTable, name, label, description, defaultValue, minLength, maxLength,
+        nominalWidth, nominalHeight, compute);
   }
 
   public JSONObject toJson() throws JSONException {
@@ -106,6 +112,8 @@ public class TextField extends Field {
       json.put("nominal_width", nominalWidth);
     if (nominalHeight != 0)
       json.put("nominal_height", nominalHeight);
+    if (compute != null)
+      json.put("compute", compute);
     return json;
   }
   
@@ -114,6 +122,7 @@ public class TextField extends Field {
         " description: '" + description + "'" + " default value: " + defaultValue +
         " min length: " + minLength + " max length: " + maxLength +
         " nominal width: " + nominalWidth + " nominal height: " + nominalHeight +
+        " compute: (" + compute + ")" +
         "]";
   }
 }

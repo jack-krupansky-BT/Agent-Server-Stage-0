@@ -44,7 +44,7 @@ public class DataSourceReference {
     this.parameterValues = parameterValues == null ? new SymbolValues() : parameterValues;
   }
 
-  public AgentInstance instantiate(AgentInstance refererInstance, User user, AgentServer agentServer) throws SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException {
+  public AgentInstance instantiate(AgentInstance refererInstance, User user, AgentServer agentServer) throws AgentServerException {
     // Get new or shared instance
     AgentInstance agentInstance = agentServer.getAgentInstance(user, dataSource, parameterValues, true);
     

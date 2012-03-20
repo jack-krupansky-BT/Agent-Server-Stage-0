@@ -42,15 +42,16 @@ public class BooleanField extends Field {
     this.label = label;
   }
 
-  public BooleanField(SymbolTable symbolTable, String name, String label, String description, boolean defaultValue){
+  public BooleanField(SymbolTable symbolTable, String name, String label, String description, boolean defaultValue, String compute){
     this.symbol = new Symbol(symbolTable, name, BooleanTypeNode.one);
     this.label = label;
     this.description = description;
     this.defaultValue = defaultValue;
+    this.compute = compute;
   }
 
   public Field clone(){
-    return new BooleanField(symbol.symbolTable, symbol.name, label, description, defaultValue);
+    return new BooleanField(symbol.symbolTable, symbol.name, label, description, defaultValue, compute);
   }
 
   public Object getDefaultValue(){
@@ -73,7 +74,8 @@ public class BooleanField extends Field {
     String label = fieldJson.has("label") ? fieldJson.optString("label") : null;
     String description = fieldJson.has("description") ? fieldJson.optString("description") : null;
     boolean defaultValue = fieldJson.has("default_value") ? fieldJson.optBoolean("default_value") : true;
-    return new BooleanField(symbolTable, name, label, description, defaultValue);
+    String compute = fieldJson.has("compute") ? fieldJson.optString("compute") : null;
+    return new BooleanField(symbolTable, name, label, description, defaultValue, compute);
   }
 
   public JSONObject toJson() throws JSONException {
@@ -87,11 +89,14 @@ public class BooleanField extends Field {
       json.put("description", description);
     if (defaultValue != false)
       json.put("default_value", defaultValue);
+    if (compute != null)
+      json.put("compute", compute);
     return json;
   }
   
   public String toString(){
     return "[Boolean field symbol: " + symbol + " label: " + label +
-        " description: '" + description + "'" + " default value: " + defaultValue + "]";
+        " description: '" + description + "'" + " default value: " + defaultValue +
+        " compute: (" + compute + ")]";
   }
 }

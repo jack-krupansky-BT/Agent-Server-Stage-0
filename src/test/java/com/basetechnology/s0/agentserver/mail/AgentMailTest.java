@@ -18,17 +18,16 @@ package com.basetechnology.s0.agentserver.mail;
 
 import static org.junit.Assert.*;
 
-import java.util.List;
-
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import com.basetechnology.s0.agentserver.AgentDefinition;
 import com.basetechnology.s0.agentserver.AgentInstance;
+import com.basetechnology.s0.agentserver.AgentSchedulerTest;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.AgentServerTestBase;
@@ -51,6 +50,7 @@ import com.basetechnology.s0.agentserver.script.runtime.value.StringValue;
 import com.basetechnology.s0.agentserver.util.ListMap;
 
 public class AgentMailTest extends AgentServerTestBase {
+  static final Logger log = Logger.getLogger(AgentMailTest.class);
 
   public static AgentAppServer server;
 
@@ -79,36 +79,40 @@ public class AgentMailTest extends AgentServerTestBase {
     AgentServer agentServer = server.agentServer;
     AgentServerConfig config = agentServer.config;
     AgentServerProperties properties = config.agentServerProperties;
-    
-    String serverHostName = properties.mailServerHostName;
-    String serverUserName = properties.mailServerUserName;
-    String serverUserPwd = properties.mailServerUserPassword;
-    int serverPort = properties.mailServerPort;
-    String serverFromEmail = properties.mailServerFromEmail;
-    String serverFromName = properties.mailServerFromName;
-    int nextMessageId = 1000;
-    AgentMail agentMail = new AgentMail(agentServer, serverHostName, serverUserName, serverUserPwd,
-        serverPort, serverFromEmail, serverFromName, nextMessageId);
 
-    String toEmail = properties.testUserEmail;
-    int i = toEmail.indexOf('@');
-    String userId = i < 0 ? "" : toEmail.substring(0, i);
-    User user = new User(userId);
-    String toName = properties.testUserName;
-    String subject = "Test subject";
-    String message = "Test message.";
-    String messageTrailer1 = "\n\n----------\nFrom Agent Server - Message Id #";
-    String messageTrailer2 = "\n" +
+    // Skip test if mail access if disabled
+    if(config.getMailAccessEnabled()){
+      String serverHostName = properties.mailServerHostName;
+      String serverUserName = properties.mailServerUserName;
+      String serverUserPwd = properties.mailServerUserPassword;
+      int serverPort = properties.mailServerPort;
+      String serverFromEmail = properties.mailServerFromEmail;
+      String serverFromName = properties.mailServerFromName;
+      int nextMessageId = 1000;
+      AgentMail agentMail = new AgentMail(agentServer, serverHostName, serverUserName, serverUserPwd,
+          serverPort, serverFromEmail, serverFromName, nextMessageId);
+
+      String toEmail = properties.testUserEmail;
+      int i = toEmail.indexOf('@');
+      String userId = i < 0 ? "" : toEmail.substring(0, i);
+      User user = new User(userId);
+      String toName = properties.testUserName;
+      String subject = "Test subject";
+      String message = "Test message.";
+      String messageTrailer1 = "\n\n----------\nFrom Agent Server - Message Id #";
+      String messageTrailer2 = "\n" +
           "For support contact agent-server-1-admin@basetechnology.com\n" +
           "Or visit http://basetechnology.com\n";
 
-    try {
-      int messageId = agentMail.sendMessage(user, toEmail, toName, subject, message,
-          messageTrailer1, messageTrailer2);
-      assertEquals("Message Id", nextMessageId + 1, messageId);
-    } catch (AgentServerException e){
-      fail("Exception sending message - " + e.getMessage());
-    }
+      try {
+        int messageId = agentMail.sendMessage(user, toEmail, toName, subject, message,
+            messageTrailer1, messageTrailer2);
+        assertEquals("Message Id", nextMessageId + 1, messageId);
+      } catch (AgentServerException e){
+        fail("Exception sending message - " + e.getMessage());
+      }
+    } else
+      log.warn("testBasic skipped since mail_access_enabled is false");
   }
 
 
@@ -116,7 +120,7 @@ public class AgentMailTest extends AgentServerTestBase {
   public void testNotification() throws AgentServerException, JSONException, TokenizerException, ParserException {
     // Add user
     AgentServer agentServer = server.agentServer;
-    User user = new User("test-user-1", "pwd-1", "Your pwd", "Test User 1", "Test User 1", "tu1", "", "", "test-user-1@basetechnology.com", false, "", true, null, null);
+    User user = new User("test-user-1", "pwd-1", "Your pwd", "Test User 1", "Test User 1", "", "tu1", "", "", "test-user-1@basetechnology.com", false, "", true, null, null);
     agentServer.addUser(user);
     
     // Add agent definition
@@ -127,9 +131,9 @@ public class AgentMailTest extends AgentServerTestBase {
     // Add several notifications to the agent definition
     FieldList fieldList1 = new FieldList();
     SymbolTable symbolTable = new SymbolTable("Not1");
-    fieldList1.add(new StringField(symbolTable, "Vendor", "", "", "Abc Corp.", 0, 1000, 100, ".*"));
-    fieldList1.add(new FloatField(symbolTable, "Price", "", "", 123.45, 0.0, 1000.0, 100));
-    fieldList1.add(new BooleanField(symbolTable, "Purchased", "", "", true));
+    fieldList1.add(new StringField(symbolTable, "Vendor", "", "", "Abc Corp.", 0, 1000, 100, ".*", null));
+    fieldList1.add(new FloatField(symbolTable, "Price", "", "", 123.45, 0.0, 1000.0, 100, null));
+    fieldList1.add(new BooleanField(symbolTable, "Purchased", "", "", true, null));
     NotificationDefinition notificationDefinition1 =
         new NotificationDefinition("Not1", "FYI, we found your deal", "notify_only", "", true, true, fieldList1, null, "", false);
     agentDefinition.notifications.add(notificationDefinition1.name, notificationDefinition1);
@@ -146,7 +150,7 @@ public class AgentMailTest extends AgentServerTestBase {
     AgentInstance agentInstance = agentServer.getAgentInstance(user, agentDefinition);
     
     // Suppress email for now, just check status
-    agentInstance.suppressEmail = true;
+    //agentInstance.suppressEmail = true;
     
     // Get the notification instances
     ListMap<String, NotificationInstance> notificationInstances = agentInstance.notifications;

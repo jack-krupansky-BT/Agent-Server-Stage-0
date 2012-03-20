@@ -108,6 +108,11 @@ public class HandlePost extends HandleHttp {
         nickName = userJson.optString("nick_name");
       else
         userJson.put("nick_name", nickName);
+      String organization = request.getParameter("organization");
+      if (organization == null)
+        organization = userJson.optString("organization");
+      else
+        userJson.put("organization", organization);
       String bio = request.getParameter("bio");
       if (bio == null)
         bio = userJson.optString("bio");
@@ -156,7 +161,8 @@ public class HandlePost extends HandleHttp {
         password = password.trim();
         log.info("Adding new user: " + id);
         Boolean approved = ! agentServer.config.getBoolean("admin_approve_user_create");
-        User newUser = new User(id, password, passwordHint, fullName, displayName, nickName, bio, interests, email, incognito, comment, approved, null, null);
+        User newUser = new User(id, password, passwordHint, fullName, displayName, nickName,
+            organization, bio, interests, email, incognito, comment, approved, null, null);
         newUser.generateSha();
         agentServer.addUser(newUser);
         response.setStatus(HttpServletResponse.SC_CREATED);
@@ -168,57 +174,55 @@ public class HandlePost extends HandleHttp {
       String password = request.getParameter("password");
       JSONObject agentDefinitionJson = getJsonRequest(httpInfo);
 
-      if (userId == null){
-        throw new AgentAppServerBadRequestException("Missing user name path parameter");
-      } else if (userId.trim().length() == 0){
-        throw new AgentAppServerBadRequestException("Empty user name path parameter");
-      } else if (password == null){
+      if (userId == null)
+        throw new AgentAppServerBadRequestException("Missing user Id path parameter");
+      else if (userId.trim().length() == 0)
+        throw new AgentAppServerBadRequestException("Empty user Id path parameter");
+      else if (password == null)
         throw new AgentAppServerBadRequestException("Missing password query parameter");
-      } else if (password.trim().length() == 0){
+      else if (password.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty password query parameter");
-      } else if (! agentServer.users.containsKey(userId) ||
-          ! agentServer.users.get(userId).password.equals(password)){
+      else if (! agentServer.users.containsKey(userId) ||
+          ! agentServer.users.get(userId).password.equals(password))
         throw new AgentAppServerBadRequestException("Unknown user Id or incorrect password");
-      } else if (agentDefinitionJson == null){
+      else if (agentDefinitionJson == null)
         throw new AgentAppServerBadRequestException("Invalid agent definition JSON object");
-      } else {
-        log.info("Adding new agent definition for user: " + userId);
-        User user = agentServer.getUser(userId);
-        
-        // Parse and add the agent definition
-        AgentDefinition agentDefinition = agentServer.addAgentDefinition(user, agentDefinitionJson);
-        
-        // Done
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-      }
+
+      log.info("Adding new agent definition for user: " + userId);
+      User user = agentServer.getUser(userId);
+
+      // Parse and add the agent definition
+      AgentDefinition agentDefinition = agentServer.addAgentDefinition(user, agentDefinitionJson);
+
+      // Done
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents$")){
       String userId = pathParts[2];
       String password = request.getParameter("password");
       JSONObject agentInstanceJson = getJsonRequest(httpInfo);
 
-      if (userId == null){
-        throw new AgentAppServerBadRequestException("Missing user name path parameter");
-      } else if (userId.trim().length() == 0){
-        throw new AgentAppServerBadRequestException("Empty user name path parameter");
-      } else if (password == null){
+      if (userId == null)
+        throw new AgentAppServerBadRequestException("Missing user Id path parameter");
+      else if (userId.trim().length() == 0)
+        throw new AgentAppServerBadRequestException("Empty user Id path parameter");
+      else if (password == null)
         throw new AgentAppServerBadRequestException("Missing password query parameter");
-      } else if (password.trim().length() == 0){
+      else if (password.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty password query parameter");
-      } else if (! agentServer.users.containsKey(userId) ||
-          ! agentServer.users.get(userId).password.equals(password)){
+      else if (! agentServer.users.containsKey(userId) ||
+          ! agentServer.users.get(userId).password.equals(password))
         throw new AgentAppServerBadRequestException("Unknown user Id or incorrect password");
-      } else if (agentInstanceJson == null){
+      else if (agentInstanceJson == null)
         throw new AgentAppServerBadRequestException("Invalid agent instance JSON object");
-      } else {
-        log.info("Adding new agent instance for user: " + userId);
-        User user = agentServer.getUser(userId);
-        
-        // Parse and add the agent instance
-        AgentInstance agentInstance = agentServer.addAgentInstance(user, agentInstanceJson);
-        
-        // Done
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-      }
+
+      log.info("Adding new agent instance for user: " + userId);
+      User user = agentServer.getUser(userId);
+
+      // Parse and add the agent instance
+      AgentInstance agentInstance = agentServer.addAgentInstance(user, agentInstanceJson);
+
+      // Done
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-*]*/website_access$")){
       String userId = pathParts[2];
       String password = request.getParameter("password");

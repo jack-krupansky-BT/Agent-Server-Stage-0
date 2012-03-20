@@ -82,6 +82,10 @@ public class AgentServerProperties {
   public String minimumMailAccessInterval;
   public String minimumHostMailAccessInterval;
   public String minimumAddressMailAccessInterval;
+  public String maximumLimitInstanceStatesStored;
+  public String defaultLimitInstanceStatesStored;
+  public String maximumLimitInstanceStatesReturned;
+  public String defaultLimitInstanceStatesReturned;
 
   public ListMap<String, String> commandLineProperties;
   public Properties properties;
@@ -215,8 +219,18 @@ public class AgentServerProperties {
     minimumHostMailAccessInterval = getProperty("minimum_host_mail_access_interval",
         Long.toString(MailAccessManager.DEFAULT_MINIMUM_HOST_MAIL_ACCESS_INTERVAL));
     minimumAddressMailAccessInterval = getProperty("minimum_address_mail_access_interval",
-        Long.toString(MailAccessManager.DEFAULT_MINIMUM_HOST_MAIL_ACCESS_INTERVAL));
+        Long.toString(MailAccessManager.DEFAULT_MINIMUM_ADDRESS_MAIL_ACCESS_INTERVAL));
 
+    defaultLimitInstanceStatesStored = getProperty("default_limit_instance_states_stored",
+        Integer.toString(AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_STORED));
+    maximumLimitInstanceStatesStored = getProperty("maximum_limit_instance_states_stored",
+        Integer.toString(AgentInstance.DEFAULT_MAXIMUM_LIMIT_INSTANCE_STATES_STORED));
+
+    defaultLimitInstanceStatesReturned = getProperty("default_limit_instance_states_returned",
+        Integer.toString(AgentInstance.DEFAULT_LIMIT_INSTANCE_STATES_RETURNED));
+    maximumLimitInstanceStatesReturned = getProperty("maximum_limit_instance_states_returned",
+        Integer.toString(AgentInstance.DEFAULT_MAXIMUM_LIMIT_INSTANCE_STATES_RETURNED));
+    
   }
   
   public String getProperty(String key, String defaultValue){

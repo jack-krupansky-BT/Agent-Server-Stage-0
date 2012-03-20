@@ -21,7 +21,6 @@ import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.script.intermediate.FloatTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.IntegerTypeNode;
-import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolTable;
 import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
@@ -41,7 +40,8 @@ public class FloatField extends Field {
     maxValue = Double.MAX_VALUE;
   }
 
-  public FloatField(SymbolTable symbolTable, String name, String label, String description, double defaultValue, double minValue, double maxValue, int nominalWidth){
+  public FloatField(SymbolTable symbolTable, String name, String label, String description,
+      double defaultValue, double minValue, double maxValue, int nominalWidth, String compute){
     this.symbol = new Symbol(symbolTable, name, FloatTypeNode.one);
     this.label = label;
     this.description = description;
@@ -49,10 +49,12 @@ public class FloatField extends Field {
     this.minValue = minValue;
     this.maxValue = maxValue;
     this.nominalWidth = nominalWidth;
+    this.compute = compute;
   }
 
   public Field clone(){
-    return new FloatField(symbol.symbolTable, symbol.name, label, description, defaultValue, minValue, maxValue, nominalWidth);
+    return new FloatField(symbol.symbolTable, symbol.name, label, description, defaultValue,
+        minValue, maxValue, nominalWidth, compute);
   }
 
   public Object getDefaultValue(){
@@ -78,7 +80,9 @@ public class FloatField extends Field {
     double minValue = fieldJson.has("min_value") ? fieldJson.optDouble("min_value") : Double.MIN_VALUE;
     double maxValue = fieldJson.has("max_value") ? fieldJson.optDouble("max_value") : Double.MAX_VALUE;
     int nominalWidth = fieldJson.has("nominal_width") ? fieldJson.optInt("nominal_width") : 0;
-    return new FloatField(symbolTable, name, label, description, defaultValue, minValue, maxValue, nominalWidth);
+    String compute = fieldJson.has("compute") ? fieldJson.optString("compute") : null;
+    return new FloatField(symbolTable, name, label, description, defaultValue, minValue, maxValue,
+        nominalWidth, compute);
   }
 
   public JSONObject toJson() throws JSONException {
@@ -98,6 +102,8 @@ public class FloatField extends Field {
       json.put("max_value", maxValue);
     if (nominalWidth != 0)
       json.put("nominal_width", nominalWidth);
+    if (compute != null)
+      json.put("compute", compute);
     return json;
   }
   
@@ -105,7 +111,7 @@ public class FloatField extends Field {
     return "[Float field symbol: " + symbol + " label: " + label +
         " description: '" + description + "'" + " default value: " + defaultValue +
         " min value: " + minValue + " max value: " + maxValue +
-        " nominal width: " + nominalWidth +
+        " nominal width: " + nominalWidth + " compute: (" + compute + ")" +
         "]";
   }
 }

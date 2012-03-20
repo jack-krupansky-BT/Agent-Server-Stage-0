@@ -131,10 +131,10 @@ public class MailAccessManager {
   }
   
   static public void setConfigDefaults(AgentServerConfig config) throws AgentServerException {
-    config.put("mail_access_enabled", DEFAULT_MAIL_ACCESS_ENABLED);
-    config.put("minimum_mail_access_interval", DEFAULT_MINIMUM_MAIL_ACCESS_INTERVAL);
-    config.put("minimum_host_mail_access_interval", DEFAULT_MINIMUM_HOST_MAIL_ACCESS_INTERVAL);
-    config.put("minimum_address_mail_access_interval", DEFAULT_MINIMUM_ADDRESS_MAIL_ACCESS_INTERVAL);
+    config.put("mail_access_enabled", config.agentServerProperties.mailAccessEnabled);
+    config.put("minimum_mail_access_interval", config.agentServerProperties.minimumMailAccessInterval);
+    config.put("minimum_host_mail_access_interval", config.agentServerProperties.minimumHostMailAccessInterval);
+    config.put("minimum_address_mail_access_interval", config.agentServerProperties.minimumAddressMailAccessInterval);
   }
   
   public void wait(User user, String emailAddress){

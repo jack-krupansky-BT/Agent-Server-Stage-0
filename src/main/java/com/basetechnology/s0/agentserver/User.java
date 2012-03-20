@@ -19,12 +19,16 @@ package com.basetechnology.s0.agentserver;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.basetechnology.s0.agentserver.appserver.HandlePut;
 import com.basetechnology.s0.agentserver.util.JsonUtils;
 import com.basetechnology.s0.agentserver.util.ShaUtils;
 
 public class User {
+  static final Logger log = Logger.getLogger(User.class);
 
   public static final int DEFAULT_MAX_USERS = 100;
   public static final boolean DEFAULT_ADMIN_ONLY_USER_CREATE = false;
@@ -39,6 +43,7 @@ public class User {
   public String fullName;
   public String displayName;
   public String nickName;
+  public String organization;
   public String bio;
   public String interests;
   public String email;
@@ -54,7 +59,7 @@ public class User {
   public static User allUser = new User("*");
   
   public User(String id){
-    this(id, "", "", "", "", "", "", "", "", false, "", true, null, null);
+    this(id, "", "", "", "", "", "", "", "", "", false, "", true, null, null);
   }
   
   public User(
@@ -64,6 +69,7 @@ public class User {
       String fullName,
       String displayName,
       String nickName,
+      String organization,
       String bio,
       String interests,
       String email,
@@ -80,6 +86,7 @@ public class User {
     this.fullName = fullName;
     this.displayName = displayName;
     this.nickName = nickName;
+    this.organization = organization;
     this.bio = bio;
     this.interests = interests;
     this.email = email;
@@ -110,6 +117,8 @@ public class User {
       this.nickName = updated.nickName;
     if (updated.bio != null)
       this.bio = updated.bio;
+    if (updated.organization != null)
+      this.organization = updated.organization;
     if (updated.interests != null)
       this.interests = updated.interests;
     if (updated.incognito != null)
@@ -141,6 +150,7 @@ public class User {
     String fullName = userJson.optString("full_name", null);
     String displayName = userJson.optString("display_name", null);
     String nickName = userJson.optString("nick_name", null);
+    String organization = userJson.optString("organization", null);
     String bio = userJson.optString("bio", null);
     String interests = userJson.optString("interests", null);
     Boolean incognito = userJson.has("incognito") ? userJson.optBoolean("incognito") : null;
@@ -157,22 +167,56 @@ public class User {
     }
     JsonUtils.validateKeys(userJson, "User", new ArrayList<String>(Arrays.asList(
         "id", "password", "password_hint", "full_name", "display_name", "nick_name",
-        "bio", "interests", "email", "incognito", "comment", "approved", "sha_id", "sha_password")));
-    return new User(id, password, passwordHint, fullName, displayName, nickName, bio, interests, email, incognito, comment, approved, shaId, shaPassword);
+        "organization", "bio", "interests", "email", "incognito", "comment", "approved",
+        "sha_id", "sha_password")));
+    return new User(id, password, passwordHint, fullName, displayName, nickName,
+        organization, bio, interests, email, incognito, comment, approved, shaId, shaPassword);
 
   }
   
-  public String toJson(){
+  public JSONObject toJson(){
     return toJson(true, true);
   }
 
-  public String toJson(boolean withPassword, boolean withPasswordHint){
+  public JSONObject toJson(boolean withPassword, boolean withPasswordHint){
+    JSONObject userJson = new JSONObject();
+    try {
+      userJson.put("id", id);
+      if (withPassword)
+        userJson.put("password", password);
+      if (withPasswordHint)
+        userJson.put("password_hint", passwordHint);
+      userJson.put("full_name", fullName);
+      userJson.put("display_name", displayName);
+      userJson.put("nick_name", nickName);
+      userJson.put("organization", organization);
+      userJson.put("bio", bio);
+      userJson.put("interests", interests);
+      userJson.put("incognito", incognito);
+      userJson.put("email", email);
+      userJson.put("comment", comment);
+      userJson.put("approved", approved);
+      userJson.put("sha_id", shaId);
+      userJson.put("sha_password", shaPassword);
+    } catch (JSONException e){
+      e.printStackTrace();
+      log.error("Exception generating User JSON - " + e.getMessage());
+    }
+    return userJson;
+  }
+
+  public String toJsonString(){
+    return toJsonString(true, true);
+  }
+
+  public String toJsonString(boolean withPassword, boolean withPasswordHint){
     return "{\"id\": \"" + (id == null ? "null" : id) +
         (withPassword ? "\", \"password\": \"" + (password == null ? "" : password) : "") +
         (withPasswordHint ? "\", \"password_hint\": \"" + (passwordHint == null ? "" : passwordHint) : "") +
         "\", \"full_name\": \"" + (fullName == null ? "" : fullName) +
         "\", \"display_name\": \"" + (displayName == null ? "" : displayName) +
         "\", \"nick_name\": \"" + (nickName == null ? "" : nickName) +
+        "\", \"organization\": \"" + (organization == null ? "" : organization) +
         "\", \"bio\": \"" + (bio == null ? "" : bio) +
         "\", \"interests\": \"" + (interests == null ? "" : interests) +
         "\", \"incognito\": " + (incognito == null ? "" : incognito) +
@@ -184,6 +228,6 @@ public class User {
   }
   
   public String toString(){
-    return toJson();
+    return toJsonString();
   }
 }

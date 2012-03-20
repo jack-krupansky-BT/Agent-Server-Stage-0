@@ -66,6 +66,11 @@ import com.basetechnology.s0.agentserver.util.NameValue;
 public class AgentInstance {
   static final Logger log = Logger.getLogger(AgentInstance.class);
   public static final int DEFAULT_MAX_INSTANCES = 1000;
+  public static final int DEFAULT_LIMIT_INSTANCE_STATES_STORED = 25;
+  public static final int DEFAULT_MAXIMUM_LIMIT_INSTANCE_STATES_STORED = 1000;
+  public static final int DEFAULT_LIMIT_INSTANCE_STATES_RETURNED = 10;
+  public static final int DEFAULT_MAXIMUM_LIMIT_INSTANCE_STATES_RETURNED = 1000;
+  public static final boolean DEFAULT_PUBLIC_OUTPUT= false;
   public AgentServer agentServer;
   public long timeInstantiated;
   public long timeUpdated;
@@ -82,8 +87,8 @@ public class AgentInstance {
   public Map<String, AgentConditionStatus> conditionStatus;
   public String triggerIntervalExpression;
   public String reportingIntervalExpression;
-  //public long triggerInterval;
-  //public long reportingInterval;
+  public Boolean publicOutput;
+  public int limitInstanceStatesStored;
   public Boolean enabled;
   public boolean pendingSuspended;
   public boolean busy;
@@ -124,8 +129,8 @@ public class AgentInstance {
     this(user, agentDefinition, null);
   }
 
-  public AgentInstance(User user, AgentDefinition agentDefinition, SymbolValues parameterValues) throws SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException  {
-    this(user, agentDefinition, null, null, parameterValues, null, null, agentDefinition.enabled, -1, -1, null, false);
+  public AgentInstance(User user, AgentDefinition agentDefinition, SymbolValues parameterValues) throws SymbolException, AgentServerException  {
+    this(user, agentDefinition, null, null, parameterValues, null, null, false, -1, agentDefinition.enabled, -1, -1, null, false);
   }
   
   public AgentInstance(
@@ -136,11 +141,13 @@ public class AgentInstance {
       SymbolValues parameterValues,
       String triggerIntervalExpression,
       String reportingIntervalExpression,
+      Boolean publicOutput,
+      int limitInstanceStatesStored,
       Boolean enabled,
       long timeInstantiated,
       long timeUpdated,
       List<AgentState> state,
-      boolean update) throws SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException  {
+      boolean update) throws AgentServerException {
     this.timeInstantiated = timeInstantiated > 0 ? timeInstantiated : System.currentTimeMillis();
     this.timeUpdated = timeUpdated > 0 ? timeUpdated : 0;
     this.user = user == null ? User.noUser : user;
@@ -167,6 +174,9 @@ public class AgentInstance {
         reportingIntervalExpression == null || reportingIntervalExpression.trim().length() == 0 ?
             agentDefinition.reportingIntervalExpression :
               reportingIntervalExpression;
+    this.publicOutput = publicOutput;
+    this.limitInstanceStatesStored = limitInstanceStatesStored >= 0 ? limitInstanceStatesStored :
+      update ? limitInstanceStatesStored : agentServer.config.getDefaultLimitInstanceStatesStored();
     this.lastInputsChanged = 0;
     this.lastTriggerReady = 0;
     this.lastTriggered = 0;
@@ -252,7 +262,7 @@ public class AgentInstance {
     }
   }
   
-  public void enable() throws RuntimeException, SymbolException, JSONException, AgentServerException {
+  public void enable() throws AgentServerException {
     enabled = true;
     captureState();
 
@@ -394,7 +404,12 @@ public class AgentInstance {
         memoryStates,
         outputStates, exceptionStates, lastDismissedExceptionTime,
         notificationStates, notificationHistoryStates);
-    if (state.size() == 0 || ! state.get(state.size() - 1).equalValues(newState)){
+    int stateSize = state.size(); 
+    if (stateSize == 0 || ! state.get(stateSize - 1).equalValues(newState)){
+      // Limit number of states recorded - roll off the oldest
+      if (stateSize >= limitInstanceStatesStored || stateSize >= agentServer.config.getMaximumLimitInstanceStatesStored())
+        state.remove(0);
+      
       // Store the new state
       state.add(newState);
       
@@ -406,7 +421,7 @@ public class AgentInstance {
     return newState;
   }
 
-  public void instantiateInputDataSources() throws SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException {
+  public void instantiateInputDataSources() throws AgentServerException {
     // Instantiate referenced data sources
     for (DataSourceReference dataSourceReference: agentDefinition.inputs){
       AgentInstance dataSourceInstance = dataSourceReference.instantiate(this, user, agentDefinition.agentServer);
@@ -414,7 +429,7 @@ public class AgentInstance {
     }
   }
   
-  public void initializeVariables() throws SymbolException, RuntimeException, AgentServerException, TokenizerException, ParserException {
+  public void initializeVariables() throws AgentServerException {
     // Set value for each parameter, as specified or default if not specified
     SymbolValues parameterValues = categorySymbolValues.get("parameters");
     for (Field field: agentDefinition.parameters){
@@ -498,6 +513,17 @@ public class AgentInstance {
   }
 
   public void checkpointOutput() throws AgentServerException {
+    // Recompute any computed fields
+    SymbolValues outputValues = categorySymbolValues.get("outputs");
+    for (Field field: agentDefinition.outputs){
+      if (field.compute != null){
+        Value newValue = evaluateExpression(field.compute);
+        outputValues.put(symbolManager.get("outputs", field.symbol.name), newValue);
+        log.info("Computed new output value for " + field.symbol.name + ": " + newValue.toJson());
+      }
+    }
+    //log.info("Initial output values for instance " + name + ": " + categorySymbolValues.get("outputs").toJson());
+    
     // Trigger dependent instances if output values of this instance changed
     // TODO: Where else do we need to do this?
     // - Init of instance for initial output values
@@ -638,31 +664,37 @@ public class AgentInstance {
     return valueNode;
   }
   
-  public Value runScriptString(String script) throws TokenizerException, ParserException, SymbolException, RuntimeException, AgentServerException, JSONException {
+  public Value runScriptString(String script) throws AgentServerException {
     return runScriptString(script, true);
   }
   
-  public Value runScriptString(String script, boolean captureInputs) throws TokenizerException, ParserException, SymbolException, RuntimeException, AgentServerException, JSONException {
-    // Compile the script
-    // TODO: Cache and reuse compiled scripts
-    ScriptParser parser = new ScriptParser(this);
-    ScriptNode scriptNode = parser.parseScriptString(script);
+  public Value runScriptString(String script, boolean captureInputs) throws AgentServerException {
+    try {
+      // Compile the script
+      // TODO: Cache and reuse compiled scripts
+      ScriptParser parser = new ScriptParser(this);
+      ScriptNode scriptNode = parser.parseScriptString(script);
 
-    // Optionally capture output field values for data source inputs
-    if (captureInputs)
-      captureDataSourceOutputValues();
-    
-    // Run the compiled script
-    Value valueNode = scriptRuntime.runScript(script, scriptNode);
+      // Optionally capture output field values for data source inputs
+      if (captureInputs)
+        captureDataSourceOutputValues();
 
-    // Capture state
-    captureState();
-    
-    // Trigger dependent instances if output values of this instance changed
-    checkpointOutput();
+      // Run the compiled script
+      Value valueNode = scriptRuntime.runScript(script, scriptNode);
 
-    // Return the return value node for the script
-    return valueNode;
+      // Capture state
+      captureState();
+
+      // Trigger dependent instances if output values of this instance changed
+      checkpointOutput();
+
+      // Return the return value node for the script
+      return valueNode;
+    } catch (TokenizerException e){
+      throw new AgentServerException("TokenizerException parsing script string \"" + script + "\" - " + e.getMessage());
+    } catch (ParserException e){
+      throw new AgentServerException("ParserException parsing expression \"" + script + "\" - " + e.getMessage());
+    }
   }
 
   public AgentState getCurrentState(){
@@ -693,6 +725,8 @@ public class AgentInstance {
 
       agentJson.put("trigger_interval", triggerIntervalExpression);
       agentJson.put("reporting_interval", reportingIntervalExpression);
+      agentJson.put("public_output", publicOutput);
+      agentJson.put("limit_instance_states_stored", limitInstanceStatesStored);
       agentJson.put("enabled", enabled);
 
       // Return most recent parameter values
@@ -701,80 +735,33 @@ public class AgentInstance {
         currentParameterValuesJson.put(parameter.symbol.name, getParameter(parameter.symbol.name).getValue());
       agentJson.put("parameter_values", currentParameterValuesJson);
 
-      if (includeState){
-        agentJson.put("inputs_changed", lastInputsChanged > 0 ? DateUtils.toRfcString(lastInputsChanged) : "");
-        agentJson.put("triggered", lastTriggered > 0 ? DateUtils.toRfcString(lastTriggered) : "");
-        agentJson.put("outputs_changed", outputHistory.size() > 0 ? DateUtils.toRfcString(outputHistory.get(outputHistory.size() - 1).time) : "");
-        agentJson.put("status", getStatus());
+      // Summarize activity of instance
+      agentJson.put("inputs_changed", lastInputsChanged > 0 ? DateUtils.toRfcString(lastInputsChanged) : "");
+      agentJson.put("triggered", lastTriggered > 0 ? DateUtils.toRfcString(lastTriggered) : "");
+      agentJson.put("outputs_changed", outputHistory.size() > 0 ? DateUtils.toRfcString(outputHistory.get(outputHistory.size() - 1).time) : "");
+      agentJson.put("status", getStatus());
 
+      if (includeState){
         // Generate array of state history
         JSONArray stateHistoryJson = new JSONArray();
 
         // Default and limit count of states to return
         int historySize = state.size();
         if (stateCount <= 0)
+          stateCount = agentServer.config.getDefaultLimitInstanceStatesReturned();
+        if (stateCount <= 0)
           stateCount = historySize;
         if (stateCount > historySize)
           stateCount = historySize;
+        int limitCount = agentServer.config.getMaximumLimitInstanceStatesReturned();
+        if (stateCount > limitCount)
+          stateCount = limitCount;
         int startIndex = historySize - stateCount;
         for (int i = startIndex; i < historySize; i++)
           stateHistoryJson.put(state.get(i).toJson());
-
-        // Return most recent agent state, if any
-        //AgentState currentState = getCurrentState();
-
-        // Return most recent input values
-        // TODO: Rework this
-        /*    Map<DataSource, DataSourceState> currentInputValues = currentState.inputStates;
-    JSONObject currentInputValuesJson = new JSONObject();
-    for (DataSourceReference input: agentDefinition.inputs){
-      Map<Field, FieldState> dataSourceFieldValues = currentInputValues.get(input).attributeValues;
-      JSONObject dataSourceValuesJson = new JSONObject();
-      for (Field attribute: input.attributes)
-        dataSourceValuesJson.put(attribute.symbol.name, dataSourceFieldValues.get(attribute).value);
-      currentInputValuesJson.put(input.name, dataSourceValuesJson);
-    }
-    agentJson.put("inputs", currentInputValuesJson);
-
-    // Return most recent event values
-    Map<Event, EventState> currentEventValues = currentState.eventStates;
-    JSONObject currentEventValuesJson = new JSONObject();
-    for (Event event: agentDefinition.events){
-      Map<Field, FieldState> eventFieldValues = currentEventValues.get(event).attributeValues;
-      JSONObject eventValuesJson = new JSONObject();
-      for (Field attribute: event.attributes)
-        eventValuesJson.put(attribute.symbol.name, eventFieldValues.get(attribute).value);
-      currentEventValuesJson.put(event.name, eventValuesJson);
-    }
-    agentJson.put("events", currentEventValuesJson);
-         */
-        /*
-        // Return most recent memory values
-        JSONObject currentMemoryValuesJson = new JSONObject();
-        if (agentState != null){
-          SymbolValues currentMemoryValues = agentState.memoryValues;
-          for (Field memory: agentDefinition.memory)
-            currentMemoryValuesJson.put(memory.symbol.name, currentMemoryValues.get(memory.symbol.name));
-        }
-        stateJson.put("memory", currentMemoryValuesJson);
-
-        // Return most recent output values
-        JSONObject currentOutputValuesJson = new JSONObject();
-        if (agentState != null){
-          SymbolValues currentOutputValues = agentState.outputValues;
-          log.info("OutputValues: " + currentOutputValues.toJson().toString());
-          for (Field output: agentDefinition.outputs)
-            currentOutputValuesJson.put(output.symbol.name, currentOutputValues.get(output.symbol.name));
-        }
-        stateJson.put("outputs", currentOutputValuesJson);
-
-        // Add JSON for this state to the state history array
-        stateHistoryJson.put(stateJson);
-         */
-
+        
         agentJson.put("state", stateHistoryJson);
       }
-      //log.info("AgentInstance.toJson: " + agentJson.toString());
 
       return agentJson;
     } catch (JSONException e) {
@@ -937,7 +924,16 @@ public class AgentInstance {
     String triggerInterval = JsonUtils.getString(agentJson, "trigger_interval", update ? null : AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION);
     String reportingInterval = JsonUtils.getString(agentJson, "reporting_interval", update ? null : AgentDefinition.DEFAULT_REPORTING_INTERVAL_EXPRESSION);
 
-    //Boolean enabled = agentJson.has("enabled") ? agentJson.optBoolean("enabled") : (update ? null : true);
+    Boolean publicOutput = null;
+    if (agentJson.has("public_output"))
+      publicOutput = agentJson.optBoolean("public_output");
+    else if (update)
+      publicOutput = null;
+    else
+      publicOutput = false;
+
+    int limitInstanceStatesStored = agentJson.optInt("limit_instance_states_stored", -1);
+
     Boolean enabled = null;
     if (agentJson.has("enabled"))
       enabled = agentJson.optBoolean("enabled");
@@ -980,9 +976,10 @@ public class AgentInstance {
     JsonUtils.validateKeys(agentJson, "Agent instance", new ArrayList<String>(Arrays.asList(
         "user", "name", "definition", "description", "parameter_values", "trigger_interval", "reporting_interval",
         "enabled", "instantiated", "updated", "state",
-        "status", "inputs_changed", "triggered", "outputs_changed")));
+        "status", "inputs_changed", "triggered", "outputs_changed",
+        "public_output", "limit_instance_states_stored")));
 
-    AgentInstance agentInstance = new AgentInstance(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerInterval, reportingInterval, enabled, timeInstantiated, timeUpdated, state, update);
+    AgentInstance agentInstance = new AgentInstance(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerInterval, reportingInterval, publicOutput, limitInstanceStatesStored, enabled, timeInstantiated, timeUpdated, state, update);
 
     // Return the new agent instance
     return agentInstance;
@@ -1026,7 +1023,7 @@ public class AgentInstance {
       return lastTriggered + getTriggerInterval();
   }
   
-  public void setState(List<AgentState> state, boolean update) throws SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException {
+  public void setState(List<AgentState> state, boolean update) throws AgentServerException {
     int stateSize = state == null ? 0 : state.size();
     if (stateSize > 0){
     // Restore saved state history
@@ -1179,9 +1176,11 @@ public class AgentInstance {
     
     // Perform the notification - email-only, for now
     if (user.email != null && user.email.trim().length() > 0){
-      if (suppressEmail){
-        log.info("Email notification suppressed by suppressEmail flag for instance " + name);
-      } else {
+      if (suppressEmail)
+        log.warn("Email notification suppressed by suppressEmail flag for instance " + name);
+      else if (! agentServer.config.getMailAccessEnabled())
+        log.warn("Email notification suppressed by mail_access_enabled = false for instance " + name);
+      else {
         MailNotification mailNotification = new MailNotification(agentServer);
         mailNotification.notify(notificationInstance);
       }
@@ -1220,22 +1219,8 @@ public class AgentInstance {
     // Now run an optional script based on the response
     ScriptDefinition scriptDefinition = notificationInstance.definition.scripts.get(response);
     if (scriptDefinition != null){
-      try {
         runScriptString(scriptDefinition.script);
         // TODO: Pass script name/description to runScriptString
-      } catch (SymbolException e){
-        throw new AgentServerException(
-            "SymbolException while trying to run notification script - " + e.getMessage());
-      } catch (TokenizerException e){
-        throw new AgentServerException(
-            "TokenizerException while trying to run notification script - " + e.getMessage());
-      } catch (ParserException e){
-        throw new AgentServerException(
-            "ParserException while trying to run notification script - " + e.getMessage());
-      } catch (JSONException e){
-        throw new AgentServerException(
-            "JSONException while trying to run notification script - " + e.getMessage());
-      }
     } else
       log.info("No script named '" + response + "' to run in response to notification '" +
           notificationInstance.definition.name + "' for agent instance '" + name + "'");
