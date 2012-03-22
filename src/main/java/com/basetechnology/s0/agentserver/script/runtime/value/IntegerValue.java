@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
+import com.basetechnology.s0.agentserver.util.DateUtils;
 
 public class IntegerValue extends NumberValue {
   public long value;
@@ -61,6 +62,10 @@ public class IntegerValue extends NumberValue {
   public Value getNamedValue(ScriptState scriptState, String name) throws RuntimeException {
     if (name.equals("sqrt"))
       return new FloatValue(Math.sqrt(this.getFloatValue()));
+    else if(name.equals("toIsoDate"))
+      return new StringValue(DateUtils.toIsoString(this.getLongValue()));
+    else if(name.equals("toRfcDate") || name.equals("toDate"))
+      return new StringValue(DateUtils.toRfcString(this.getLongValue()));
     return super.getNamedValue(scriptState, name);
   }
 

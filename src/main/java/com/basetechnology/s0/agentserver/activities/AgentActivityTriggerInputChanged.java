@@ -145,6 +145,18 @@ public class AgentActivityTriggerInputChanged extends AgentActivity {
             gotException(e);
             return false;
           }
+        } else {
+          // No 'inputs_changed' script - still do state capture
+          
+          // Optionally capture output field values for data source inputs
+          if (captureInputValues)
+            agent.captureDataSourceOutputValues();
+
+          // Capture state, if changed
+          agent.captureState();
+          
+          // Trigger dependent instances if output values of this instance changed
+          agent.checkpointOutput();
         }
       } else {
         log.info("Skipping " + agent.name + ".inputs_changed  since delta: " + delta + " ms. < trigger_interval: \"" + agent.triggerIntervalExpression + "\" (" + triggerInterval + " ms.)");

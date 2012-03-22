@@ -80,6 +80,8 @@ public class FunctionCallNode extends ExpressionNode {
       String notificationName = arg1.getStringValue(scriptState);
       scriptState.agentInstance.queueNotify(notificationName);
       return NullValue.one;
+    } if (functionName.equals("now") && numArgs == 0){
+      return new IntegerValue(System.currentTimeMillis());
     } if (functionName.equals("runScript") && numArgs == 1){
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       String scriptString = arg1.getStringValue();

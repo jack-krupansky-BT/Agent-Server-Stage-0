@@ -44,10 +44,8 @@ import com.basetechnology.s0.agentserver.script.parser.ParserException;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerException;
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 import com.basetechnology.s0.agentserver.util.DateUtils;
-import com.basetechnology.s0.agentserver.util.JsonUtils;
 import com.basetechnology.s0.agentserver.util.ListMap;
 import com.basetechnology.s0.agentserver.util.NameValueList;
-import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessConfig;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessManager;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebPage;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebSiteAccessConfig;
@@ -739,6 +737,22 @@ public class AgentServer {
     if (! usersAgents.containsKey(agentName))
       throw new AgentServerException("Attempt to delete agent instance ('" + agentName + "') that does not exist for user ('" + userId + "')");
 
+    // First step in deleting an agent instance is to pause it
+    agentInstance.disable();
+    
+    // Wait a little for agent activity to settle down
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e){
+      // Ignore any non-problem here
+    }
+    
+    // Flush any pending activities for this agent
+    agentScheduler.flushAgentActivities(agentInstance);
+    
+    // De-reference any input agents
+    agentInstance.deReferenceInputs();
+    
     // Delete the named agent definition for the user
     usersAgents.remove(agentName);
   }

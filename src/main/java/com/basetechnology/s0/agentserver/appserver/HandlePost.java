@@ -195,7 +195,7 @@ public class HandlePost extends HandleHttp {
       AgentDefinition agentDefinition = agentServer.addAgentDefinition(user, agentDefinitionJson);
 
       // Done
-      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+      response.setStatus(HttpServletResponse.SC_CREATED);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents$")){
       String userId = pathParts[2];
       String password = request.getParameter("password");
@@ -222,7 +222,7 @@ public class HandlePost extends HandleHttp {
       AgentInstance agentInstance = agentServer.addAgentInstance(user, agentInstanceJson);
 
       // Done
-      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+      response.setStatus(HttpServletResponse.SC_CREATED);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-*]*/website_access$")){
       String userId = pathParts[2];
       String password = request.getParameter("password");
@@ -251,71 +251,6 @@ public class HandlePost extends HandleHttp {
         // Done
         response.setStatus(HttpServletResponse.SC_NO_CONTENT);
       }
-    } else if (path.equalsIgnoreCase("/evaluate")){
-      try {
-        BufferedReader reader = request.getReader();
-        String expressionString = null;
-        try {
-          StringBuilder builder = new StringBuilder();
-          char[] buffer = new char[8192];
-          int read;
-          while ((read = reader.read(buffer, 0, buffer.length)) > 0) {
-            builder.append(buffer, 0, read);
-          }
-          expressionString = builder.toString();
-        } catch (Exception e){
-          log.info("Exception reading expression text : " + e);
-        }
-
-        log.info("Evaluating expression: " + expressionString);
-        AgentDefinition dummyAgentDefinition = new AgentDefinition(agentServer);
-        AgentInstance dummyAgentInstance = new AgentInstance(dummyAgentDefinition);
-        ScriptParser parser = new ScriptParser(dummyAgentInstance);
-        ScriptRuntime scriptRuntime = new ScriptRuntime(dummyAgentInstance);
-        ExpressionNode expressionNode = parser.parseExpressionString(expressionString);
-        Value valueNode = scriptRuntime.evaluateExpression(expressionString, expressionNode);
-        String resultString = valueNode.getStringValue();
-
-        response.setContentType("text/plain; charset=utf-8");
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println(resultString);
-      } catch (Exception e){
-        log.info("Evaluate Exception: " + e);
-      }
-      ((Request)request).setHandled(true);
-    } else if (path.equalsIgnoreCase("/run")){
-      try {
-        BufferedReader reader = request.getReader();
-        String scriptString = null;
-        try {
-          StringBuilder builder = new StringBuilder();
-          char[] buffer = new char[8192];
-          int read;
-          while ((read = reader.read(buffer, 0, buffer.length)) > 0) {
-            builder.append(buffer, 0, read);
-          }
-          scriptString = builder.toString();
-        } catch (Exception e){
-          log.info("Exception reading script text : " + e);
-        }
-
-        log.info("Running script: " + scriptString);
-        AgentDefinition dummyAgentDefinition = new AgentDefinition(agentServer);
-        AgentInstance dummyAgentInstance = new AgentInstance(dummyAgentDefinition);
-        ScriptParser parser = new ScriptParser(dummyAgentInstance);
-        ScriptRuntime scriptRuntime = new ScriptRuntime(dummyAgentInstance);
-        ScriptNode scriptNode = parser.parseScriptString(scriptString);
-        Value valueNode = scriptRuntime.runScript(scriptString, scriptNode);
-        String resultString = valueNode.getStringValue();
-        log.info("Script result: " + resultString);
-
-        response.setContentType("text/plain; charset=utf-8");
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println(resultString);
-      } catch (Exception e){
-        log.info("Run Exception: " + e);
-      }
-      ((Request)request).setHandled(true);
     } else {
       throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "Path does not address any existing object");
     }

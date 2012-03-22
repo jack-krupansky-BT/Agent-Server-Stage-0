@@ -36,18 +36,20 @@ public class StringField extends Field {
   public StringField(SymbolTable symbolTable, String name){
     this.symbol = new Symbol(symbolTable, name, StringTypeNode.one);
     this.label = name;
+    this.defaultValue = "";
   }
 
   public StringField(SymbolTable symbolTable, String name, String label){
     this.symbol = new Symbol(symbolTable, name, StringTypeNode.one);
     this.label = label;
+    this.defaultValue = "";
   }
 
   public StringField(SymbolTable symbolTable, String name, String label, String description, String defaultValue, int minLength, int maxLength, int nominalWidth, String validRegex, String compute){
     this.symbol = new Symbol(symbolTable, name, StringTypeNode.one);
     this.label = label;
     this.description = description;
-    this.defaultValue = defaultValue;
+    this.defaultValue = defaultValue == null ? "" : defaultValue;
     this.minLength = minLength;
     this.maxLength = maxLength;
     this.nominalWidth = nominalWidth;

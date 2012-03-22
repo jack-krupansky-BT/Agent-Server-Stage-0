@@ -2516,7 +2516,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
     // Test for creation of empty agent definition with only the required name
     url = baseUrl + "/users/test-user/agent_definitions?password=test-pwd";
-    agDefJson = doPostJson(url, "{\"name\": \"test-definition\"}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-definition\"}", 201);
     assertTrue("Unexpected response entity", agDefJson == null);
 
     // Test for error on creation of agent definition with name that is already defined
@@ -2527,7 +2527,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
     // Test creation of a second agent and check status
     url = baseUrl + "/users/test-user/agent_definitions?password=test-pwd";
-    agDefJson = doPostJson(url, "{\"name\": \"test-definition-2\"}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-definition-2\"}", 201);
     assertTrue("Unexpected response entity", agDefJson == null);
 
     // Check query of agent definitions
@@ -2596,7 +2596,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
     // Update an agent definition
     url = baseUrl + "/users/test-user/agent_definitions?password=test-pwd";
-    agDefJson = doPostJson(url, "{\"name\": \"test-definition-3\", \"outputs\": [{\"name\": \"output1\", \"type\": \"string\", \"default_value\": \"abc\"}]}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-definition-3\", \"outputs\": [{\"name\": \"output1\", \"type\": \"string\", \"default_value\": \"abc\"}]}", 201);
     assertTrue("Unexpected response entity", agDefJson == null);
     url = baseUrl + "/users/test-user/agent_definitions/test-definition-3?password=test-pwd";
     agDefJson = doGetJson(url, 200);
@@ -2651,50 +2651,50 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
     // Create two agent definitions for each user
     url = baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1";
-    JSONObject agDefJson = doPostJson(url, "{\"name\": \"test-definition-1\", \"description\": \"Test definition #1\", \"parameters\": [{\"name\": \"p1\", \"type\": \"int\", \"default_value\": 123}]}", 204);
+    JSONObject agDefJson = doPostJson(url, "{\"name\": \"test-definition-1\", \"description\": \"Test definition #1\", \"parameters\": [{\"name\": \"p1\", \"type\": \"int\", \"default_value\": 123}]}", 201);
     url = baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1";
-    agDefJson = doPostJson(url, "{\"name\": \"test-definition-2\", \"description\": \"Test definition #2\", \"parameters\": [{\"name\": \"p1\", \"type\": \"string\", \"default_value\": \"abc\"}]}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-definition-2\", \"description\": \"Test definition #2\", \"parameters\": [{\"name\": \"p1\", \"type\": \"string\", \"default_value\": \"abc\"}]}", 201);
 
     url = baseUrl + "/users/test-user-2/agent_definitions?password=test-pwd-2";
-    agDefJson = doPostJson(url, "{\"name\": \"test-definition-1\", \"description\": \"Test definition #3\", \"parameters\": [{\"name\": \"p1\", \"type\": \"int\", \"default_value\": 456}]}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-definition-1\", \"description\": \"Test definition #3\", \"parameters\": [{\"name\": \"p1\", \"type\": \"int\", \"default_value\": 456}]}", 201);
     url = baseUrl + "/users/test-user-2/agent_definitions?password=test-pwd-2";
-    agDefJson = doPostJson(url, "{\"name\": \"test-definition-2\", \"description\": \"Test definition #4\", \"parameters\": [{\"name\": \"p1\", \"type\": \"string\", \"default_value\": \"def\"}]}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-definition-2\", \"description\": \"Test definition #4\", \"parameters\": [{\"name\": \"p1\", \"type\": \"string\", \"default_value\": \"def\"}]}", 201);
 
     url = baseUrl + "/users/test-user-3/agent_definitions?password=test-pwd-3";
-    agDefJson = doPostJson(url, "{\"name\": \"test-definition-1\", \"description\": \"Test definition #5\", \"parameters\": [{\"name\": \"p1\", \"type\": \"int\", \"default_value\": 789}]}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-definition-1\", \"description\": \"Test definition #5\", \"parameters\": [{\"name\": \"p1\", \"type\": \"int\", \"default_value\": 789}]}", 201);
     url = baseUrl + "/users/test-user-3/agent_definitions?password=test-pwd-3";
-    agDefJson = doPostJson(url, "{\"name\": \"test-definition-2\", \"description\": \"Test definition #6\", \"parameters\": [{\"name\": \"p1\", \"type\": \"string\", \"default_value\": \"ghi\"}]}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-definition-2\", \"description\": \"Test definition #6\", \"parameters\": [{\"name\": \"p1\", \"type\": \"string\", \"default_value\": \"ghi\"}]}", 201);
 
     // Instantiate each agent definition twice, once with default params, once with overrides
     url = baseUrl + "/users/test-user-1/agents?password=test-pwd-1";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-1\", \"description\": \"Test instance #1\", \"definition\": \"test-definition-1\",}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-1\", \"description\": \"Test instance #1\", \"definition\": \"test-definition-1\",}", 201);
     url = baseUrl + "/users/test-user-1/agents?password=test-pwd-1";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-2\", \"description\": \"Test instance #2\", \"definition\": \"test-definition-1\", \"parameter_values\": {\"p1\": 12399}}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-2\", \"description\": \"Test instance #2\", \"definition\": \"test-definition-1\", \"parameter_values\": {\"p1\": 12399}}", 201);
 
     url = baseUrl + "/users/test-user-1/agents?password=test-pwd-1";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-3\", \"description\": \"Test instance #3\", \"definition\": \"test-definition-2\",}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-3\", \"description\": \"Test instance #3\", \"definition\": \"test-definition-2\",}", 201);
     url = baseUrl + "/users/test-user-1/agents?password=test-pwd-1";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-4\", \"description\": \"Test instance #4\", \"definition\": \"test-definition-2\", \"parameter_values\": {\"p1\": \"abc99\"}}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-4\", \"description\": \"Test instance #4\", \"definition\": \"test-definition-2\", \"parameter_values\": {\"p1\": \"abc99\"}}", 201);
 
     url = baseUrl + "/users/test-user-2/agents?password=test-pwd-2";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-5\", \"description\": \"Test instance #5\", \"definition\": \"test-definition-1\",}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-5\", \"description\": \"Test instance #5\", \"definition\": \"test-definition-1\",}", 201);
     url = baseUrl + "/users/test-user-2/agents?password=test-pwd-2";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-6\", \"description\": \"Test instance #6\", \"definition\": \"test-definition-1\", \"parameter_values\": {\"p1\": 45699}}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-6\", \"description\": \"Test instance #6\", \"definition\": \"test-definition-1\", \"parameter_values\": {\"p1\": 45699}}", 201);
 
     url = baseUrl + "/users/test-user-2/agents?password=test-pwd-2";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-7\", \"description\": \"Test instance #7\", \"definition\": \"test-definition-2\",}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-7\", \"description\": \"Test instance #7\", \"definition\": \"test-definition-2\",}", 201);
     url = baseUrl + "/users/test-user-2/agents?password=test-pwd-2";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-8\", \"description\": \"Test instance #8\", \"definition\": \"test-definition-2\", \"parameter_values\": {\"p1\": \"def99\"}}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-8\", \"description\": \"Test instance #8\", \"definition\": \"test-definition-2\", \"parameter_values\": {\"p1\": \"def99\"}}", 201);
 
     url = baseUrl + "/users/test-user-3/agents?password=test-pwd-3";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-9\", \"description\": \"Test instance #9\", \"definition\": \"test-definition-1\",}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-9\", \"description\": \"Test instance #9\", \"definition\": \"test-definition-1\",}", 201);
     url = baseUrl + "/users/test-user-3/agents?password=test-pwd-3";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-10\", \"description\": \"Test instance #10\", \"definition\": \"test-definition-1\", \"parameter_values\": {\"p1\": 78999}}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-10\", \"description\": \"Test instance #10\", \"definition\": \"test-definition-1\", \"parameter_values\": {\"p1\": 78999}}", 201);
 
     url = baseUrl + "/users/test-user-3/agents?password=test-pwd-3";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-11\", \"description\": \"Test instance #11\", \"definition\": \"test-definition-2\",}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-11\", \"description\": \"Test instance #11\", \"definition\": \"test-definition-2\",}", 201);
     url = baseUrl + "/users/test-user-3/agents?password=test-pwd-3";
-    agDefJson = doPostJson(url, "{\"name\": \"test-instance-12\", \"description\": \"Test instance #12\", \"definition\": \"test-definition-2\", \"parameter_values\": {\"p1\": \"ghi99\"}}", 204);
+    agDefJson = doPostJson(url, "{\"name\": \"test-instance-12\", \"description\": \"Test instance #12\", \"definition\": \"test-definition-2\", \"parameter_values\": {\"p1\": \"ghi99\"}}", 201);
 
     // Check total user, definition, and instance counts
     url = baseUrl + "/status";
@@ -3428,11 +3428,11 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
     // Create one agent definition that says "Hello World" in its output
     doPostJson(baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}]}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}]}", 201);
 
     // Instantiate the agent definition once
     doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"definition\": \"HelloWorld\"}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"definition\": \"HelloWorld\"}", 201);
 
     // Get the agent instance's output as JSON
     JSONObject outputJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld/output?password=test-pwd-1", 200);
@@ -3474,11 +3474,11 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
     // Create one agent definition that says "Hello World" in its output
     doPostJson(baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}, {\"name\": \"field2\", \"type\": \"int\", \"default_value\": 123}, {\"name\": \"field3\", \"type\": \"float\", \"default_value\": 4.56}, {\"name\": \"field4\", \"type\": \"boolean\", \"default_value\": true}]}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}, {\"name\": \"field2\", \"type\": \"int\", \"default_value\": 123}, {\"name\": \"field3\", \"type\": \"float\", \"default_value\": 4.56}, {\"name\": \"field4\", \"type\": \"boolean\", \"default_value\": true}]}", 201);
 
     // Instantiate the agent definition once
     doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"definition\": \"HelloWorld\"}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"definition\": \"HelloWorld\"}", 201);
 
     // Get the agent instance's output as JSON
     JSONObject outputJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld/output?password=test-pwd-1", 200);
@@ -3589,11 +3589,11 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
     // Create one agent definition that says "Hello World" in its output
     doPostJson(baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
-        "{\"user\": \"test-user-1\", \"name\": \"HelloWorld\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}]}", 204);
+        "{\"user\": \"test-user-1\", \"name\": \"HelloWorld\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}]}", 201);
 
     // Instantiate the agent definition once
     doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
-        "{\"user\": \"test-user-1\", \"name\": \"MyHelloWorld\", \"definition\": \"HelloWorld\"}", 204);
+        "{\"user\": \"test-user-1\", \"name\": \"MyHelloWorld\", \"definition\": \"HelloWorld\"}", 201);
 
     // Get agent server status
     JSONObject serverStatusJson = doGetJson(baseUrl + "/status", 200);
@@ -3660,16 +3660,16 @@ public class AgentAppServerTest extends AgentServerTestBase {
     doPostJson(baseUrl + "/users", "{\"id\": \"test-user-3\", \"password\": \"test-pwd-3\", \"display_name\": \"Test User #3\"}", 201);
 
     doPostJson(baseUrl + "/users/test-user-2/agent_definitions?password=test-pwd-2",
-        "{\"user\": \"test-user-2\", \"name\": \"HelloWorld2\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World-2\"}]}", 204);
+        "{\"user\": \"test-user-2\", \"name\": \"HelloWorld2\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World-2\"}]}", 201);
     doPostJson(baseUrl + "/users/test-user-2/agent_definitions?password=test-pwd-2",
-        "{\"user\": \"test-user-2\", \"name\": \"HelloWorld3\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World-3\"}]}", 204);
+        "{\"user\": \"test-user-2\", \"name\": \"HelloWorld3\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World-3\"}]}", 201);
 
     doPostJson(baseUrl + "/users/test-user-2/agents?password=test-pwd-2",
-        "{\"user\": \"test-user-2\", \"name\": \"MyHelloWorld-2\", \"definition\": \"HelloWorld2\"}", 204);
+        "{\"user\": \"test-user-2\", \"name\": \"MyHelloWorld-2\", \"definition\": \"HelloWorld2\"}", 201);
     doPostJson(baseUrl + "/users/test-user-2/agents?password=test-pwd-2",
-        "{\"user\": \"test-user-2\", \"name\": \"MyHelloWorld-3\", \"definition\": \"HelloWorld3\"}", 204);
+        "{\"user\": \"test-user-2\", \"name\": \"MyHelloWorld-3\", \"definition\": \"HelloWorld3\"}", 201);
     doPostJson(baseUrl + "/users/test-user-2/agents?password=test-pwd-2",
-        "{\"user\": \"test-user-2\", \"name\": \"MyHelloWorld-4\", \"definition\": \"HelloWorld3\"}", 204);
+        "{\"user\": \"test-user-2\", \"name\": \"MyHelloWorld-4\", \"definition\": \"HelloWorld3\"}", 201);
 
     // Check to see that server status is updated for new object
     serverStatusJson = doGetJson(baseUrl + "/status", 200);
@@ -3726,18 +3726,18 @@ public class AgentAppServerTest extends AgentServerTestBase {
             "\"scratchpad\": [{\"name\": \"count\", \"type\": \"int\"}], " +
             "\"memory\": [{\"name\": \"countm\", \"type\": \"int\"}], " +
             "\"timers\": [{\"name\": \"t1\", \"interval\": 20, \"script\": \"if (++count < 10){countm = count / 3; field2++; field3=3.14;}\"}]" +
-            "}", 204);
+            "}", 201);
 
     // Create an agent that simply generates a single line of output but depends on the data source
     doPostJson(baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
         "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}, {\"name\": \"field2\", \"type\": \"int\", \"default_value\": 123}, {\"name\": \"field3\", \"type\": \"float\", \"default_value\": 4.56}, {\"name\": \"field4\", \"type\": \"boolean\", \"default_value\": true}], " +
             "\"inputs\": [{\"name\": \"ds1\", \"data_source\": \"DataSource\"}], " +
             "\"scripts\": [{\"name\": \"init\", \"script\": \"for(int i = 0; i < 100; i++){outputs.field2++;; outputs.field3=3.14; /*outputs.commit();*/}\"}]" +
-            "}", 204);
+            "}", 201);
 
     // Instantiate the agent definition once
     doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"definition\": \"HelloWorld\"}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"definition\": \"HelloWorld\"}", 201);
 
     // Give agent some time to run
     log.info("Before waitUntilDone");
@@ -4528,11 +4528,11 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
     // Create one agent definition that says "Hello World" in its output
     doPostJson(baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"description\": \"Test agent definition\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}, {\"name\": \"field2\", \"type\": \"int\", \"default_value\": 123}, {\"name\": \"field3\", \"type\": \"float\", \"default_value\": 4.56}, {\"name\": \"field4\", \"type\": \"boolean\", \"default_value\": true}]}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"description\": \"Test agent definition\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}, {\"name\": \"field2\", \"type\": \"int\", \"default_value\": 123}, {\"name\": \"field3\", \"type\": \"float\", \"default_value\": 4.56}, {\"name\": \"field4\", \"type\": \"boolean\", \"default_value\": true}]}", 201);
 
     // Instantiate the agent definition once
     doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"HelloWorld.mine\", \"description\": \"Test agent\", \"definition\": \"HelloWorld\"}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld.mine\", \"description\": \"Test agent\", \"definition\": \"HelloWorld\"}", 201);
 
     // Check the agent's status
     JSONObject statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld.mine/status?password=test-pwd-1", 200);
@@ -4552,9 +4552,9 @@ public class AgentAppServerTest extends AgentServerTestBase {
     
     // Now define an agent that gets an exception
     doPostJson(baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"Bad1\", \"description\": \"Test agent definition\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}, {\"name\": \"field2\", \"type\": \"int\", \"default_value\": 123}, {\"name\": \"field3\", \"type\": \"float\", \"default_value\": 4.56}, {\"name\": \"field4\", \"type\": \"boolean\", \"default_value\": true}], \"scripts\": [{\"name\": \"init\", \"script\": \"int i = 1, j = i / 0;\"}]}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"Bad1\", \"description\": \"Test agent definition\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}, {\"name\": \"field2\", \"type\": \"int\", \"default_value\": 123}, {\"name\": \"field3\", \"type\": \"float\", \"default_value\": 4.56}, {\"name\": \"field4\", \"type\": \"boolean\", \"default_value\": true}], \"scripts\": [{\"name\": \"init\", \"script\": \"int i = 1, j = i / 0;\"}]}", 201);
     doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"Bad1.mine\", \"description\": \"Test agent\", \"definition\": \"Bad1\"}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"Bad1.mine\", \"description\": \"Test agent\", \"definition\": \"Bad1\"}", 201);
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/Bad1.mine/status?password=test-pwd-1", 200);
 /*    assertTrue("Status not returned", statusJson != null);
     assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
@@ -4614,11 +4614,11 @@ public class AgentAppServerTest extends AgentServerTestBase {
     
     // Create one agent definition that says "Hello World" in its output
     doPostJson(baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
-        "{\"user\": \"test-user-1\", \"name\": \"HelloWorld\", \"description\": \"Test agent definition\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}, {\"name\": \"field2\", \"type\": \"int\", \"default_value\": 123}, {\"name\": \"field3\", \"type\": \"float\", \"default_value\": 4.56}, {\"name\": \"field4\", \"type\": \"boolean\", \"default_value\": true}]}", 204);
+        "{\"user\": \"test-user-1\", \"name\": \"HelloWorld\", \"description\": \"Test agent definition\", \"outputs\": [{\"name\": \"field1\", \"type\": \"string\", \"default_value\": \"Hello World\"}, {\"name\": \"field2\", \"type\": \"int\", \"default_value\": 123}, {\"name\": \"field3\", \"type\": \"float\", \"default_value\": 4.56}, {\"name\": \"field4\", \"type\": \"boolean\", \"default_value\": true}]}", 201);
 
     // Instantiate the agent definition once
     doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
-        "{\"user\": \"test-user-1\", \"name\": \"HelloWorld.mine\", \"description\": \"Test agent\", \"definition\": \"HelloWorld\"}", 204);
+        "{\"user\": \"test-user-1\", \"name\": \"HelloWorld.mine\", \"description\": \"Test agent\", \"definition\": \"HelloWorld\"}", 201);
 
     // Check the agent's status
     JSONObject statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld.mine/status?password=test-pwd-1", 200);
@@ -4663,11 +4663,11 @@ public class AgentAppServerTest extends AgentServerTestBase {
             "  {\"name\": \"do_notify2\", \"script\": \"notifications.Not2.vendor = 'Abc Corp.'; Not2.price = 123.45; Not2.purchased = true; notify('Not2');\", \"public\": true}," +
             "  {\"name\": \"do_notify2a\", \"script\": \"notifications.Not2.vendor = 'Delta Ltd.'; Not2.price = 250.75; Not2.purchased = false; notify('Not2');\", \"public\": true}], " +
             "\"notifications\": [{\"name\": \"Not1\", \"type\": \"notify_only\", \"manual\": true}," +
-            "{\"name\": \"Not2\", \"description\": \"Second notification\", \"type\": \"yes_no\", \"manual\": true, \"timeout\": \"minutes(90)\", \"scripts\": [{\"name\": \"accept\", \"script\": \"return 2+2;\"}], \"details\": [{\"name\": \"vendor\", \"type\": \"string\", \"default_value\": \"N/A\"}, {\"name\": \"price\", \"type\": \"float\", \"default_value\": 0.00}, {\"name\": \"purchased\", \"type\": \"boolean\", \"default_value\": false}]}]}", 204);
+            "{\"name\": \"Not2\", \"description\": \"Second notification\", \"type\": \"yes_no\", \"manual\": true, \"timeout\": \"minutes(90)\", \"scripts\": [{\"name\": \"accept\", \"script\": \"return 2+2;\"}], \"details\": [{\"name\": \"vendor\", \"type\": \"string\", \"default_value\": \"N/A\"}, {\"name\": \"price\", \"type\": \"float\", \"default_value\": 0.00}, {\"name\": \"purchased\", \"type\": \"boolean\", \"default_value\": false}]}]}", 201);
 
     // Instantiate the agent definition once
     doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
-        "{\"user\": \"Test-User\", \"name\": \"HelloWorld2.mine\", \"description\": \"Test agent\", \"definition\": \"HelloWorld2\"}", 204);
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld2.mine\", \"description\": \"Test agent\", \"definition\": \"HelloWorld2\"}", 201);
 
     // Check the agent's status
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/status?password=test-pwd-1", 200);

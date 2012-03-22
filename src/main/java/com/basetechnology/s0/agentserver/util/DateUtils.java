@@ -25,6 +25,14 @@ public class DateUtils {
   public static SimpleDateFormat rfcFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
   public static SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
+  public static long parseDate(String time) throws ParseException {
+    try {
+      return rfcFormat.parse(time).getTime();
+    } catch (ParseException e){
+      return isoFormat.parse(time).getTime();
+    }
+  }
+
   public static long parseIsoString(String time) throws ParseException {
     return isoFormat.parse(time).getTime();
   }

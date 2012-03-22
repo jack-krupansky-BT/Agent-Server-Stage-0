@@ -1,5 +1,4 @@
 /**
- * Copyright 2012 John W. Krupansky d/b/a Base Technology
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,6 +113,7 @@ public class AgentInstance {
   public NotificationHistory notificationHistory;
   public long lastDismissedExceptionTime;
   public boolean suppressEmail;
+  public boolean autoCreated = false;
 
   public static int autoNameCounter = 0;
   
@@ -284,7 +284,7 @@ public class AgentInstance {
     }
   }
 
-  public void disable() throws SymbolException, JSONException, AgentServerException {
+  public void disable() throws AgentServerException {
     if (enabled){
       captureState();
       enabled = false;
@@ -452,6 +452,7 @@ public class AgentInstance {
       scratchpadValues.put(symbolManager.get("scratchpad", field.symbol.name), field.getDefaultValueNode());
 
     // Set default value for each memory field
+    log.info("Initialize memory variables for " + name);
     SymbolValues memoryValues = categorySymbolValues.get("memory");
     for (Field field: agentDefinition.memory)
       memoryValues.put(symbolManager.get("memory", field.symbol.name), field.getDefaultValueNode());
@@ -1224,5 +1225,26 @@ public class AgentInstance {
     } else
       log.info("No script named '" + response + "' to run in response to notification '" +
           notificationInstance.definition.name + "' for agent instance '" + name + "'");
+  }
+  
+  public void deReference(AgentInstance agentInstance) throws AgentServerException {
+    // Remove an agent instance from the dependents list of this agent instance
+    dependentInstances.remove(agentInstance);
+    
+    // If no more dependents, auto-delete this instance if it was auto-created
+    if (dependentInstances.size() == 0 && autoCreated){
+      log.info("Auto-deleting agent instance " + name + " since all dependents have gone away");
+      agentServer.removeAgentInstance(this);
+    } else {
+      log.info("Agent instance " + name + " still has " + dependentInstances.size() + " dependents after dependent " + agentInstance.name + " de-references it");
+    }
+  }
+  
+  public void deReferenceInputs() throws AgentServerException{
+    // De-reference agents associated with each input
+    for (DataSourceReference dsr: dataSourceInstances.keySet()){
+      AgentInstance agentInstance = dataSourceInstances.get(dsr);
+      agentInstance.deReference(this);
+    }
   }
 }

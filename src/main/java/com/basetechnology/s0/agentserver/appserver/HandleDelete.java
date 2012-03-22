@@ -39,7 +39,6 @@ public class HandleDelete extends HandleHttp {
     String[] pathParts = httpInfo.pathParts;
     Request request = httpInfo.request;
     HttpServletResponse response = httpInfo.response;
-    String format = httpInfo.format;
     AgentServer agentServer = httpInfo.agentServer;
     String lcPath = path.toLowerCase();
    

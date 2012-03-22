@@ -462,6 +462,9 @@ curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions
  ]
 }'
 
+Note that we do not need to initialize the counter to zero - the agent server automatically initializes
+all variables based on their type.
+ 
 Now instantiate the counter agent:
 
 curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1' -H Content-type:application/json -d'
@@ -935,4 +938,348 @@ curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyCounter-3/status
 }
 
 You can see how the counter is incrementing at each step and the time stamp for each step.
+
+Now, as a final introductory agent, lets create an agent that aggregates the output from three other
+agents. The first agent will be a simple integer count, the second will generate a growing string, and
+the third will simply be the date/time. The aggregating agent will simply have three output fields, one
+for each of the input agents.
+
+The important thing to note here is that the aggregating agent is purely input-driven and needs no
+timers. Any time that the output of any of the input agents changed, the aggregating agent gets
+triggered, subject to the automatic throttling of its trigger_interval constraint.
+
+Create the first agent:
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "Agent1",
+ "memory": [{"name": "counter", "type": "int"}],
+ "timers": [{"name": "count", "interval": "seconds(0.5)", "script": "counter++;"}],
+ "outputs": [{"name": "outCounter", "type": "int", "compute": "counter"}]
+}'
+
+That's very similar to our original Counter agent, but formatted for conciseness rather than readability.
+
+We're not going to instantiate it, because that will be done automatically when we instantiate the
+aggregating agent - instantiating an agent automatically instantiates all of its input agents.
+
+Now create the second agent
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "Agent2",
+ "memory": [{"name": "str", "type": "string"}],
+ "timers": [{"name": "count", "interval": "seconds(3)", "script": "str += \"a\";"}],
+ "outputs": [{"name": "outStr", "type": "string", "compute": "\"-\" + str + \"-\""}]
+}'
+
+Now create the third agent
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "Agent3",
+ "timers": [{"name": "count", "interval": "seconds(1.5)"}],
+ "outputs": [{"name": "time", "type": "string", "compute": "now.toDate"}]
+}'
+
+And now we create the aggregating agent:
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agent_definitions?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "Agent",
+ "inputs":[
+   {"name": "input1", "data_source": "Agent1"},
+   {"name": "input2", "data_source": "Agent2"},
+   {"name": "input3", "data_source": "Agent3"}],
+ "outputs": [
+   {"name": "outCounter", "type": "int", "compute": "input1.outCounter"},
+   {"name": "outStr", "type": "string", "compute": "input2.outStr"},
+   {"name": "time", "type": "string", "compute": "input3.time"},
+   {"name": "all3", "type": "string",
+     "compute": "\"Time is \" + input3.time + \", count is \" + input1.outCounter + \" string is \" + input2.outStr"}],
+   "trigger_interval": "seconds(4)"
+}'
+
+Note the "trigger_interval" which throttles down the agent so that it only responds to changes in inputs
+every four seconds.
+
+Instantiate the aggregating agent:
+
+curl -X POST 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1' -H Content-type:application/json -d'
+{
+ "name": "MyAgent-1",
+ "definition": "Agent",
+ "public_output": true
+}'
+
+Note that this will automatically instantiate the agents referenced as inputs.
+
+The "public_output" option will allow any user to read the output of the agent instance. That is not
+required here, but is a useful feature if you would like to be able to allow other users to "reuse"
+the output of your agents.
+
+Wait a couple of seconds and query the output of our aggregating agent:
+
+curl http://localhost:8980/API/v0.1/users/test-user-1/agents/MyAgent-1/output
+
+{
+    "outCounter": 7,
+    "outStr": "-a-",
+    "time": "Wed, 21 Mar 2012 18:23:44 -0400",
+    "all3": "Time is Wed, 21 Mar 2012 18:23:44 -0400, count is 7 string is -a-"
+}
+
+Hit that URL again to see the agent output change as its inputs change:
+
+curl http://localhost:8980/API/v0.1/users/test-user-1/agents/MyAgent-1/output
+
+{
+    "outCounter": 19,
+    "outStr": "-aaa-",
+    "time": "Wed, 21 Mar 2012 18:23:50 -0400",
+    "all3": "Time is Wed, 21 Mar 2012 18:23:50 -0400, count is 19 string is -aaa-"
+}
+
+And awhile later:
+
+curl http://localhost:8980/API/v0.1/users/test-user-1/agents/MyAgent-1/output
+
+{
+    "outCounter": 40,
+    "outStr": "-aaaaaaa-",
+    "time": "Wed, 21 Mar 2012 18:24:02 -0400",
+    "all3": "Time is Wed, 21 Mar 2012 18:24:02 -0400, count is 40 string is -aaaaaaa-"
+}
+
+And lets look at the agent's status:
+
+curl http://localhost:8980/API/v0.1/users/test-user-1/agents/MyAgent-1?password=test-pwd-1
+
+{
+    "user": "test-user-1",
+    "name": "MyAgent-1",
+    "definition": "Agent",
+    "description": "",
+    "instantiated": "Wed, 21 Mar 2012 18:23:38 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": true,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "Wed, 21 Mar 2012 18:24:30 -0400",
+    "triggered": "Wed, 21 Mar 2012 18:24:30 -0400",
+    "outputs_changed": "Wed, 21 Mar 2012 18:24:30 -0400",
+    "status": "active"
+}
+
+It reports the time stamp of when the inputs last changed.
+
+Note that unlike the output, the password is required since only the output is "public".
+
+Let's look at the detailed status:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyAgent-1/status?password=test-pwd-1&state=yes&count=1'
+
+{
+    "user": "test-user-1",
+    "name": "MyAgent-1",
+    "definition": "Agent",
+    "description": "",
+    "instantiated": "Wed, 21 Mar 2012 18:23:38 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": true,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "Wed, 21 Mar 2012 18:24:41 -0400",
+    "triggered": "Wed, 21 Mar 2012 18:24:41 -0400",
+    "outputs_changed": "Wed, 21 Mar 2012 18:24:41 -0400",
+    "status": "active",
+    "state": [{
+        "exceptions": [],
+        "inputs": {
+            "input1": {"outCounter": 101},
+            "input2": {"outStr": "-aaaaaaaaaaaaaaaaaaa-"},
+            "input3": {"time": "Wed, 21 Mar 2012 18:24:40 -0400"}
+        },
+        "last_dismissed_exception": "",
+        "memory": {},
+        "notification_history": [],
+        "notifications": [],
+        "outputs": {
+            "all3": "Time is Wed, 21 Mar 2012 18:24:40 -0400, count is 100 string is -aaaaaaaaaaaaaaaaaaa-",
+            "outCounter": 100,
+            "outStr": "-aaaaaaaaaaaaaaaaaaa-",
+            "time": "Wed, 21 Mar 2012 18:24:40 -0400"
+        },
+        "parameters": {},
+        "time": "2012-03-21T18:24:41.133-0400"
+    }]
+}
+
+Note that the state shows the values of all of the inputs and the outputs.
+
+Let's look at the status for all agent instances:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1'
+
+{"agent_instances": [
+    {
+        "user": "test-user-1",
+        "name": "Agent1_1",
+        "definition": "Agent1",
+        "description": null
+    },
+    {
+        "user": "test-user-1",
+        "name": "Agent2_2",
+        "definition": "Agent2",
+        "description": null
+    },
+    {
+        "user": "test-user-1",
+        "name": "Agent3_3",
+        "definition": "Agent3",
+        "description": null
+    },
+    {
+        "user": "test-user-1",
+        "name": "MyAgent-1",
+        "definition": "Agent",
+        "description": ""
+    }
+]}
+
+Note that the agent server automatically assigned names to the input agents that were automatically
+instantiated, Agent1_1, Agent2_2, and Agent3_3.
+
+Let's query the detailed status and state of each of those agent instances:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/Agent1_1/status?password=test-pwd-1&state=yes&count=1'
+
+{
+    "user": "test-user-1",
+    "name": "Agent1_1",
+    "definition": "Agent1",
+    "description": "",
+    "instantiated": "Wed, 21 Mar 2012 18:23:38 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Wed, 21 Mar 2012 18:25:08 -0400",
+    "status": "active",
+    "state": [{
+        "exceptions": [],
+        "inputs": {},
+        "last_dismissed_exception": "",
+        "memory": {"counter": 146},
+        "notification_history": [],
+        "notifications": [],
+        "outputs": {"outCounter": 145},
+        "parameters": {},
+        "time": "2012-03-21T18:25:08.134-0400"
+    }]
+}
+
+Note the memory variable there.
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/Agent2_2/status?password=test-pwd-1&state=yes&count=1'
+
+{
+    "user": "test-user-1",
+    "name": "Agent2_2",
+    "definition": "Agent2",
+    "description": "",
+    "instantiated": "Wed, 21 Mar 2012 18:23:39 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Wed, 21 Mar 2012 18:25:16 -0400",
+    "status": "active",
+    "state": [{
+        "exceptions": [],
+        "inputs": {},
+        "last_dismissed_exception": "",
+        "memory": {"str": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+        "notification_history": [],
+        "notifications": [],
+        "outputs": {"outStr": "-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-"},
+        "parameters": {},
+        "time": "2012-03-21T18:25:16.808-0400"
+    }]
+}
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents/Agent3_3/status?password=test-pwd-1&state=yes&count=1'
+
+{
+    "user": "test-user-1",
+    "name": "Agent3_3",
+    "definition": "Agent3",
+    "description": "",
+    "instantiated": "Wed, 21 Mar 2012 18:23:39 -0400",
+    "updated": "",
+    "trigger_interval": "50",
+    "reporting_interval": "200",
+    "public_output": false,
+    "limit_instance_states_stored": 25,
+    "enabled": true,
+    "parameter_values": {},
+    "inputs_changed": "",
+    "triggered": "",
+    "outputs_changed": "Wed, 21 Mar 2012 18:25:25 -0400",
+    "status": "active",
+    "state": [{
+        "exceptions": [],
+        "inputs": {},
+        "last_dismissed_exception": "",
+        "memory": {},
+        "notification_history": [],
+        "notifications": [],
+        "outputs": {"time": "Wed, 21 Mar 2012 18:25:23 -0400"},
+        "parameters": {},
+        "time": "2012-03-21T18:25:25.058-0400"
+    }]
+}
+
+Now that we are done with this introductory example agent, let's kill it off:
+
+curl -X DELETE 'http://localhost:8980/API/v0.1/users/test-user-1/agents/MyAgent-1/status?password=test-pwd-1'
+
+Note that this will automatically kill off the three input agents since they are no longer referenced
+and were auto-created.
+
+Let's check the agent instance status to see that there are no longer any agents running:
+
+curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1'
+
+
+There is plenty of additional material to cover, but this has been a decent overview of a lot of the
+basics.
+
+Some next steps of doc to review:
+
+- agent_parts - Overview of the structure of an agent definition
+- script.txt - Overview of the scripting language
+- web.txt - Overview of access to web resources
+- admin.txt - Overview of administrative controls
+
+
+.
+
 

@@ -16,6 +16,7 @@
 
 package com.basetechnology.s0.agentserver.appserver;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
@@ -38,9 +39,14 @@ import com.basetechnology.s0.agentserver.User;
 import com.basetechnology.s0.agentserver.field.Field;
 import com.basetechnology.s0.agentserver.notification.NotificationInstance;
 import com.basetechnology.s0.agentserver.scheduler.AgentScheduler;
+import com.basetechnology.s0.agentserver.script.intermediate.ExpressionNode;
+import com.basetechnology.s0.agentserver.script.intermediate.ScriptNode;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
+import com.basetechnology.s0.agentserver.script.parser.ScriptParser;
+import com.basetechnology.s0.agentserver.script.runtime.ScriptRuntime;
+import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 import com.basetechnology.s0.agentserver.util.DateUtils;
 import com.basetechnology.s0.agentserver.util.JsonListMap;
 import com.basetechnology.s0.agentserver.util.ListMap;
@@ -70,6 +76,71 @@ public class HandleGet extends HandleHttp {
       aboutJson.put("website", agentServer.config.get("website"));
       aboutJson.put("contact", agentServer.config.get("contact"));
       AgentAppServer.setOutput(httpInfo, aboutJson);
+    } else if (path.equalsIgnoreCase("/evaluate")){
+      try {
+        BufferedReader reader = request.getReader();
+        String expressionString = null;
+        try {
+          StringBuilder builder = new StringBuilder();
+          char[] buffer = new char[8192];
+          int read;
+          while ((read = reader.read(buffer, 0, buffer.length)) > 0) {
+            builder.append(buffer, 0, read);
+          }
+          expressionString = builder.toString();
+        } catch (Exception e){
+          log.info("Exception reading expression text : " + e);
+        }
+
+        log.info("Evaluating expression: " + expressionString);
+        AgentDefinition dummyAgentDefinition = new AgentDefinition(agentServer);
+        AgentInstance dummyAgentInstance = new AgentInstance(dummyAgentDefinition);
+        ScriptParser parser = new ScriptParser(dummyAgentInstance);
+        ScriptRuntime scriptRuntime = new ScriptRuntime(dummyAgentInstance);
+        ExpressionNode expressionNode = parser.parseExpressionString(expressionString);
+        Value valueNode = scriptRuntime.evaluateExpression(expressionString, expressionNode);
+        String resultString = valueNode.getStringValue();
+
+        response.setContentType("text/plain; charset=utf-8");
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().println(resultString);
+      } catch (Exception e){
+        log.info("Evaluate Exception: " + e);
+      }
+      ((Request)request).setHandled(true);
+    } else if (path.equalsIgnoreCase("/run")){
+      try {
+        BufferedReader reader = request.getReader();
+        String scriptString = null;
+        try {
+          StringBuilder builder = new StringBuilder();
+          char[] buffer = new char[8192];
+          int read;
+          while ((read = reader.read(buffer, 0, buffer.length)) > 0) {
+            builder.append(buffer, 0, read);
+          }
+          scriptString = builder.toString();
+        } catch (Exception e){
+          log.info("Exception reading script text : " + e);
+        }
+
+        log.info("Running script: " + scriptString);
+        AgentDefinition dummyAgentDefinition = new AgentDefinition(agentServer);
+        AgentInstance dummyAgentInstance = new AgentInstance(dummyAgentDefinition);
+        ScriptParser parser = new ScriptParser(dummyAgentInstance);
+        ScriptRuntime scriptRuntime = new ScriptRuntime(dummyAgentInstance);
+        ScriptNode scriptNode = parser.parseScriptString(scriptString);
+        Value valueNode = scriptRuntime.runScript(scriptString, scriptNode);
+        String resultString = valueNode.getStringValue();
+        log.info("Script result: " + resultString);
+
+        response.setContentType("text/plain; charset=utf-8");
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().println(resultString);
+      } catch (Exception e){
+        log.info("Run Exception: " + e);
+      }
+      ((Request)request).setHandled(true);
     } else if (path.equalsIgnoreCase("/status")){
       try {
         log.info("Getting status info");

@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
@@ -34,12 +36,18 @@ import com.basetechnology.s0.agentserver.util.Word;
 import com.basetechnology.s0.agentserver.util.XmlUtils;
 
 public class StringValue extends Value {
+  static final Logger log = Logger.getLogger(StringValue.class);
+
   public String value;
 
   static public StringValue empty = new StringValue("");
   
   public StringValue(String value){
     this.value = value;
+  }
+
+  public Value getDefaultValue(){
+    return StringValue.empty;
   }
 
   public Object getValue(){
@@ -570,11 +578,24 @@ public class StringValue extends Value {
   }
 
   public boolean equals(Value valueNode){
-    return valueNode instanceof StringValue && (value.equals(valueNode.getStringValue()));
+    if (valueNode instanceof StringValue){
+      String otherValue = valueNode.getStringValue();
+      if (value == null)
+        return otherValue == null;
+      else if (otherValue == null)
+        return false;
+      else
+        return value.equals(otherValue);
+    } else
+      return false;
   }
   
   public String toJson(){
     StringBuilder sb = new StringBuilder("\"");
+    if (value == null ){
+      log.error("value of StingValue is null");
+      return "";
+    }
     int len = value.length();
     for (int i = 0; i < len; i++){
       char ch = value.charAt(i);

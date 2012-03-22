@@ -58,7 +58,6 @@ import com.basetechnology.s0.agentserver.script.intermediate.NewNode;
 import com.basetechnology.s0.agentserver.script.intermediate.NotEqualsNode;
 import com.basetechnology.s0.agentserver.script.intermediate.NullExpressionNode;
 import com.basetechnology.s0.agentserver.script.intermediate.NullStatementNode;
-import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.PostDecrementNode;
 import com.basetechnology.s0.agentserver.script.intermediate.PostIncrementNode;
 import com.basetechnology.s0.agentserver.script.intermediate.PreDecrementNode;
@@ -1176,15 +1175,13 @@ public class ScriptParser {
       node = NullValue.one;
       tokens.skipToken();
     } else if (token instanceof FalseToken){
-      // TODO: Shouldn't this be a one?
-      node = new FalseValue();
+      node = FalseValue.one;
       tokens.skipToken();
     } else if (token instanceof TrueToken){
-      // TODO: Shouldn't this be a one?
-      node = new TrueValue();
+      node = TrueValue.one;
       tokens.skipToken();
     } else if (token instanceof NowKeywordToken){
-      node = new NowValue();
+      node = NowValue.one;
       tokens.skipToken();
     } else if (token instanceof IntegerToken){
       node = new IntegerValue(((IntegerToken)token).number);

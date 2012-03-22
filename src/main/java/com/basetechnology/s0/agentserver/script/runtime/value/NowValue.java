@@ -23,6 +23,40 @@ import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
 
 public class NowValue extends Value {
 
+  static public NowValue one = new NowValue();
+
+  public Value clone(){
+    return this;
+  }
+
+  public Value getDefaultValue(){
+    return new IntegerValue(System.currentTimeMillis());
+  }
+
+  public Object getValue(){
+    return new IntegerValue(System.currentTimeMillis());
+  }
+
+  public boolean getBooleanValue(){
+    return true;
+  }
+
+  public long getLongValue(){
+    return System.currentTimeMillis();
+  }
+
+  public double getDoubleValue(){
+    return getLongValue();
+  }
+
+  public String getStringValue(){
+    return Long.toString(getLongValue());
+  }
+
+  public Value evaluateExpression(ScriptState scriptState){
+    return new IntegerValue(getLongValue());
+  }
+
   public Value getNamedValue(ScriptState scriptState, String name) throws RuntimeException {
     return super.getNamedValue(scriptState, name);
   }
@@ -32,7 +66,8 @@ public class NowValue extends Value {
   }
   
   public String toString(){
-    return "now";
+    // TODO: Or should this be Iso/Rfc format for date/time
+    return getStringValue();
   }
 
 }

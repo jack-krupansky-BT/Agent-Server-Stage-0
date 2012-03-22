@@ -52,6 +52,9 @@ public class DataSourceReference {
     if (refererInstance != null)
       agentInstance.addReference(refererInstance);
     
+    // Mark the instance as being "auto-created"
+    agentInstance.autoCreated = true;
+    
     // Return the new instance
     return agentInstance;
   }

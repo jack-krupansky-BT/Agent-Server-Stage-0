@@ -404,4 +404,15 @@ public class AgentScheduler implements Runnable {
     shutdown();
   }
 
+  public void flushAgentActivities(AgentInstance agentInstance){
+    // Find and remove all activities that are queued up for this agent instance
+    // TODO: Really to to interlock the queue to do this safely
+    for (int i = 0; i < queue.size(); i++){
+      AgentActivity agentActivity = queue.get(i);
+      if (agentActivity.agent == agentInstance){
+        queue.remove(i);
+        i--;
+      }
+    }
+  }
 }
