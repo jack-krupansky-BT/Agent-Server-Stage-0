@@ -1,0 +1,14 @@
+- what aspects to emphasize in intro?
+- Extent of tutorial at this stage
+- example expressions and scripts
+ - memory variables
+ - parameters
+ - interval expressions
+ 
+- web page access and scrape/parse
+ - html
+ - xml
+ - rss
+ - stream of words for html/xml
+ 
+ 

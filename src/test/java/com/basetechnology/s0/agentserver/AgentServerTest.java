@@ -895,6 +895,7 @@ public class AgentServerTest {
       AgentDefinition agDef = agentServer.addAgentDefinition(
           "{\"user\": \"Test-User\"," +
           "\"name\": \"ConditionTest\", " +
+          "\"memory\": [{\"name\": \"m\", \"type\": \"map\"}, {\"name\": \"i\", \"type\": \"map\"}], " +
           "\"conditions\": [{\"name\": \"condition-1\", \"interval\": 10, \"condition\": \"i.i1.f1 - i.i2.f1 < i.i3.f3\", \"description\": \"10 ms condition\", \"script\": \"m.hit['condition-1'] = true;\", \"enabled\": true}]}");
       assertEquals("Condition count", 1, agDef.conditions.size());
       AgentCondition condition = agDef.conditions.get(0).value;
@@ -904,7 +905,7 @@ public class AgentServerTest {
       assertEquals("Condition description", "10 ms condition", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
       assertEquals("Condition description", "i.i1.f1 - i.i2.f1 < i.i3.f3", condition.condition);
-      assertEquals("Condition interval", 10, condition.interval);
+      assertEquals("Condition interval", "10", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "m.hit['condition-1'] = true;", condition.script);
       assertEquals("Condition enabled", true, condition.enabled);
@@ -930,6 +931,7 @@ public class AgentServerTest {
       AgentDefinition agDef = agentServer.addAgentDefinition(
           "{\"user\": \"Test-User\"," +
           "\"name\": \"ConditionTest\", " +
+          "\"memory\": [{\"name\": \"m\", \"type\": \"map\"}, {\"name\": \"i\", \"type\": \"map\"}], " +
           "\"conditions\": [{\"name\": \"condition-1\", \"condition\": \"i.i1.f1 - i.i2.f1 < i.i3.f3\", \"description\": \"10 ms condition\", \"script\": \"m.hit['condition-1'] = true;\", \"enabled\": true}]}");
       assertEquals("Condition count", 1, agDef.conditions.size());
       AgentCondition condition = agDef.conditions.get(0).value;
@@ -939,7 +941,7 @@ public class AgentServerTest {
       assertEquals("Condition description", "10 ms condition", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
       assertEquals("Condition description", "i.i1.f1 - i.i2.f1 < i.i3.f3", condition.condition);
-      assertEquals("Condition interval", 0, condition.interval);
+      assertEquals("Condition interval", "", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "m.hit['condition-1'] = true;", condition.script);
       assertEquals("Condition enabled", true, condition.enabled);
@@ -951,6 +953,7 @@ public class AgentServerTest {
       AgentDefinition agDef = agentServer.addAgentDefinition(
           "{\"user\": \"Test-User\"," +
           "\"name\": \"ConditionTest\", " +
+          "\"memory\": [{\"name\": \"i\", \"type\": \"map\"}], " +
           "\"conditions\": [{\"name\": \"condition-1\", \"condition\": \"i.i1.f1 - i.i2.f1 < i.i3.f3\", \"description\": \"10 ms condition\", \"enabled\": true}]}");
       assertEquals("Condition count", 1, agDef.conditions.size());
       AgentCondition condition = agDef.conditions.get(0).value;
@@ -960,7 +963,7 @@ public class AgentServerTest {
       assertEquals("Condition description", "10 ms condition", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
       assertEquals("Condition description", "i.i1.f1 - i.i2.f1 < i.i3.f3", condition.condition);
-      assertEquals("Condition interval", 0, condition.interval);
+      assertEquals("Condition interval", "", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "", condition.script);
       assertEquals("Condition enabled", true, condition.enabled);
@@ -972,6 +975,7 @@ public class AgentServerTest {
       AgentDefinition agDef = agentServer.addAgentDefinition(
           "{\"user\": \"Test-User\"," +
           "\"name\": \"ConditionTest\", " +
+          "\"memory\": [{\"name\": \"i\", \"type\": \"map\"}], " +
           "\"conditions\": [{\"condition\": \"i.i1.f1 - i.i2.f1 < i.i3.f3\", \"description\": \"10 ms condition\", \"enabled\": true}]}");
       assertEquals("Condition count", 1, agDef.conditions.size());
       AgentCondition condition = agDef.conditions.get(0).value;
@@ -981,7 +985,7 @@ public class AgentServerTest {
       assertEquals("Condition description", "10 ms condition", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
       assertEquals("Condition description", "i.i1.f1 - i.i2.f1 < i.i3.f3", condition.condition);
-      assertEquals("Condition interval", 0, condition.interval);
+      assertEquals("Condition interval", "", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "", condition.script);
       assertEquals("Condition enabled", true, condition.enabled);
@@ -993,6 +997,7 @@ public class AgentServerTest {
       AgentDefinition agDef = agentServer.addAgentDefinition(
           "{\"user\": \"Test-User\"," +
           "\"name\": \"ConditionTest\", " +
+          "\"memory\": [{\"name\": \"i\", \"type\": \"map\"}], " +
           "\"conditions\": [{\"condition\": \"i.i1.f1 - i.i2.f1 < i.i3.f3\", \"enabled\": true}]}");
       assertEquals("Condition count", 1, agDef.conditions.size());
       AgentCondition condition = agDef.conditions.get(0).value;
@@ -1001,8 +1006,8 @@ public class AgentServerTest {
       assertTrue("Condition description is missing", condition.description != null);
       assertEquals("Condition description", "", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
-      assertEquals("Condition description", "i.i1.f1 - i.i2.f1 < i.i3.f3", condition.condition);
-      assertEquals("Condition interval", 0, condition.interval);
+      assertEquals("Condition condition expression", "i.i1.f1 - i.i2.f1 < i.i3.f3", condition.condition);
+      assertEquals("Condition interval", "", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "", condition.script);
       assertEquals("Condition enabled", true, condition.enabled);
@@ -1014,6 +1019,7 @@ public class AgentServerTest {
       AgentDefinition agDef = agentServer.addAgentDefinition(
           "{\"user\": \"Test-User\"," +
           "\"name\": \"ConditionTest\", " +
+          "\"memory\": [{\"name\": \"i\", \"type\": \"map\"}], " +
           "\"conditions\": [{\"condition\": \"i.i1.f1 - i.i2.f1 < i.i3.f3\", \"enabled\": false}]}");
       assertEquals("Condition count", 1, agDef.conditions.size());
       AgentCondition condition = agDef.conditions.get(0).value;
@@ -1023,7 +1029,7 @@ public class AgentServerTest {
       assertEquals("Condition description", "", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
       assertEquals("Condition description", "i.i1.f1 - i.i2.f1 < i.i3.f3", condition.condition);
-      assertEquals("Condition interval", 0, condition.interval);
+      assertEquals("Condition interval", "", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "", condition.script);
       assertEquals("Condition enabled", false, condition.enabled);
@@ -1035,6 +1041,7 @@ public class AgentServerTest {
       AgentDefinition agDef = agentServer.addAgentDefinition(
           "{\"user\": \"Test-User\"," +
           "\"name\": \"ConditionTest\", " +
+          "\"memory\": [{\"name\": \"i\", \"type\": \"map\"}], " +
           "\"conditions\": [{\"condition\": \"i.i1.f1 - i.i2.f1 < i.i3.f3\"}]}");
       assertEquals("Condition count", 1, agDef.conditions.size());
       AgentCondition condition = agDef.conditions.get(0).value;
@@ -1044,7 +1051,7 @@ public class AgentServerTest {
       assertEquals("Condition description", "", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
       assertEquals("Condition description", "i.i1.f1 - i.i2.f1 < i.i3.f3", condition.condition);
-      assertEquals("Condition interval", 0, condition.interval);
+      assertEquals("Condition interval", "", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "", condition.script);
       assertEquals("Condition enabled", true, condition.enabled);
@@ -1070,6 +1077,7 @@ public class AgentServerTest {
       AgentDefinition agDef = agentServer.addAgentDefinition(
           "{\"user\": \"Test-User\"," +
           "\"name\": \"ConditionTest\", " +
+          "\"memory\": [{\"name\": \"m\", \"type\": \"map\"}, {\"name\": \"i\", \"type\": \"map\"}], " +
           "\"conditions\": [{\"name\": \"condition-1\", \"interval\": 10, \"condition\": \"i.i1.f1 - i.i2.f1 < i.i3.f3\", \"description\": \"10 ms condition\", \"script\": \"m.hit['condition-1'] = true;\", \"enabled\": true}, " +
           "                 {\"name\": \"condition-2\", \"interval\": 2500, \"condition\": \"i.i1.f2 - i.i2.f2 < i.i3.f4\", \"description\": \"2.5 sec condition\", \"script\": \"m.hit['condition-2'] = true;\", \"enabled\": false}, " +
           "                 {\"name\": \"condition-3\", \"interval\": 10000, \"condition\": \"i.i1.f3 - i.i2.f3 < i.i3.f5\", \"description\": \"10 sec condition\", \"script\": \"m.hit['condition-3'] = true;\"}]}, \"enabled\": true");
@@ -1081,7 +1089,7 @@ public class AgentServerTest {
       assertEquals("Condition description", "10 ms condition", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
       assertEquals("Condition description", "i.i1.f1 - i.i2.f1 < i.i3.f3", condition.condition);
-      assertEquals("Condition interval", 10, condition.interval);
+      assertEquals("Condition interval", "10", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "m.hit['condition-1'] = true;", condition.script);
       assertEquals("Condition enabled", true, condition.enabled);
@@ -1092,7 +1100,7 @@ public class AgentServerTest {
       assertEquals("Condition description", "2.5 sec condition", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
       assertEquals("Condition description", "i.i1.f2 - i.i2.f2 < i.i3.f4", condition.condition);
-      assertEquals("Condition interval", 2500, condition.interval);
+      assertEquals("Condition interval", "2500", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "m.hit['condition-2'] = true;", condition.script);
       assertEquals("Condition enabled", false, condition.enabled);
@@ -1103,7 +1111,7 @@ public class AgentServerTest {
       assertEquals("Condition description", "10 sec condition", condition.description);
       assertTrue("Condition condition expression is missing", condition.condition != null);
       assertEquals("Condition description", "i.i1.f3 - i.i2.f3 < i.i3.f5", condition.condition);
-      assertEquals("Condition interval", 10000, condition.interval);
+      assertEquals("Condition interval", "10000", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "m.hit['condition-3'] = true;", condition.script);
       assertEquals("Condition enabled", true, condition.enabled);

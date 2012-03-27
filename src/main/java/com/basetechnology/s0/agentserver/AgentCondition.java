@@ -32,12 +32,12 @@ import com.basetechnology.s0.agentserver.util.JsonUtils;
 public class AgentCondition {
   public String name;
   public String description;
-  public long interval;
+  public String interval;
   public String condition;
   public String script;
   public boolean enabled;
   
-  public AgentCondition(String name, String description, long interval, String condition, String script, boolean enabled){
+  public AgentCondition(String name, String description, String interval, String condition, String script, boolean enabled){
     this.name = name;
     this.description = description;
     this.interval = interval;
@@ -54,7 +54,7 @@ public class AgentCondition {
     // TODO: Whether empty fields should be null or empty strings
     String name = conditionJson.optString("name", "");
     String description = conditionJson.optString("description", "");
-    long interval = conditionJson.optLong("interval");
+    String interval = conditionJson.optString("interval");
     if (! conditionJson.has("condition"))
       throw new AgentServerException("Condition condition expression is missing");
     String condition = conditionJson.optString("condition");
@@ -65,7 +65,10 @@ public class AgentCondition {
     return new AgentCondition(name, description, interval, condition, script, enabled);
   }
   
-  
+  public long getInterval(AgentInstance agentInstance) throws AgentServerException {
+    return agentInstance.evaluateExpressionLong(interval);
+  }
+
   public JSONObject toJson() throws JSONException {
     JSONObject timerJson = new JSONObject();
     timerJson.put("name", name);

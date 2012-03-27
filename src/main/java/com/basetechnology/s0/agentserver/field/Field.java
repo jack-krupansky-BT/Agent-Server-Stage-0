@@ -20,6 +20,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.AgentServerException;
+import com.basetechnology.s0.agentserver.script.intermediate.BooleanTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.DateTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.FloatTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.IntegerTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.ListTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.LocationTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.MapTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.MoneyTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolTable;
 import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
@@ -71,8 +80,53 @@ public abstract class Field {
       return ChoiceField.fromJson(symbolTable, fieldJson);
     else if (type.equals("multi_choice"))
       return MultiChoiceField.fromJson(symbolTable, fieldJson);
+    else if (type.equals("list"))
+      return ListField.fromJson(symbolTable, fieldJson);
+    else if (type.equals("map"))
+      return MapField.fromJson(symbolTable, fieldJson);
     else
       throw new AgentServerException("Invalid type ('" + type + "') in field definition");
+  }
+
+  public static TypeNode getType(String typeName) throws AgentServerException {
+    if (typeName == null)
+      throw new AgentServerException("'typeName' is null");
+    else if (typeName.trim().length() == 0)
+      throw new AgentServerException("'typeName' is empty");
+    else if (typeName.equals("string"))
+      return StringTypeNode.one;
+    else if (typeName.equals("int") || typeName.equals("integer"))
+      return IntegerTypeNode.one;
+    else if (typeName.equals("float"))
+      return FloatTypeNode.one;
+    else if (typeName.equals("money"))
+      return MoneyTypeNode.one;
+    else if (typeName.equals("date"))
+      return DateTypeNode.one;
+    else if (typeName.equals("location"))
+      return LocationTypeNode.one;
+    else if (typeName.equals("text"))
+      return StringTypeNode.one;
+    else if (typeName.equals("help"))
+      return StringTypeNode.one;
+    else if (typeName.equals("option") || typeName.equals("boolean"))
+      return BooleanTypeNode.one;
+    else if (typeName.equals("choice"))
+      return StringTypeNode.one;
+    else if (typeName.equals("multi_choice"))
+      return StringTypeNode.one;
+    else if (typeName.equals("list"))
+      return ListTypeNode.one;
+    else if (typeName.startsWith("list<"))
+      // TODO: Parse the element type
+      return ListTypeNode.one;
+    else if (typeName.equals("map"))
+      return MapTypeNode.one;
+    else if (typeName.startsWith("map<"))
+      // TODO: Parse the element type
+      return MapTypeNode.one;
+    else
+      throw new AgentServerException("Invalid typeName: '" + typeName + "'");
   }
   
   public String toJsonString() throws JSONException {

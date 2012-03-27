@@ -1268,6 +1268,10 @@ Let's check the agent instance status to see that there are no longer any agents
 
 curl 'http://localhost:8980/API/v0.1/users/test-user-1/agents?password=test-pwd-1'
 
+TBD
+
+(What else here?)
+(Clarify intro vs. tutorial.)
 
 There is plenty of additional material to cover, but this has been a decent overview of a lot of the
 basics.

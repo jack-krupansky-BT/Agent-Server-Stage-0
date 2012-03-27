@@ -763,7 +763,7 @@ public class AgentSchedulerTest {
       assertEquals("Condition name", "", condition.name);
       assertTrue("Condition description is missing", condition.description != null);
       assertEquals("Condition description", "10 ms condition", condition.description);
-      assertEquals("Condition interval", 10, condition.interval);
+      assertEquals("Condition interval", "10", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "return 'hit condition-10';", condition.script);
       assertTrue("Condition condition is missing", condition.condition != null);
@@ -798,7 +798,7 @@ public class AgentSchedulerTest {
       assertEquals("Condition name", "condition-1", condition.name);
       assertTrue("Condition description is missing", condition.description != null);
       assertEquals("Condition description", "10 ms condition", condition.description);
-      assertEquals("Condition interval", 0, condition.interval);
+      assertEquals("Condition interval", "", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "return 'hit condition-10';", condition.script);
       assertTrue("Condition condition is missing", condition.condition != null);
@@ -819,7 +819,7 @@ public class AgentSchedulerTest {
       assertEquals("Condition name", "condition-1", condition.name);
       assertTrue("Condition description is missing", condition.description != null);
       assertEquals("Condition description", "10 ms condition", condition.description);
-      assertEquals("Condition interval", 10, condition.interval);
+      assertEquals("Condition interval", "10", condition.interval);
       assertTrue("Condition script is missing", condition.script != null);
       assertEquals("Condition script", "", condition.script);
       assertTrue("Condition condition is missing", condition.condition != null);
@@ -858,7 +858,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-1", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "10 ms condition", condition.description);
-    assertEquals("Condition interval", 10, condition.interval);
+    assertEquals("Condition interval", "10", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "return 'hit condition-10';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -908,7 +908,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-1", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "50 ms condition", condition.description);
-    assertEquals("Condition interval", 50, condition.interval);
+    assertEquals("Condition interval", "50", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "return 'hit condition-1';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -979,7 +979,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-1", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "50 ms condition", condition.description);
-    assertEquals("Condition interval", 50, condition.interval);
+    assertEquals("Condition interval", "50", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "return 'hit condition-1';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1049,7 +1049,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-1", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "50 ms condition", condition.description);
-    assertEquals("Condition interval", 50, condition.interval);
+    assertEquals("Condition interval", "50", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "return 'hit condition-1';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1116,7 +1116,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-1", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "50 ms condition", condition.description);
-    assertEquals("Condition interval", 50, condition.interval);
+    assertEquals("Condition interval", "50", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "return 'hit condition-1';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1196,7 +1196,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-1", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "50 ms condition", condition.description);
-    assertEquals("Condition interval", 50, condition.interval);
+    assertEquals("Condition interval", "50", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "return 'hit condition-1';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1280,7 +1280,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-1", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "50 ms condition", condition.description);
-    assertEquals("Condition interval", 50, condition.interval);
+    assertEquals("Condition interval", "50", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "memory.count1++; return 'hit condition-1';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1290,7 +1290,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-2", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "100 ms condition", condition.description);
-    assertEquals("Condition interval", 100, condition.interval);
+    assertEquals("Condition interval", "100", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "memory.count2++; return 'hit condition-2';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1300,7 +1300,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-3", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "250 ms condition", condition.description);
-    assertEquals("Condition interval", 250, condition.interval);
+    assertEquals("Condition interval", "250", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "memory.count3++; return 'hit condition-3';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1310,7 +1310,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-4", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "25 sec condition", condition.description);
-    assertEquals("Condition interval", 25000, condition.interval);
+    assertEquals("Condition interval", "25000", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "memory.count4++; return 'hit condition-4';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1412,7 +1412,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-1", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "50 ms condition", condition.description);
-    assertEquals("Condition interval", 50, condition.interval);
+    assertEquals("Condition interval", "50", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "memory.count1++; return 'hit condition-1';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1422,7 +1422,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-2", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "100 ms condition", condition.description);
-    assertEquals("Condition interval", 100, condition.interval);
+    assertEquals("Condition interval", "100", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "memory.count2++; return 'hit condition-2';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1432,7 +1432,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-3", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "250 ms condition", condition.description);
-    assertEquals("Condition interval", 250, condition.interval);
+    assertEquals("Condition interval", "250", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "memory.count3++; return 'hit condition-3';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);
@@ -1442,7 +1442,7 @@ public class AgentSchedulerTest {
     assertEquals("Condition name", "condition-4", condition.name);
     assertTrue("Condition description is missing", condition.description != null);
     assertEquals("Condition description", "25 sec condition", condition.description);
-    assertEquals("Condition interval", 25000, condition.interval);
+    assertEquals("Condition interval", "25000", condition.interval);
     assertTrue("Condition script is missing", condition.script != null);
     assertEquals("Condition script", "memory.count4++; return 'hit condition-4';", condition.script);
     assertTrue("Condition condition is missing", condition.condition != null);

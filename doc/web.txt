@@ -1,0 +1,16 @@
+TBD
+- Read a web page as raw text
+ - scrape data
+- Read as HTML
+ - Navigate
+- Read as XML
+ - Navigate
+- Extract word list from raw text, HTML, and XML
+- Raw text to XML
+
+- Script to do the logic vs. generating agent output
+ - Read a web page on a timer
+ 
+- GET vs. POST/PUT/DELETE
+- Custom headers
+- Status codes

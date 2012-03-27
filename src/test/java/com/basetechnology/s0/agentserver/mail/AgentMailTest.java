@@ -120,7 +120,7 @@ public class AgentMailTest extends AgentServerTestBase {
   public void testNotification() throws AgentServerException, JSONException, TokenizerException, ParserException {
     // Add user
     AgentServer agentServer = server.agentServer;
-    User user = new User("test-user-1", "pwd-1", "Your pwd", "Test User 1", "Test User 1", "", "tu1", "", "", "test-user-1@basetechnology.com", false, "", true, null, null);
+    User user = new User("test-user-1", "pwd-1", "Your pwd", "Test User 1", "Test User 1", "", "tu1", "", "", "test-user-1@basetechnology.com", false, "", true, true, true, null, null);
     agentServer.addUser(user);
     
     // Add agent definition

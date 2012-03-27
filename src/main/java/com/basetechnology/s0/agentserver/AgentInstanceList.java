@@ -105,7 +105,7 @@ public class AgentInstanceList implements Iterable<AgentInstance> {
         throw new AgentServerException("Instance already exists with name '" + agentInstanceName + "' for user '" + user.id + "' - existing instance is for definition named '" + agentInstance.agentDefinition.name + "'; new instance is for definition named '" + agentDefinition.name + "'");
 
     // Create new instance
-    AgentInstance agentInstance = new AgentInstance(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerIntervalExpression, reportingIntervalExpression, publicOutput, limitInstanceStatesStored, enabled, timeCreated, timeModified, null, false);
+    AgentInstance agentInstance = new AgentInstance(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerIntervalExpression, reportingIntervalExpression, publicOutput, limitInstanceStatesStored, enabled, timeCreated, timeModified, null, false, false);
     put(agentInstance);
     return agentInstance;
   }

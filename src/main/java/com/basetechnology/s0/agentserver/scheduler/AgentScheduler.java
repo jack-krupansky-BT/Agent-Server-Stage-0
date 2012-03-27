@@ -390,7 +390,7 @@ public class AgentScheduler implements Runnable {
 
     this.requestShutdown = true;
     if (wait){
-      int waitLimit = 2000;
+      int waitLimit = 5 * 1000;
       int sleepTime = 5;
       for (int i = 0; i < waitLimit && ! shutdown; i += sleepTime)
         Thread.sleep(sleepTime);

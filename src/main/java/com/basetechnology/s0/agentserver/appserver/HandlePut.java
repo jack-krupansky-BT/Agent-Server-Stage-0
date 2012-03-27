@@ -17,38 +17,24 @@
 package com.basetechnology.s0.agentserver.appserver;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.text.ParseException;
-
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 
 import com.basetechnology.s0.agentserver.AgentDefinition;
 import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentInstanceList;
 import com.basetechnology.s0.agentserver.AgentServer;
-import com.basetechnology.s0.agentserver.AgentServerException;
-import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.ScriptDefinition;
 import com.basetechnology.s0.agentserver.User;
-import com.basetechnology.s0.agentserver.activities.AgentActivityThread;
 import com.basetechnology.s0.agentserver.field.Field;
 import com.basetechnology.s0.agentserver.field.FieldList;
 import com.basetechnology.s0.agentserver.notification.NotificationInstance;
 import com.basetechnology.s0.agentserver.scheduler.AgentScheduler;
-import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
-import com.basetechnology.s0.agentserver.script.parser.ParserException;
-import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerException;
-import com.basetechnology.s0.agentserver.util.DateUtils;
-import com.basetechnology.s0.agentserver.util.JsonListMap;
 
 public class HandlePut extends HandleHttp {
   static final Logger log = Logger.getLogger(HandlePut.class);
@@ -56,14 +42,12 @@ public class HandlePut extends HandleHttp {
   static public Thread shutdownThread;
   
   public boolean handlePut(HttpInfo httpInfo) throws Exception {
-    this.httpInfo = httpInfo;
-    
     // Extract out commonly used info
+    this.httpInfo = httpInfo;
     String path = httpInfo.path;
     String[] pathParts = httpInfo.pathParts;
     Request request = httpInfo.request;
     HttpServletResponse response = httpInfo.response;
-    String format = httpInfo.format;
     AgentServer agentServer = httpInfo.agentServer;
     String lcPath = path.toLowerCase();
     
@@ -71,10 +55,7 @@ public class HandlePut extends HandleHttp {
       String userName = pathParts[2];
       String agentDefinitionName = pathParts[3];
       BufferedReader reader = request.getReader();
-      JSONObject agentDefinitionJson = null;
-      try {
-        agentDefinitionJson = new JSONObject(new JSONTokener(reader));
-      } catch (Exception e){}
+      JSONObject agentDefinitionJson = getInputJson();
 
       if (agentDefinitionName == null){
         response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -137,16 +118,7 @@ public class HandlePut extends HandleHttp {
         ((Request)request).setHandled(true);
       }
     } else if (path.equalsIgnoreCase("/config")){
-      // Get password from query parameters
-      String password = request.getParameter("password");
-      if (password == null){
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      } else if (password.trim().length() == 0){
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      } else if (! password.equals(agentServer.getAdminPassword())){
-        throw new AgentAppServerBadRequestException("Incorrect password");
-      }
-
+      checkAdminAccess();
       JSONObject configJson = getInputJson();
       log.info("Updating configuration settings");
 
@@ -156,15 +128,7 @@ public class HandlePut extends HandleHttp {
       // Update was successful
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (path.equalsIgnoreCase("/config/reset")){
-      // Get password from query parameters
-      String password = request.getParameter("password");
-      if (password == null){
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      } else if (password.trim().length() == 0){
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      } else if (! password.equals(agentServer.getAdminPassword())){
-        throw new AgentAppServerBadRequestException("Incorrect password");
-      }
+      checkAdminAccess();
 
       log.info("Resetting to original configuration settings");
 
@@ -174,31 +138,9 @@ public class HandlePut extends HandleHttp {
       // Update was successful
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.equals("/shutdown")){
-      // Get password from query parameters
-      String password = request.getParameter("password");
-      if (password == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (password.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (! password.equals(agentServer.getAdminPassword())){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Incorrect password");
-        return true;
-      } else {
-        // Request the agent app server to shutdown
+      checkAdminAccess();
+
+      // Request the agent app server to shutdown
         // TODO: Can we really do this here and still return a response?
         // Or do we need to set a timer, return, and shutdown independent of current request
         
@@ -206,317 +148,126 @@ public class HandlePut extends HandleHttp {
         AgentAppServerShutdown agentAppServerShutdown = new AgentAppServerShutdown(agentServer);
         shutdownThread = new Thread(agentAppServerShutdown);
         shutdownThread.start();
-        
+
         // Done
         response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         return true;
-      }
     } else if (lcPath.equals("/status/pause")){
-      // Get password from query parameters
-      String password = request.getParameter("password");
-      if (password == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (password.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (! password.equals(agentServer.getAdminPassword())){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Incorrect password");
-        return true;
-      } else {
-        // Request the agent scheduler to pause
-        AgentScheduler.singleton.pause();
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        return true;
-      }
+      checkAdminAccess();
+      // Request the agent scheduler to pause
+      AgentScheduler.singleton.pause();
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.equals("/status/restart")){
-      // Get password from query parameters
-      String password = request.getParameter("password");
-      if (password == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (password.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (! password.equals(agentServer.getAdminPassword())){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Incorrect password");
-        return true;
-      } else {
-        // Request the agent scheduler to shutdown
-        AgentScheduler.singleton.shutdown();
-        
-        // Sleep a little to wait for shutdown to complete
+      checkAdminAccess();
+      // Request the agent scheduler to shutdown
+      AgentScheduler.singleton.shutdown();
+
+      // Sleep a little to wait for shutdown to complete
+      Thread.sleep(250);
+
+      // Make sure scheduler is no longer running
+      if (AgentScheduler.singleton != null)
+        // Sleep a little longer to wait for shutdown
         Thread.sleep(250);
 
-        // Make sure scheduler is no longer running
-        if (AgentScheduler.singleton != null)
-          // Sleep a little longer to wait for shutdown
-          Thread.sleep(250);
+      // Force the scheduler to start
+      AgentScheduler agentScheduler = new AgentScheduler(agentServer);
 
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    } else if (lcPath.equals("/status/resume")){
+      checkAdminAccess();
+      // Request the agent scheduler to resume
+      AgentScheduler.singleton.resume();
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    } else if (lcPath.equals("/status/shutdown")){
+      checkAdminAccess();
+      // Request the agent scheduler to shutdown
+      log.info("Shutting down agent server");
+      AgentScheduler.singleton.shutdown();
+      log.info("Agent server shut down");
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    } else if (lcPath.equals("/status/start")){
+      checkAdminAccess();
+      // Make sure scheduler is not already running
+      if (AgentScheduler.singleton == null){
         // Force the scheduler to start
         AgentScheduler agentScheduler = new AgentScheduler(agentServer);
-
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        return true;
       }
-    } else if (lcPath.equals("/status/resume")){
-      // Get password from query parameters
-      String password = request.getParameter("password");
-      if (password == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (password.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (! password.equals(agentServer.getAdminPassword())){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Incorrect password");
-        return true;
-      } else {
-        // Request the agent scheduler to resume
-        AgentScheduler.singleton.resume();
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        return true;
-      }
-    } else if (lcPath.equals("/status/shutdown")){
-      // Get password from query parameters
-      String password = request.getParameter("password");
-      if (password == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (password.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (! password.equals(agentServer.getAdminPassword())){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Incorrect password");
-        return true;
-      } else {
-        // Request the agent scheduler to shutdown
-        log.info("Shutting down agent server");
-        AgentScheduler.singleton.shutdown();
-        log.info("Agent server shut down");
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        return true;
-      }
-    } else if (lcPath.equals("/status/start")){
-      // Get password from query parameters
-      String password = request.getParameter("password");
-      if (password == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (password.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (! password.equals(agentServer.getAdminPassword())){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Incorrect password");
-        return true;
-      } else {
-        // Make sure scheduler is not already running
-        if (AgentScheduler.singleton == null){
-          // Force the scheduler to start
-          AgentScheduler agentScheduler = new AgentScheduler(agentServer);
-        }
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        return true;
-      }
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.equals("/status/stop")){
-      // Get password from query parameters
-      String password = request.getParameter("password");
-      if (password == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (password.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (! password.equals(agentServer.getAdminPassword())){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Incorrect password");
-        return true;
-      } else {
-        // Request the agent scheduler to shutdown
-        log.info("Shutting down agent server");
-        AgentScheduler.singleton.shutdown();
-        log.info("Agent server shut down");
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-        return true;
-      }
+      checkAdminAccess();
+      // Request the agent scheduler to shutdown
+      log.info("Shutting down agent server");
+      AgentScheduler.singleton.shutdown();
+      log.info("Agent server shut down");
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*$")){
-      // Get user id from path
-      String id = pathParts[2];
-      
-      // Get password from query parameters
-      String password = request.getParameter("password");
+      User user = checkUserAccess(true);
 
       // Parse the user info JSON from posted entity
-      BufferedReader reader = request.getReader();
-      if (reader == null)
-        throw new AgentAppServerBadRequestException("Missing JSON in request");
-      JSONObject userJson = null;
-      try {
-        userJson = new JSONObject(new JSONTokener(reader));
-      } catch (Exception e){
-        throw new AgentAppServerBadRequestException("Exception parsing JSON - " + e.getMessage());
-      }
+      JSONObject userJson = getInputJson();
 
-      if (id == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing id query parameter");
-        ((Request)request).setHandled(true);
-      } else if (id.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty id query parameter");
-        ((Request)request).setHandled(true);
-      } else if (id.trim().length() < User.MIN_ID_LENGTH){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Id must be at least 4 characters");
-        ((Request)request).setHandled(true);
-      } else if (password == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (password.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty password query parameter");
-        ((Request)request).setHandled(true);
-      } else if (password.trim().length() < User.MIN_ID_LENGTH){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Password must be at least 4 characters");
-        ((Request)request).setHandled(true);
-      } else if (! agentServer.users.containsKey(id) ||
-          ! agentServer.users.get(id).password.equals(password)){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Unknown user Id or incorrect password");
-        return true;
-      }
-      if (userJson == null)
-        throw new AgentAppServerBadRequestException("Missing JSON");
+      log.info("Updating existing user: " + user.id);
 
-        id = id.trim();
-        password = password.trim();
-        log.info("Updating existing user: " + id);
-        
-        // Get the existing user info
-        User user = agentServer.users.get(id);
-        
-        // Parse the updated user info
-        User newUser = User.fromJson(userJson, true);
-        
-        // Update the user info
-        user.update(agentServer, newUser);
-        
-        // Update was successful
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+      // Parse the updated user info
+      User newUser = User.fromJson(userJson, true);
+
+      // Update the user info
+      user.update(agentServer, newUser);
+
+      // Update was successful
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/disable$")){
+      User user = checkAdminUserAccess();
+      String allActivityString = request.getParameter("all_activity");
+      boolean disableAllActivity = allActivityString == null || (allActivityString.equalsIgnoreCase("true") ||
+          allActivityString.equalsIgnoreCase("yes") ||
+          allActivityString.equalsIgnoreCase("on"));
+      String newActivityString = request.getParameter("new_activity");
+      boolean disableNewActivity = newActivityString == null || (newActivityString.equalsIgnoreCase("true") ||
+          newActivityString.equalsIgnoreCase("yes") ||
+          newActivityString.equalsIgnoreCase("on"));
+      log.info("Disabling user: " + user.id + " diable all activity: " + disableAllActivity +
+          " disable new activity: " + disableNewActivity);
+
+      // Disable user as directed
+      user.enabled = ! disableAllActivity;
+      user.newActivityEnabled = ! disableNewActivity;
+      
+      // Update was successful
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/enable$")){
+      User user = checkAdminUserAccess();
+      String allActivityString = request.getParameter("all_activity");
+      boolean enableAllActivity = allActivityString == null || (allActivityString.equalsIgnoreCase("true") ||
+          allActivityString.equalsIgnoreCase("yes") ||
+          allActivityString.equalsIgnoreCase("on"));
+      String newActivityString = request.getParameter("new_activity");
+      boolean enableNewActivity = newActivityString == null || (newActivityString.equalsIgnoreCase("true") ||
+          newActivityString.equalsIgnoreCase("yes") ||
+          newActivityString.equalsIgnoreCase("on"));
+      log.info("Enabling user: " + user.id + " enable new activity: " + enableNewActivity);
+
+      // Enable user as directed
+      user.enabled = enableAllActivity;
+      user.newActivityEnabled = enableNewActivity;
+      
+      // Update was successful
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agent_definitions/[a-zA-Z0-9_.@\\-]*$")){
-      String userId = pathParts[2];
+      User user = checkUserAccess(false);
       String agentName = pathParts[4];
-      BufferedReader reader = request.getReader();
-      JSONObject agentJson = new JSONObject(new JSONTokener(reader));
+      JSONObject agentJson = getInputJson();
 
-      if (userId == null)
-        throw new AgentAppServerBadRequestException("Missing user Id path parameter");
-      else if (userId.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty user Id path parameter");
-      else if (agentName == null)
+      if (agentName == null)
         throw new AgentAppServerBadRequestException("Missing agent definition name path parameter");
-      else if (agentName.trim().length() == 0)
+      if (agentName.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty agent definition name path parameter");
-      else if (! agentServer.users.containsKey(userId))
+      if (! agentServer.users.containsKey(user.id))
         throw new AgentAppServerBadRequestException("Unknown user id");
 
-      User user = agentServer.getUser(userId);
-      AgentDefinition agent = agentServer.agentDefinitions.get(userId).get(agentName);
-      log.info("Updating agent definition named: " + agentName + " for user: " + userId);
+      AgentDefinition agent = agentServer.agentDefinitions.get(user.id).get(agentName);
+      log.info("Updating agent definition named: " + agentName + " for user: " + user.id);
 
       // Parse the updated agent definition info
       AgentDefinition newAgentDefinition = AgentDefinition.fromJson(agentServer, user, agentJson, true);
@@ -527,95 +278,42 @@ public class HandlePut extends HandleHttp {
       // Update was successful
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*$")){
-      String userId = pathParts[2];
+      User user = checkUserAccess(false);
       String agentName = pathParts[4];
-      BufferedReader reader = request.getReader();
-      JSONObject agentJson = null;
-      try {
-        agentJson = new JSONObject(new JSONTokener(reader));
-      } catch (Exception e){}
+      JSONObject agentJson = getInputJson();
 
-      if (userId == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing user name path parameter");
-        ((Request)request).setHandled(true);
-      } else if (userId.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty user name path parameter");
-        ((Request)request).setHandled(true);
-      } else if (agentName == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing agent name path parameter");
-        ((Request)request).setHandled(true);
-      } else if (agentName.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty agent name path parameter");
-        ((Request)request).setHandled(true);
-      } else if (! agentServer.users.containsKey(userId)){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Unknown user name");
-        ((Request)request).setHandled(true);
-      } else if (agentJson == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Invalid agent JSON object");
-        ((Request)request).setHandled(true);
-      } else {
-        User user = agentServer.getUser(userId);
-        AgentInstance agent = agentServer.agentInstances.get(userId).get(agentName);
-        String agentDefinitionName = agent.agentDefinition.name;
-        log.info("Updating agent instance named: " + agentName + " with class: " + agentDefinitionName + " for user: " + userId);
-
-        // Parse the updated agent instance info
-        AgentInstance newAgentInstance = AgentInstance.fromJson(agentServer, user, agentJson, agent.agentDefinition, true);
-        
-        // Update the agent instance info
-        agent.update(agentServer, newAgentInstance);
-        
-        // Update was successful
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-      }
-    } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/dismiss_exceptions$")){
-      String userId = pathParts[2];
-      String agentName = pathParts[4];
-      String password = request.getParameter("password");
-      if (userId == null)
-        throw new AgentAppServerBadRequestException("Missing user name path parameter");
-      else if (userId.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty user name path parameter");
-      else if (password == null)
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      else if (password.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      else if (! agentServer.users.containsKey(userId) ||
-          ! agentServer.users.get(userId).password.equals(password))
-        throw new AgentAppServerBadRequestException("Unknown user name or invalid password");
-      else if (agentName == null)
+      if (agentName == null)
         throw new AgentAppServerBadRequestException("Missing agent instance name path parameter");
-      else if (agentName.trim().length() == 0)
+      if (agentName.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty agent instance name path parameter");
-      else if (! agentServer.agentInstances.get(userId).containsKey(agentName))
+      if (! agentServer.agentInstances.get(user.id).containsKey(agentName))
         throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "No agent instance with that name for that user");
 
-      log.info("Dismissing exceptions for agent instance " + agentName + " for user: " + userId);
-      AgentInstanceList agentMap = agentServer.agentInstances.get(userId);
+      AgentInstance agent = agentServer.agentInstances.get(user.id).get(agentName);
+      String agentDefinitionName = agent.agentDefinition.name;
+      log.info("Updating agent instance named: " + agentName + " with definition: " + agentDefinitionName + " for user: " + user.id);
+
+      // Parse the updated agent instance info
+      AgentInstance newAgentInstance = AgentInstance.fromJson(agentServer, user, agentJson, agent.agentDefinition, true);
+
+      // Update the agent instance info
+      agent.update(agentServer, newAgentInstance);
+
+      // Update was successful
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/dismiss_exceptions$")){
+      User user = checkUserAccess(false);
+      String agentName = pathParts[4];
+
+      if (agentName == null)
+        throw new AgentAppServerBadRequestException("Missing agent instance name path parameter");
+      if (agentName.trim().length() == 0)
+        throw new AgentAppServerBadRequestException("Empty agent instance name path parameter");
+      if (! agentServer.agentInstances.get(user.id).containsKey(agentName))
+        throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "No agent instance with that name for that user");
+
+      log.info("Dismissing exceptions for agent instance " + agentName + " for user: " + user.id);
+      AgentInstanceList agentMap = agentServer.agentInstances.get(user.id);
       AgentInstance agent = agentMap.get(agentName);
 
       // Set the time of dismissal for exceptions
@@ -624,29 +322,18 @@ public class HandlePut extends HandleHttp {
       // Done
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/notifications/[a-zA-Z0-9_.@\\-]*$")){
-      String userId = pathParts[2];
+      User user = checkUserAccess(false);
       String agentName = pathParts[4];
       String notificationName = pathParts.length >= 7 ? pathParts[6] : null;
-      String password = request.getParameter("password");
       String responseParam = request.getParameter("response");
       String responseChoice = request.getParameter("response_choice");
       String comment = request.getParameter("comment");
-      if (userId == null)
-        throw new AgentAppServerBadRequestException("Missing user name path parameter");
-      if (userId.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty user name path parameter");
-      if (password == null)
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      if (password.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      if (! agentServer.users.containsKey(userId) ||
-          ! agentServer.users.get(userId).password.equals(password))
-        throw new AgentAppServerBadRequestException("Unknown user name or invalid password");
+
       if (agentName == null)
         throw new AgentAppServerBadRequestException("Missing agent instance name path parameter");
       if (agentName.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty agent instance name path parameter");
-      if (! agentServer.agentInstances.get(userId).containsKey(agentName))
+      if (! agentServer.agentInstances.get(user.id).containsKey(agentName))
         throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "No agent instance with that name for that user");
       if (notificationName == null)
         throw new AgentAppServerBadRequestException("Missing notification name path parameter");
@@ -659,7 +346,7 @@ public class HandlePut extends HandleHttp {
       if (! NotificationInstance.responses.contains(responseParam))
         throw new AgentAppServerBadRequestException("Unknown response keyword query parameter");
 
-      AgentInstanceList agentMap = agentServer.agentInstances.get(userId);
+      AgentInstanceList agentMap = agentServer.agentInstances.get(user.id);
       AgentInstance agent = agentMap.get(agentName);
 
       NotificationInstance notificationInstance = agent.notifications.get(notificationName);
@@ -668,36 +355,25 @@ public class HandlePut extends HandleHttp {
       if (! notificationInstance.pending)
         throw new AgentAppServerBadRequestException("Cannot respond to notification '" + notificationName + "' for agent instance '" + agentName + "' since it is not pending");
       
-      log.info("Respond to a pending notification '" + notificationName + "' for agent instance " + agentName + " for user: " + userId);
+      log.info("Respond to a pending notification '" + notificationName + "' for agent instance " + agentName + " for user: " + user.id);
 
       agent.respondToNotification(notificationInstance, responseParam, responseChoice, comment);
       
       // Done
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/(pause|disable)$")){
-      String userId = pathParts[2];
+      User user = checkUserAccess(false);
       String agentName = pathParts[4];
-      String password = request.getParameter("password");
-      if (userId == null)
-        throw new AgentAppServerBadRequestException("Missing user Id path parameter");
-      else if (userId.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty user Id path parameter");
-      else if (password == null)
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      else if (password.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      else if (! agentServer.users.containsKey(userId) ||
-          ! agentServer.users.get(userId).password.equals(password))
-        throw new AgentAppServerBadRequestException("Unknown user name or invalid password");
-      else if (agentName == null)
+
+      if (agentName == null)
         throw new AgentAppServerBadRequestException("Missing agent instance name path parameter");
-      else if (agentName.trim().length() == 0)
+      if (agentName.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty agent instance name path parameter");
-      else if (! agentServer.agentInstances.get(userId).containsKey(agentName))
+      if (! agentServer.agentInstances.get(user.id).containsKey(agentName))
         throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "No agent instance with that name for that user");
 
-      log.info("Disabling/pausing agent instance " + agentName + " for user: " + userId);
-      AgentInstanceList agentMap = agentServer.agentInstances.get(userId);
+      log.info("Disabling/pausing agent instance " + agentName + " for user: " + user.id);
+      AgentInstanceList agentMap = agentServer.agentInstances.get(user.id);
       AgentInstance agent = agentMap.get(agentName);
 
       // Disable/pause the agent
@@ -706,29 +382,18 @@ public class HandlePut extends HandleHttp {
       // Done
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/(resume|enable)$")){
-      String userId = pathParts[2];
+      User user = checkUserAccess(false);
       String agentName = pathParts[4];
-      String password = request.getParameter("password");
-      if (userId == null)
-        throw new AgentAppServerBadRequestException("Missing user Id path parameter");
-      else if (userId.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty user Id path parameter");
-      else if (password == null)
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      else if (password.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      else if (! agentServer.users.containsKey(userId) ||
-          ! agentServer.users.get(userId).password.equals(password))
-        throw new AgentAppServerBadRequestException("Unknown user name or invalid password");
-      else if (agentName == null)
+
+      if (agentName == null)
         throw new AgentAppServerBadRequestException("Missing agent instance name path parameter");
-      else if (agentName.trim().length() == 0)
+      if (agentName.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty agent instance name path parameter");
-      else if (! agentServer.agentInstances.get(userId).containsKey(agentName))
+      if (! agentServer.agentInstances.get(user.id).containsKey(agentName))
         throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "No agent instance with that name for that user");
 
-      log.info("Enabling/resuming agent instance " + agentName + " for user: " + userId);
-      AgentInstanceList agentMap = agentServer.agentInstances.get(userId);
+      log.info("Enabling/resuming agent instance " + agentName + " for user: " + user.id);
+      AgentInstanceList agentMap = agentServer.agentInstances.get(user.id);
       AgentInstance agent = agentMap.get(agentName);
 
       // Enable/resume the agent
@@ -737,41 +402,30 @@ public class HandlePut extends HandleHttp {
       // Done
       response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/run_script/[a-zA-Z0-9_.@\\-]*$")){
-      String userId = pathParts[2];
+      User user = checkUserAccess(false);
       String agentName = pathParts[4];
       String scriptName = pathParts[6];
-      String password = request.getParameter("password");
-      if (userId == null)
-        throw new AgentAppServerBadRequestException("Missing user name path parameter");
-      else if (userId.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty user name path parameter");
-      else if (password == null)
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      else if (password.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      else if (! agentServer.users.containsKey(userId) ||
-          ! agentServer.users.get(userId).password.equals(password))
-        throw new AgentAppServerBadRequestException("Unknown user name or invalid password");
-      else if (agentName == null)
+
+      if (agentName == null)
         throw new AgentAppServerBadRequestException("Missing agent instance name path parameter");
-      else if (agentName.trim().length() == 0)
+      if (agentName.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty agent instance name path parameter");
-      else if (! agentServer.agentInstances.get(userId).containsKey(agentName))
+      if (! agentServer.agentInstances.get(user.id).containsKey(agentName))
         throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "No agent instance with that name for that user");
-      else if (scriptName == null)
+      if (scriptName == null)
         throw new AgentAppServerBadRequestException("Missing agent instance script name path parameter");
-      else if (scriptName.trim().length() == 0)
+      if (scriptName.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty agent instance script name path parameter");
       
       ScriptDefinition scriptDefinition =
-          agentServer.agentInstances.get(userId).get(agentName).agentDefinition.scripts.get(scriptName);
+          agentServer.agentInstances.get(user.id).get(agentName).agentDefinition.scripts.get(scriptName);
       if (scriptDefinition == null)
         throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "Undefined public agent script for that user: " + scriptName);
       if (! scriptDefinition.publicAccess)
         throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "Undefined public agent script for that user: " + scriptName);
 
-      log.info("Call a public script for agent instance " + agentName + " for user: " + userId);
-      AgentInstanceList agentMap = agentServer.agentInstances.get(userId);
+      log.info("Call a public script for agent instance " + agentName + " for user: " + user.id);
+      AgentInstanceList agentMap = agentServer.agentInstances.get(user.id);
       AgentInstance agent = agentMap.get(agentName);
 
       // Call the script

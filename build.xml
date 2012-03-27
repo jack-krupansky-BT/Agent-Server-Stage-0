@@ -152,7 +152,7 @@
     <unzip dest="${test.dir}" src="${test.zip.file}" />
   	<!-- Run the agent app server -->
 		<!-- <java jar="${test.jar.file}" fork="true" spawn="true" dir="${test.dir}" /> -->
-		<java jar="${test.jar.file}" fork="true" spawn="flase" dir="${test.dir}" />
+		<java jar="${test.jar.file}" fork="true" spawn="false" dir="${test.dir}" />
   </target>
 
   <target name="test-zip-spawn" depends="build-zip">

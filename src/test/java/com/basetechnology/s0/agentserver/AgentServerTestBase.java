@@ -455,4 +455,19 @@ public class AgentServerTestBase {
     //}
   }
 
+  public void assertException(JSONObject returnJson, String type, String message){
+    assertTrue("No JSON object returned", returnJson != null);
+    assertTrue("errors is not present", returnJson.has("errors"));
+    assertEquals("Count of Error JSON keys", 1, returnJson.length());
+    Object object = returnJson.opt("errors");
+    assertTrue("errors is not a JSON array", object instanceof JSONArray);
+    JSONArray errorsJson = returnJson.optJSONArray("errors");
+    assertEquals("Count of errors", 1, errorsJson.length());
+    object = errorsJson.opt(0);
+    assertTrue("errors[0] is not a JSON object", object instanceof JSONObject);
+    JSONObject errorJson = errorsJson.optJSONObject(0);
+    assertEquals("Count of error keys", 2, errorJson.length());
+    assertEquals("Error type", type, errorJson.optString("type"));
+    assertEquals("Error message", message, errorJson.optString("message"));
+  }
 }

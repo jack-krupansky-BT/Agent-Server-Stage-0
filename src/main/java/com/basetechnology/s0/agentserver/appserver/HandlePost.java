@@ -16,60 +16,34 @@
 
 package com.basetechnology.s0.agentserver.appserver;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
-
 import com.basetechnology.s0.agentserver.AgentDefinition;
 import com.basetechnology.s0.agentserver.AgentInstance;
-import com.basetechnology.s0.agentserver.AgentInstanceList;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
-import com.basetechnology.s0.agentserver.AgentState;
-import com.basetechnology.s0.agentserver.AgentTimer;
 import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.User;
-import com.basetechnology.s0.agentserver.field.Field;
-import com.basetechnology.s0.agentserver.field.FieldList;
-import com.basetechnology.s0.agentserver.script.intermediate.ExpressionNode;
-import com.basetechnology.s0.agentserver.script.intermediate.ScriptNode;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
-import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
-import com.basetechnology.s0.agentserver.script.intermediate.SymbolTable;
-import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
 import com.basetechnology.s0.agentserver.script.parser.ParserException;
-import com.basetechnology.s0.agentserver.script.parser.ScriptParser;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerException;
-import com.basetechnology.s0.agentserver.script.runtime.ExceptionInfo;
-import com.basetechnology.s0.agentserver.script.runtime.ScriptRuntime;
-import com.basetechnology.s0.agentserver.script.runtime.value.Value;
-import com.basetechnology.s0.agentserver.util.DateUtils;
 
 public class HandlePost extends HandleHttp {
   static final Logger log = Logger.getLogger(HandlePut.class);
 
   public boolean handlePost(HttpInfo httpInfo) throws IOException, ServletException, AgentAppServerException, SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException {
     // Extract out commonly used info
+    this.httpInfo = httpInfo;
     String path = httpInfo.path;
     String[] pathParts = httpInfo.pathParts;
     Request request = httpInfo.request;
     HttpServletResponse response = httpInfo.response;
-    String format = httpInfo.format;
     AgentServer agentServer = httpInfo.agentServer;
     String lcPath = path.toLowerCase();
     
@@ -162,7 +136,7 @@ public class HandlePost extends HandleHttp {
         log.info("Adding new user: " + id);
         Boolean approved = ! agentServer.config.getBoolean("admin_approve_user_create");
         User newUser = new User(id, password, passwordHint, fullName, displayName, nickName,
-            organization, bio, interests, email, incognito, comment, approved, null, null);
+            organization, bio, interests, email, incognito, comment, approved, true, true, null, null);
         newUser.generateSha();
         agentServer.addUser(newUser);
         response.setStatus(HttpServletResponse.SC_CREATED);
@@ -170,26 +144,13 @@ public class HandlePost extends HandleHttp {
         return true;
       }
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agent_definitions$")){
-      String userId = pathParts[2];
-      String password = request.getParameter("password");
+      User user = checkUserAccess(true);
       JSONObject agentDefinitionJson = getJsonRequest(httpInfo);
 
-      if (userId == null)
-        throw new AgentAppServerBadRequestException("Missing user Id path parameter");
-      else if (userId.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty user Id path parameter");
-      else if (password == null)
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      else if (password.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      else if (! agentServer.users.containsKey(userId) ||
-          ! agentServer.users.get(userId).password.equals(password))
-        throw new AgentAppServerBadRequestException("Unknown user Id or incorrect password");
-      else if (agentDefinitionJson == null)
+      if (agentDefinitionJson == null)
         throw new AgentAppServerBadRequestException("Invalid agent definition JSON object");
 
-      log.info("Adding new agent definition for user: " + userId);
-      User user = agentServer.getUser(userId);
+      log.info("Adding new agent definition for user: " + user.id);
 
       // Parse and add the agent definition
       AgentDefinition agentDefinition = agentServer.addAgentDefinition(user, agentDefinitionJson);
@@ -197,26 +158,13 @@ public class HandlePost extends HandleHttp {
       // Done
       response.setStatus(HttpServletResponse.SC_CREATED);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents$")){
-      String userId = pathParts[2];
-      String password = request.getParameter("password");
+      User user = checkUserAccess(true);
       JSONObject agentInstanceJson = getJsonRequest(httpInfo);
 
-      if (userId == null)
-        throw new AgentAppServerBadRequestException("Missing user Id path parameter");
-      else if (userId.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty user Id path parameter");
-      else if (password == null)
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      else if (password.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      else if (! agentServer.users.containsKey(userId) ||
-          ! agentServer.users.get(userId).password.equals(password))
-        throw new AgentAppServerBadRequestException("Unknown user Id or incorrect password");
-      else if (agentInstanceJson == null)
+      if (agentInstanceJson == null)
         throw new AgentAppServerBadRequestException("Invalid agent instance JSON object");
 
-      log.info("Adding new agent instance for user: " + userId);
-      User user = agentServer.getUser(userId);
+      log.info("Adding new agent instance for user: " + user.id);
 
       // Parse and add the agent instance
       AgentInstance agentInstance = agentServer.addAgentInstance(user, agentInstanceJson);
@@ -224,33 +172,19 @@ public class HandlePost extends HandleHttp {
       // Done
       response.setStatus(HttpServletResponse.SC_CREATED);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-*]*/website_access$")){
-      String userId = pathParts[2];
-      String password = request.getParameter("password");
+      User user = checkAdminUserAccess();
       JSONObject accessControlsJson = getJsonRequest(httpInfo);
 
-      if (userId == null){
-        throw new AgentAppServerBadRequestException("Missing user name path parameter");
-      } else if (userId.trim().length() == 0){
-        throw new AgentAppServerBadRequestException("Empty user name path parameter");
-      } else if (password == null){
-        throw new AgentAppServerBadRequestException("Missing password query parameter");
-      } else if (password.trim().length() == 0){
-        throw new AgentAppServerBadRequestException("Empty password query parameter");
-      } else if ((! userId.equals("*") && ! agentServer.users.containsKey(userId)) ||
-          ! password.equals(agentServer.getAdminPassword())){
-        throw new AgentAppServerBadRequestException("Unknown user Id or incorrect admin password");
-      } else if (accessControlsJson == null){
+      if (accessControlsJson == null)
         throw new AgentAppServerBadRequestException("Invalid website access JSON object");
-      } else {
-        log.info("Adding web site access controls for user: " + userId);
-        User user = agentServer.getUser(userId);
 
-        // Add the web site access controls for the user
-        agentServer.addWebSiteAccessControls(user, accessControlsJson);
-        
-        // Done
-        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-      }
+      log.info("Adding web site access controls for user: " + user.id);
+
+      // Add the web site access controls for the user
+      agentServer.addWebSiteAccessControls(user, accessControlsJson);
+
+      // Done
+      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
     } else {
       throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "Path does not address any existing object");
     }

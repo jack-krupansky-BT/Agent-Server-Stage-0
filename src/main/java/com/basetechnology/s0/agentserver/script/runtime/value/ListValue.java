@@ -22,12 +22,23 @@ import java.util.List;
 import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.script.intermediate.AddNode;
 import com.basetechnology.s0.agentserver.script.intermediate.DivideNode;
+import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
 
 public class ListValue extends Value {
   public TypeNode type;
   public List<Value> value;
+
+  public ListValue(){
+    this.type = ObjectTypeNode.one;
+    this.value = new ArrayList<Value>();
+  }
+
+  public ListValue(TypeNode type){
+    this.type = type;
+    this.value = new ArrayList<Value>();
+  }
 
   public ListValue(TypeNode type, List<Value> value){
     this.type = type;

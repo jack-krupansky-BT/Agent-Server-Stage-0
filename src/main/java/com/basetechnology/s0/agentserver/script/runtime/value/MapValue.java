@@ -17,16 +17,13 @@
 package com.basetechnology.s0.agentserver.script.runtime.value;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.RuntimeException;
+import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
@@ -36,6 +33,14 @@ import com.basetechnology.s0.agentserver.util.ListMap;
 public class MapValue extends Value {
   public TypeNode type;
   public ListMap<String, Value> value;
+
+  public MapValue(){
+    this(ObjectTypeNode.one, null);
+  }
+
+  public MapValue(TypeNode type){
+    this(type, null);
+  }
 
   public MapValue(TypeNode type, List<Value> value){
     this.type = type;

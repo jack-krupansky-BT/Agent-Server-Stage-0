@@ -114,6 +114,7 @@ public class AgentInstance {
   public long lastDismissedExceptionTime;
   public boolean suppressEmail;
   public boolean autoCreated = false;
+  public boolean check;
 
   public static int autoNameCounter = 0;
   
@@ -121,16 +122,28 @@ public class AgentInstance {
     // Nothing needed
   }
   
-  public AgentInstance (AgentDefinition agentDefinition) throws SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException {
-    this(User.noUser, agentDefinition, null);
+  public AgentInstance (AgentDefinition agentDefinition) throws AgentServerException {
+    this(User.noUser, agentDefinition, null, false);
   }
   
-  public AgentInstance (User user, AgentDefinition agentDefinition) throws SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException {
-    this(user, agentDefinition, null);
+  public AgentInstance (AgentDefinition agentDefinition, boolean check) throws AgentServerException {
+    this(User.noUser, agentDefinition, null, check);
+  }
+  
+  public AgentInstance (User user, AgentDefinition agentDefinition) throws AgentServerException {
+    this(user, agentDefinition, null, false);
+  }
+  
+  public AgentInstance (User user, AgentDefinition agentDefinition, boolean check) throws AgentServerException {
+    this(user, agentDefinition, null, check);
   }
 
-  public AgentInstance(User user, AgentDefinition agentDefinition, SymbolValues parameterValues) throws SymbolException, AgentServerException  {
-    this(user, agentDefinition, null, null, parameterValues, null, null, false, -1, agentDefinition.enabled, -1, -1, null, false);
+  public AgentInstance(User user, AgentDefinition agentDefinition, SymbolValues parameterValues) throws AgentServerException  {
+    this(user, agentDefinition, null, null, parameterValues, null, null, false, -1, agentDefinition.enabled, -1, -1, null, false, false);
+  }
+
+  public AgentInstance(User user, AgentDefinition agentDefinition, SymbolValues parameterValues, boolean check) throws AgentServerException  {
+    this(user, agentDefinition, null, null, parameterValues, null, null, false, -1, agentDefinition.enabled, -1, -1, null, false, check);
   }
   
   public AgentInstance(
@@ -147,18 +160,21 @@ public class AgentInstance {
       long timeInstantiated,
       long timeUpdated,
       List<AgentState> state,
-      boolean update) throws AgentServerException {
+      boolean update,
+      boolean check) throws AgentServerException {
+    this.check = check;
+    this.update = update;
     this.timeInstantiated = timeInstantiated > 0 ? timeInstantiated : System.currentTimeMillis();
     this.timeUpdated = timeUpdated > 0 ? timeUpdated : 0;
     this.user = user == null ? User.noUser : user;
     this.agentDefinition = agentDefinition;
     this.agentServer = agentDefinition.agentServer;
-    this.name = name == null ? agentDefinition.name + "_" + ++autoNameCounter : name;
+    this.name = name == null ? (check ? "check__" + agentDefinition.name :  agentDefinition.name + "_" + ++autoNameCounter) : name;
     this.description = description;
     this.parameterValues = parameterValues == null && ! update ? new SymbolValues("parameters") : parameterValues;
     this.dependentInstances = new ArrayList<AgentInstance>();
     this.dataSourceInstances = new HashMap<DataSourceReference, AgentInstance>();
-    if (! update)
+    if (! update || check)
       initCategorySymbolValues(parameterValues);
     this.scriptStatus = new HashMap<String, String>();
     this.scriptStartTime = new HashMap<String, Long>();
@@ -190,20 +206,21 @@ public class AgentInstance {
     this.pendingSuspended = false;
     this.suppressEmail = false;
     
-    if (! update)
+    if (! update && ! check)
       this.enabled = false;
     
-    if (! update)
+    if (! update || check)
       buildSymbols();
 
     // Set initial state for instance.
 
     // If state was specified, restore it
     // TODO Whether to do this before or after setting up data sources?
+    if (! update && ! check)
     setState(state, update);
 
     // Initialize status for conditions and timers
-    if (! update){
+    if (! update && ! check){
       initializeConditionStatus();
       initializeTimerStatus();
     }
@@ -211,7 +228,7 @@ public class AgentInstance {
     this.busy = false;
     this.ranInit = false;
 
-    if (! update && enabled != null && enabled)
+    if (! update && ! check && enabled != null && enabled)
       enable();
     log.info("Enabled for " + this.name + ": " + enabled);
   }
@@ -303,28 +320,34 @@ public class AgentInstance {
           symbolManager.put("parameters", field.symbol.name, field.symbol.type);
 
       // Add inputs
-      for (DataSourceReference input: agentDefinition.inputs)
-        symbolManager.put("inputs", input.name, MapTypeNode.one);
+      if (agentDefinition.inputs != null)
+        for (DataSourceReference input: agentDefinition.inputs)
+          symbolManager.put("inputs", input.name, MapTypeNode.one);
 
       // Add scratchpad
-      for (Field field: agentDefinition.scratchpad)
-        symbolManager.put("scratchpad", field.symbol.name, field.symbol.type);
+      if (agentDefinition.scratchpad != null)
+        for (Field field: agentDefinition.scratchpad)
+          symbolManager.put("scratchpad", field.symbol.name, field.symbol.type);
 
       // Add memory
-      for (Field field: agentDefinition.memory)
-        symbolManager.put("memory", field.symbol.name, field.symbol.type);
+      if (agentDefinition.memory != null)
+        for (Field field: agentDefinition.memory)
+          symbolManager.put("memory", field.symbol.name, field.symbol.type);
 
       // Add goals
-      for (Goal goal: agentDefinition.goals)
-        symbolManager.put("goals", goal.name, ObjectTypeNode.one);
+      if (agentDefinition.goals != null)
+        for (Goal goal: agentDefinition.goals)
+          symbolManager.put("goals", goal.name, ObjectTypeNode.one);
 
       // Add notifications
-      for (NameValue<NotificationDefinition> nameValue: agentDefinition.notifications)
-        symbolManager.put("notifications", nameValue.name, MapTypeNode.one);
+      if (agentDefinition.notifications != null)
+        for (NameValue<NotificationDefinition> nameValue: agentDefinition.notifications)
+          symbolManager.put("notifications", nameValue.name, MapTypeNode.one);
 
       // Add outputs
-      for (Field field: agentDefinition.outputs)
-        symbolManager.put("outputs", field.symbol.name, field.symbol.type);
+      if (agentDefinition.outputs != null)
+        for (Field field: agentDefinition.outputs)
+          symbolManager.put("outputs", field.symbol.name, field.symbol.type);
     }
   }
 
@@ -980,7 +1003,7 @@ public class AgentInstance {
         "status", "inputs_changed", "triggered", "outputs_changed",
         "public_output", "limit_instance_states_stored")));
 
-    AgentInstance agentInstance = new AgentInstance(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerInterval, reportingInterval, publicOutput, limitInstanceStatesStored, enabled, timeInstantiated, timeUpdated, state, update);
+    AgentInstance agentInstance = new AgentInstance(user, agentDefinition, agentInstanceName, agentDescription, parameterValues, triggerInterval, reportingInterval, publicOutput, limitInstanceStatesStored, enabled, timeInstantiated, timeUpdated, state, update, false);
 
     // Return the new agent instance
     return agentInstance;

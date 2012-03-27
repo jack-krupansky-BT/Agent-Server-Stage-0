@@ -31,11 +31,16 @@ import com.basetechnology.s0.agentserver.field.Field;
 import com.basetechnology.s0.agentserver.field.FieldList;
 import com.basetechnology.s0.agentserver.goals.Goal;
 import com.basetechnology.s0.agentserver.notification.NotificationDefinition;
+import com.basetechnology.s0.agentserver.script.intermediate.ExpressionNode;
+import com.basetechnology.s0.agentserver.script.intermediate.ScriptNode;
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolTable;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
+import com.basetechnology.s0.agentserver.script.parser.ParserException;
+import com.basetechnology.s0.agentserver.script.parser.ScriptParser;
+import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerException;
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 import com.basetechnology.s0.agentserver.util.DateUtils;
 import com.basetechnology.s0.agentserver.util.JsonListMap;
@@ -115,7 +120,7 @@ public class AgentDefinition {
       long timeCreated,
       long timeModified,
       Boolean enabled,
-      boolean update) throws SymbolException, RuntimeException  {
+      boolean update) throws AgentServerException  {
     this.timeCreated = update ? timeCreated : (timeCreated > 0 ? timeCreated : System.currentTimeMillis());
     this.timeModified = update? timeModified : (timeModified > 0 ? timeModified : this.timeCreated);
     this.agentServer = agentServer;
@@ -135,6 +140,7 @@ public class AgentDefinition {
     this.triggerIntervalExpression = triggerIntervalExpression;
     this.reportingIntervalExpression = reportingIntervalExpression;
     this.enabled = enabled;
+    validateSyntax();
   }
 
   static public AgentDefinition fromJson(AgentServer agentServer, String agentJsonSource) throws AgentServerException, SymbolException, JSONException {
@@ -626,6 +632,73 @@ public class AgentDefinition {
       log.info("Unable to output AgentState as string - " + e.getMessage());
       e.printStackTrace();
       return "[AgentState: Unable to output AgentState as string - " + e.getMessage();
+    }
+  }
+
+  public void validateSyntax() throws AgentServerException {
+    // Create a dummy instance for validation
+    AgentInstance agentInstance = new AgentInstance(this, true);
+
+    // Check syntax for all scripts
+    if (scripts != null)
+      for (NameValue<ScriptDefinition> scriptDefinitionNameValue: scripts){
+        ScriptDefinition scriptDefinition = scriptDefinitionNameValue.value;
+        checkScript(agentInstance, "'" + scriptDefinition.name + "'", scriptDefinition.script);
+      }
+
+    // Check syntax for all condition interval expressions and scripts
+    if (conditions != null)
+      for (NameValue<AgentCondition> conditionNameValue: conditions){
+        AgentCondition agentCondition = conditionNameValue.value;
+        checkExpression(agentInstance, "condition '" + agentCondition.name + "' interval", agentCondition.interval);
+        checkExpression(agentInstance, "condition '" + agentCondition.name + "' condition", agentCondition.condition);
+        checkScript(agentInstance, "condition '" + agentCondition.name + "'", agentCondition.script);
+      }
+
+    // Check syntax for timer interval expressions and scripts
+    if (timers != null)
+      for (NameValue<AgentTimer> timerNameValue: timers){
+        AgentTimer timer = timerNameValue.value;
+        checkExpression(agentInstance, "timer '" + timer.name + "' interval", timer.intervalExpression);
+        checkScript(agentInstance, "timer '" + timer.name + "'", timer.script);
+      }
+    
+    // Check syntax for notification condition and timeout expressions and scripts
+    if (notifications != null)
+    for (NameValue<NotificationDefinition> notificationNameValue: notifications){
+      NotificationDefinition notificationDefinition = notificationNameValue.value;
+      checkExpression(agentInstance, "notification '" + notificationDefinition.name + "' condition", notificationDefinition.condition);
+      checkExpression(agentInstance, "notification '" + notificationDefinition.name + "' timeout", notificationDefinition.timeoutExpression);
+      for (NameValue<ScriptDefinition> scriptDefinitionNameValue: notificationDefinition.scripts){
+        ScriptDefinition scriptDefinition = scriptDefinitionNameValue.value;
+        checkScript(agentInstance, "notification '" + notificationDefinition.name + "' '" + scriptDefinition.name + "'", scriptDefinition.script);
+      }
+    }
+    
+    // Check syntax for trigger and reporting intervals
+    checkExpression(agentInstance, "trigger_interval", triggerIntervalExpression);
+    checkExpression(agentInstance, "reporting_interval", reportingIntervalExpression);
+  }
+  
+  public void checkExpression(AgentInstance agentInstance, String description, String expression) throws AgentServerException{
+    try {
+      ScriptParser parser = new ScriptParser(agentInstance);
+      ExpressionNode expressionNode = parser.parseExpressionString(expression);
+    } catch (TokenizerException e){
+      throw new AgentServerException("TokenizerException parsing " + description + " expression \"" + expression + "\" - " + e.getMessage());
+    } catch (ParserException e){
+      throw new AgentServerException("ParserException parsing " + description + " expression \"" + expression + "\" - " + e.getMessage());
+    }
+  }
+  
+  public void checkScript(AgentInstance agentInstance, String description, String script) throws AgentServerException{
+    try {
+      ScriptParser parser = new ScriptParser(agentInstance);
+      ScriptNode scriptNode = parser.parseScriptString(script);
+    } catch (TokenizerException e){
+      throw new AgentServerException("TokenizerException parsing " + description + " script \"" + script + "\" - " + e.getMessage());
+    } catch (ParserException e){
+      throw new AgentServerException("ParserException parsing " + description + " script \"" + script + "\" - " + e.getMessage());
     }
   }
 }

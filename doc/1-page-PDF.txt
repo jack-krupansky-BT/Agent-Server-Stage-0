@@ -1,0 +1,28 @@
+Software agents are a hybrid computing metaphor combining the power and flexibility or a network
+of processes and web resources.
+
+Agent server infrastructure factors out all of the bookkeeping and housekeeping and resource management
+needed to support asynchronous, interdependent distributed processing computing elements.
+
+Agents are a fundamental component of distributed processing.
+
+Even the most complex computations can be decomposed into a computing graph of elementary computing
+components.
+
+Agents provide the power and flexibility of asynchronous networked processes without any of the tedious
+and error prone bookkeeping associated with traditional approaches to network computing.
+
+The power of agents comes from their simple but powerful internal structure combined with the automated
+interconnection of a graph of agents.
+
+Three goals of agents
+
+1. Simplify basic computation
+2. Enable distributed computation
+3. Support long-lived, goal-oriented computing
+
+Agent computing is not dependent on direct association with any client device or server. Although
+agents can communicate with and synch up with any client device or server, agents have a computing
+life cycle of their own.
+
+

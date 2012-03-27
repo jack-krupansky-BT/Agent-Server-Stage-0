@@ -23,7 +23,6 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.basetechnology.s0.agentserver.appserver.HandlePut;
 import com.basetechnology.s0.agentserver.util.JsonUtils;
 import com.basetechnology.s0.agentserver.util.ShaUtils;
 
@@ -52,6 +51,8 @@ public class User {
   public Boolean incognito;
   public String comment;
   public Boolean approved;
+  public Boolean enabled;
+  public Boolean newActivityEnabled;
   
   public static User noUser = new User("none");
   public static User nullUser = new User("null");
@@ -59,7 +60,7 @@ public class User {
   public static User allUser = new User("*");
   
   public User(String id){
-    this(id, "", "", "", "", "", "", "", "", "", false, "", true, null, null);
+    this(id, "", "", "", "", "", "", "", "", "", false, "", true, true, true, null, null);
   }
   
   public User(
@@ -76,6 +77,8 @@ public class User {
       Boolean incognito,
       String comment,
       Boolean approved,
+      Boolean enabled,
+      Boolean newActivityEnabled,
       String shaId,
       String shaPassword){
     this.timeCreated = System.currentTimeMillis();
@@ -93,6 +96,8 @@ public class User {
     this.incognito = incognito;
     this.comment = comment;
     this.approved = approved;
+    this.enabled = enabled;
+    this.newActivityEnabled = newActivityEnabled;
     this.shaId = shaId;
     this.shaPassword = shaPassword;
   }
@@ -127,7 +132,7 @@ public class User {
       this.email = updated.email;
     if (updated.comment != null)
       this.comment = updated.comment;
-    // User cannot update the "approved" field
+    // User cannot update the "approved", "enabled" and "new_activity_enabled" fields
     
     // Update may have changed password, so regenerate SHAa
     generateSha();
@@ -156,7 +161,27 @@ public class User {
     Boolean incognito = userJson.has("incognito") ? userJson.optBoolean("incognito") : null;
     String email = userJson.optString("email", null);
     String comment = userJson.optString("comment", null);
-    Boolean approved = userJson.has("approved") ? userJson.optBoolean("approved") : null;
+    Boolean approved = null;
+    if (userJson.has("approved"))
+      approved = userJson.optBoolean("approved");
+    else if (update)
+      approved = null;
+    else
+      approved = true;
+    Boolean enabled = null;
+    if (userJson.has("enabled"))
+      enabled = userJson.optBoolean("enabled");
+    else if (update)
+      enabled = null;
+    else
+      enabled = true;
+    Boolean newActivityEnabled = null;
+    if (userJson.has("new_activity_enabled"))
+      newActivityEnabled = userJson.optBoolean("new_activity_enabled");
+    else if (update)
+      newActivityEnabled = null;
+    else
+      newActivityEnabled = true;
     
     // Ignore SHAs on update, but preserve them for non-update
     String shaId = null;
@@ -168,9 +193,10 @@ public class User {
     JsonUtils.validateKeys(userJson, "User", new ArrayList<String>(Arrays.asList(
         "id", "password", "password_hint", "full_name", "display_name", "nick_name",
         "organization", "bio", "interests", "email", "incognito", "comment", "approved",
+        "enabled", "new_activity_enabled",
         "sha_id", "sha_password")));
     return new User(id, password, passwordHint, fullName, displayName, nickName,
-        organization, bio, interests, email, incognito, comment, approved, shaId, shaPassword);
+        organization, bio, interests, email, incognito, comment, approved, enabled, newActivityEnabled, shaId, shaPassword);
 
   }
   
@@ -223,6 +249,8 @@ public class User {
         ", \"email\": \"" + (email == null ? "" : email) +
         "\", \"comment\": \"" + (comment == null ? "" : comment) +
         "\", \"approved\": " + (approved == null ? "" : approved) +
+        "\", \"enabled\": " + (enabled == null ? "" : enabled) +
+        "\", \"new_activity_enabled\": " + (newActivityEnabled == null ? "" : newActivityEnabled) +
         ", \"sha_id\": \"" + (shaId == null ? "" : shaId) +
         "\", \"sha_password\": \"" + (shaPassword == null ? "" : shaPassword) + "\"}"; 
   }

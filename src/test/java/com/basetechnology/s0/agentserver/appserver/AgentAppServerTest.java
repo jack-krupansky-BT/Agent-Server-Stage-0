@@ -157,7 +157,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     url = baseUrl + "/users/user-id/agent_definitions/agent-definition-name?password=user-password";
     returnJson = doGetJson(url, 400);
     assertTrue("No JSON object returned", returnJson != null);
-    assertEquals("Error JSON", "{\"errors\":[{\"message\":\"Unknown user name or invalid password\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", returnJson.toString());
+    assertEquals("Error JSON", "{\"errors\":[{\"message\":\"Unknown user Id or invalid password\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", returnJson.toString());
     assertTrue("errors is not present", returnJson.has("errors"));
     assertEquals("Count of Error JSON keys", 1, returnJson.length());
     object = returnJson.get("errors");
@@ -169,7 +169,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     errorJson = errorsJson.getJSONObject(0);
     assertEquals("Count of error keys", 2, errorJson.length());
     assertEquals("Error type", "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException", errorJson.getString("type"));
-    assertEquals("Error message", "Unknown user name or invalid password", errorJson.getString("message"));
+    assertEquals("Error message", "Unknown user Id or invalid password", errorJson.getString("message"));
 
     url = AgentAppServer.appServerBaseUrl + "/users/user-id/agent_definitions/agent-definition-name?password=user-password";
     returnJson = doGetJson(url, 400);
@@ -1744,10 +1744,10 @@ public class AgentAppServerTest extends AgentServerTestBase {
   public void testUsers() throws Exception {
     // Setup common info
     String baseUrl = AgentAppServer.appServerApiBaseUrl;
-    String url = baseUrl + "/users";
     
     // Test query of /users before any users exist
     // TODO: Should admin be predefined? (Or, "agmin"?)
+    String url = baseUrl + "/users?password=" + server.agentServer.getAdminPassword();
     JSONObject userJson = doGetJson(url, 200);
     JSONArray usersArrayJson = userJson.getJSONArray("users");
     int numUsers = usersArrayJson.length();
@@ -1762,7 +1762,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertTrue("Return JSON should be null", userJson == null);
 
     // Check full user list
-    url = baseUrl + "/users";
+    url = baseUrl + "/users?password=" + server.agentServer.getAdminPassword();
     userJson = doGetJson(url, 200);
     usersArrayJson = userJson.getJSONArray("users");
     numUsers = usersArrayJson.length();
@@ -1771,6 +1771,31 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("User[0] id", expectedId, userJson.getString("id"));
     assertEquals("User[0] display_name", "", userJson.getString("display_name"));
     log.info("Users: " + userJson + " Users array: " + usersArrayJson + " numUsers: " + numUsers);
+
+    // Make sure password is required
+    url = baseUrl + "/users/" + expectedId + "?password=junk";
+    userJson = doGetJson(url, 400);
+    assertException(userJson,
+        "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "Unknown user Id or invalid password");
+
+    url = baseUrl + "/users/" + expectedId + "?password=";
+    userJson = doGetJson(url, 400);
+    assertException(userJson,
+        "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "Empty password query parameter");
+
+    url = baseUrl + "/users/" + expectedId;
+    userJson = doGetJson(url, 400);
+    assertException(userJson,
+        "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "Missing password query parameter");
+
+    url = baseUrl + "/users/" + expectedId + "?admin_password=junk";
+    userJson = doGetJson(url, 400);
+    assertException(userJson,
+        "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "Invalid admin password");
 
     // Check the individual user details
     url = baseUrl + "/users/" + expectedId + "?password=" + expectedPassword;
@@ -1790,15 +1815,82 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("User password SHA", "87d435059558808d06f480d9c0aaf35c", userJson.getString("sha_password"));
     assertJsonSourceEquals("User JSON", "{\"id\":\"Test.User\",\"password\":\"my-pwd\",\"password_hint\":\"\",\"full_name\":\"\",\"display_name\":\"\",\"nick_name\":\"\",\"bio\":\"\",\"interests\":\"\",\"incognito\":false,\"email\":\"\",\"comment\":\"\", \"approved\": true,\"sha_id\":\"68e7bea5149cf79298f3a6369bd9c459\",\"sha_password\":\"87d435059558808d06f480d9c0aaf35c\", \"organization\":\"\"}", userJson);
 
-    // Test addition of a user with an email address for user name/id 
+    // Test addition of a user with an email address for user Id
     String expectedId2 = "mary.jones@att.com";
     String expectedPassword2 = "mary-pwd";
     String expectedDisplayName2 = "Mary Jones";
     String expectedDisplayName2Encoded = "Mary+Jones";
     url = baseUrl + "/users?id=" + expectedId2 + "&password=" + expectedPassword2 + "&display_name=" + expectedDisplayName2Encoded;
     userJson = doPostJson(url, (JSONObject)null, 201);
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doGetJson(url, 200);
+    assertJsonSourceEquals("User", "{\"interests\":\"\",\"incognito\":false,\"sha_id\":\"6bd89f4ce19fdf7b973ca0a2b65f511a\",\"password\":\"mary-pwd\",\"id\":\"mary.jones@att.com\",\"nick_name\":\"\",\"display_name\":\"Mary Jones\",\"approved\":true,\"organization\":\"\",\"bio\":\"\",\"email\":\"\",\"password_hint\":\"\",\"comment\":\"\",\"sha_password\":\"bf311f089c10794f1cb6c2c4ecaf9bdb\",\"full_name\":\"\"}", userJson);
     
-    url = baseUrl + "/users";
+    // Access that user's info using admin password
+    url = baseUrl + "/users/" + expectedId2 + "?admin_password=" + server.agentServer.getAdminPassword();
+    userJson = doGetJson(url, 200);
+    assertJsonSourceEquals("User", "{\"interests\":\"\",\"incognito\":false,\"sha_id\":\"6bd89f4ce19fdf7b973ca0a2b65f511a\",\"password\":\"mary-pwd\",\"id\":\"mary.jones@att.com\",\"nick_name\":\"\",\"display_name\":\"Mary Jones\",\"approved\":true,\"organization\":\"\",\"bio\":\"\",\"email\":\"\",\"password_hint\":\"\",\"comment\":\"\",\"sha_password\":\"bf311f089c10794f1cb6c2c4ecaf9bdb\",\"full_name\":\"\"}", userJson);
+
+    // Make sure user can be disabled and no longer accessed
+    url = baseUrl + "/users/" + expectedId2 + "/disable?password=" + server.agentServer.getAdminPassword();
+    userJson = doPutJson(url, 204);
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doGetJson(url, 400);
+    assertException(userJson,
+        "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "All activity is disabled for this user");
+
+    // Make sure admin can still access disabled user
+    url = baseUrl + "/users/" + expectedId2 + "?admin_password=" + server.agentServer.getAdminPassword();
+    userJson = doGetJson(url, 200);
+    assertJsonSourceEquals("User", "{\"interests\":\"\",\"incognito\":false,\"sha_id\":\"6bd89f4ce19fdf7b973ca0a2b65f511a\",\"password\":\"mary-pwd\",\"id\":\"mary.jones@att.com\",\"nick_name\":\"\",\"display_name\":\"Mary Jones\",\"approved\":true,\"organization\":\"\",\"bio\":\"\",\"email\":\"\",\"password_hint\":\"\",\"comment\":\"\",\"sha_password\":\"bf311f089c10794f1cb6c2c4ecaf9bdb\",\"full_name\":\"\"}", userJson);
+
+    // Now disable only new activity for that user
+    url = baseUrl + "/users/" + expectedId2 + "/disable?all_activity=no&new_activity=yes&password=" + server.agentServer.getAdminPassword();
+    userJson = doPutJson(url, 204);
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doGetJson(url, 200);
+    assertJsonSourceEquals("User", "{\"interests\":\"\",\"incognito\":false,\"sha_id\":\"6bd89f4ce19fdf7b973ca0a2b65f511a\",\"password\":\"mary-pwd\",\"id\":\"mary.jones@att.com\",\"nick_name\":\"\",\"display_name\":\"Mary Jones\",\"approved\":true,\"organization\":\"\",\"bio\":\"\",\"email\":\"\",\"password_hint\":\"\",\"comment\":\"\",\"sha_password\":\"bf311f089c10794f1cb6c2c4ecaf9bdb\",\"full_name\":\"\"}", userJson);
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doPutJson(url, "{}", 400);
+    assertException(userJson,
+        "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "New activity is disabled for this user");
+    
+    // Now re-enable user for all activity
+    url = baseUrl + "/users/" + expectedId2 + "/enable?password=" + server.agentServer.getAdminPassword();
+    userJson = doPutJson(url, 204);
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doGetJson(url, 200);
+    assertJsonSourceEquals("User", "{\"interests\":\"\",\"incognito\":false,\"sha_id\":\"6bd89f4ce19fdf7b973ca0a2b65f511a\",\"password\":\"mary-pwd\",\"id\":\"mary.jones@att.com\",\"nick_name\":\"\",\"display_name\":\"Mary Jones\",\"approved\":true,\"organization\":\"\",\"bio\":\"\",\"email\":\"\",\"password_hint\":\"\",\"comment\":\"\",\"sha_password\":\"bf311f089c10794f1cb6c2c4ecaf9bdb\",\"full_name\":\"\"}", userJson);
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doPutJson(url, "{}", 204);
+
+    // Use negative options to disable user using /enable
+    url = baseUrl + "/users/" + expectedId2 + "/enable?all_activity=no&new_activity=no&password=" + server.agentServer.getAdminPassword();
+    userJson = doPutJson(url, 204);
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doGetJson(url, 400);
+    assertException(userJson,
+        "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "All activity is disabled for this user");
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doPutJson(url, "{}", 400);
+    assertException(userJson,
+        "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "All activity is disabled for this user");
+
+    // Now re-enable using negative options of /disable
+    url = baseUrl + "/users/" + expectedId2 + "/disable?all_activity=no&new_activity=no&password=" + server.agentServer.getAdminPassword();
+    userJson = doPutJson(url, 204);
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doGetJson(url, 200);
+    assertJsonSourceEquals("User", "{\"interests\":\"\",\"incognito\":false,\"sha_id\":\"6bd89f4ce19fdf7b973ca0a2b65f511a\",\"password\":\"mary-pwd\",\"id\":\"mary.jones@att.com\",\"nick_name\":\"\",\"display_name\":\"Mary Jones\",\"approved\":true,\"organization\":\"\",\"bio\":\"\",\"email\":\"\",\"password_hint\":\"\",\"comment\":\"\",\"sha_password\":\"bf311f089c10794f1cb6c2c4ecaf9bdb\",\"full_name\":\"\"}", userJson);
+    url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
+    userJson = doPutJson(url, "{}", 204);
+    
+    // Check all users
+    url = baseUrl + "/users?password=" + server.agentServer.getAdminPassword();
     userJson = doGetJson(url, 200);
     assertTrue("\"users\" field is not present", userJson.has("users"));
     usersArrayJson = userJson.getJSONArray("users");
@@ -1815,8 +1907,11 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Test attempt to re-add an existing user
     url = baseUrl + "/users?id=" + expectedId2 + "&password=" + expectedPassword2;
     userJson = doPostJson(url, (JSONObject)null, 400);
+    assertException(userJson,
+        "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "User with that id already exists");
     
-    url = baseUrl + "/users";
+    url = baseUrl + "/users?password=" + server.agentServer.getAdminPassword();
     userJson = doGetJson(url, 200);
     assertTrue("\"users\" field is not present", userJson.has("users"));
     usersArrayJson = userJson.getJSONArray("users");
@@ -1834,7 +1929,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     url = baseUrl + "/users/" + expectedId2 + "?password=" + expectedPassword2;
     userJson = doDeleteJson(url, 204);
     
-    url = baseUrl + "/users";
+    url = baseUrl + "/users?password=" + server.agentServer.getAdminPassword();
     userJson = doGetJson(url, 200);
     assertTrue("\"users\" field is not present", userJson.has("users"));
     usersArrayJson = userJson.getJSONArray("users");
@@ -1848,7 +1943,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     url = baseUrl + "/users/" + expectedId + "?password=" + expectedPassword;
     userJson = doDeleteJson(url, 204);
     
-    url = baseUrl + "/users";
+    url = baseUrl + "/users?password=" + server.agentServer.getAdminPassword();
     userJson = doGetJson(url, 200);
     assertTrue("\"users\" field is not present", userJson.has("users"));
     usersArrayJson = userJson.getJSONArray("users");
@@ -1860,7 +1955,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     url = baseUrl + "/users?id=" + expectedId2 + "&password=" + expectedPassword2a;
     userJson = doPostJson(url, (JSONObject)null, 201);
     
-    url = baseUrl + "/users";
+    url = baseUrl + "/users?password=" + server.agentServer.getAdminPassword();
     userJson = doGetJson(url, 200);
     assertTrue("\"users\" field is not present", userJson.has("users"));
     usersArrayJson = userJson.getJSONArray("users");
@@ -1875,7 +1970,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     url = baseUrl + "/users?id=jsmith&password=catylack&password_hint=What+is+my+pet%3F&full_name=John+W.+Smith,+Jr.&display_name=John+Smith&nick_name=John&bio=Hacker+and+Slacker&interests=hacking,+slacking&email=jsmith@example.com&incognito=yes&comment=just+a+test&organization=MyCo,+Inc.";
     userJson = doPostJson(url, (JSONObject)null, 201);
     
-    url = baseUrl + "/users";
+    url = baseUrl + "/users?password=" + server.agentServer.getAdminPassword();
     userJson = doGetJson(url, 200);
     assertTrue("\"users\" field is not present", userJson.has("users"));
     usersArrayJson = userJson.getJSONArray("users");
@@ -2226,16 +2321,16 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Try update without password - should fail
     configJson = doPutJson(url, "{}", 400);
     assertTrue("Exception JSON not returned", configJson != null);
-    assertJsonSourceEquals("Exception", "{\"errors\":[{\"message\":\"Missing password query parameter\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", configJson.toString());
+    assertJsonSourceEquals("Exception", "{\"errors\":[{\"message\":\"Missing admin password query parameter\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", configJson.toString());
 
     // Try update with bad password - should fail
     configJson = doPutJson(url + "?password=junk", "{}", 400);
     assertTrue("Exception JSON not returned", configJson != null);
-    assertJsonSourceEquals("Exception", "{\"errors\":[{\"message\":\"Incorrect password\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", configJson.toString());
+    assertJsonSourceEquals("Exception", "{\"errors\":[{\"message\":\"Invalid admin password\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", configJson.toString());
 
     configJson = doPutJson(url + "?password=", "{}", 400);
     assertTrue("Exception JSON not returned", configJson != null);
-    assertJsonSourceEquals("Exception", "{\"errors\":[{\"message\":\"Empty password query parameter\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", configJson.toString());
+    assertJsonSourceEquals("Exception", "{\"errors\":[{\"message\":\"Empty admin password query parameter\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", configJson.toString());
 
     // Do an update with no changes and verify that nothing changed
     configJson = doPutJson(url + "?password=abracadabra", "{}", 204);
@@ -2248,7 +2343,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Update with a junk key - should fail
     configJson = doPutJson(url + "?password=", "{\"junk\": 3, \"abc\": \"def\", \"zebra\": \"donkey\"}", 400);
     assertTrue("Exception JSON not returned", configJson != null);
-    assertJsonSourceEquals("Exception", "{\"errors\":[{\"message\":\"Empty password query parameter\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", configJson.toString());
+    assertJsonSourceEquals("Exception", "{\"errors\":[{\"message\":\"Empty admin password query parameter\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", configJson.toString());
 
     // Update a key with the identical value - should be a no-op
     configJson = doPutJson(url + "?password=abracadabra", "{\"name\": \"MyTestAgentServer-0001\"}", 204);
@@ -4301,12 +4396,12 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Verify that getting web site access controls requires admin password
     JSONObject accessJson = doGetJson(baseUrl + "/users/user1/website_access?password=pwd1", 400);
     assertTrue("JSON", accessJson != null);
-    assertJsonSourceEquals("JSON error", "{\"errors\":[{\"message\":\"Unknown user Id or incorrect admin password\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", accessJson.toString());
+    assertJsonSourceEquals("JSON error", "{\"errors\":[{\"message\":\"Invalid admin password\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", accessJson.toString());
 
     // Verify that setting web site access controls requires admin password
     accessJson = doPostJson(baseUrl + "/users/user1/website_access?password=pwd1", "{}", 400);
     assertTrue("JSON", accessJson != null);
-    assertJsonSourceEquals("JSON error", "{\"errors\":[{\"message\":\"Unknown user Id or incorrect admin password\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", accessJson.toString());
+    assertJsonSourceEquals("JSON error", "{\"errors\":[{\"message\":\"Invalid admin password\",\"type\":\"com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException\"}]}", accessJson.toString());
 
     // Verify that getting web site access controls is a no-op if none set
     accessJson = doGetJson(baseUrl + "/users/user1/website_access?password=" + server.agentServer.getAdminPassword(), 200);
@@ -4959,7 +5054,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     returnJson = doPutJson(baseUrl +
         "/users/test-user-1/agents/HelloWorld2.mine/notifications/Not1?password=test-pwd-2", 400);
     assertError(returnJson, "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
-        "Unknown user name or invalid password");
+        "Unknown user Id or invalid password");
     returnJson = doPutJson(baseUrl +
         "/users/test-user-1/agents/HelloWorld2.mine/notifications/Not1?password=test-pwd-1", 400);
     assertError(returnJson, "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
@@ -5121,7 +5216,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = pendingNotificationJson.getString("time");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for pending notification is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for pending notification is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("timeout is missing from pending notification", pendingNotificationJson.has("timeout"));
     assertEquals("timeout of pending notification", 90 * 60 * 1000, pendingNotificationJson.getLong("timeout"));
     assertTrue("details is missing from pending notification", pendingNotificationJson.has("details"));
@@ -5243,7 +5338,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationRecordJson.getString("time");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("notification is missing from notification record [0]", notificationRecordJson.has("notification"));
     notificationJson = notificationRecordJson.getJSONObject("notification");
     assertEquals("Count of field in notification[1]", 9, notificationJson.length());
@@ -5277,7 +5372,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationRecordJson.getString("time");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("notification is missing from notification record [0]", notificationRecordJson.has("notification"));
     notificationJson = notificationRecordJson.getJSONObject("notification");
     assertEquals("Count of field in notification[1]", 9, notificationJson.length());
@@ -5345,7 +5440,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationRecordJson.getString("time");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("notification is missing from notification record [0]", notificationRecordJson.has("notification"));
     notificationJson = notificationRecordJson.getJSONObject("notification");
     assertEquals("Count of field in notification[1]", 9, notificationJson.length());
@@ -5379,7 +5474,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationRecordJson.getString("time");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("notification is missing from notification record [0]", notificationRecordJson.has("notification"));
     notificationJson = notificationRecordJson.getJSONObject("notification");
     assertEquals("Count of field in notification[1]", 9, notificationJson.length());
@@ -5389,7 +5484,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationJson.getString("time_notified");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification[1] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification[1] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("time_response is missing from notification[1]", notificationJson.has("time_response"));
     assertEquals("time_response for notification[1]", "", notificationJson.getString("time_response"));
     assertTrue("details is missing from notification[1]", notificationJson.has("details"));
@@ -5413,7 +5508,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationRecordJson.getString("time");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("notification is missing from notification record [0]", notificationRecordJson.has("notification"));
     notificationJson = notificationRecordJson.getJSONObject("notification");
     assertEquals("Count of field in notification[1]", 9, notificationJson.length());
@@ -5423,7 +5518,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationJson.getString("time_notified");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification[2] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification[2] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("time_response is missing from notification[2]", notificationJson.has("time_response"));
     assertEquals("time_response for notification[2]", "", notificationJson.getString("time_response"));
     assertTrue("details is missing from notification[2]", notificationJson.has("details"));
@@ -5447,7 +5542,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationRecordJson.getString("time");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("notification is missing from notification record [0]", notificationRecordJson.has("notification"));
     notificationJson = notificationRecordJson.getJSONObject("notification");
     assertEquals("Count of field in notification[1]", 9, notificationJson.length());
@@ -5457,7 +5552,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationJson.getString("time_notified");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification[3] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification[3] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("time_response is missing from notification[3]", notificationJson.has("time_response"));
     assertEquals("time_response for notification[3]", "", notificationJson.getString("time_response"));
     assertTrue("details is missing from notification[3]", notificationJson.has("details"));
@@ -5481,7 +5576,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationRecordJson.getString("time");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta <= 4000);
+    assertTrue("Delta time for time_notified for notification record[0] is not in range: " + delta, delta >= 0 && delta <= 5000);
     assertTrue("notification is missing from notification record [0]", notificationRecordJson.has("notification"));
     notificationJson = notificationRecordJson.getJSONObject("notification");
     assertEquals("Count of field in notification[1]", 9, notificationJson.length());
@@ -5491,7 +5586,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     timeString = notificationJson.getString("time_notified");
     time = DateUtils.parseRfcString(timeString);
     delta = time - now/1000*1000;
-    assertTrue("Delta time for time_notified for notification[3] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("Delta time for time_notified for notification[3] is not in range: " + delta, delta >= 0 && delta < 5000);
     assertTrue("time_response is missing from notification[3]", notificationJson.has("time_response"));
     assertEquals("time_response for notification[3]", "", notificationJson.getString("time_response"));
     assertTrue("details is missing from notification[3]", notificationJson.has("details"));
@@ -5522,4 +5617,271 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // TODO: Test 2 notify-only plus one suspend
   }
 
+
+  @Test
+  public void testAgentDefinitionParseErrors() throws Exception {
+    // Setup common info
+    String baseUrl = AgentAppServer.appServerApiBaseUrl;
+
+    // Create a test user
+    doPostJson(baseUrl + "/users?id=test-user-1&password=test-pwd-1", "{}", 201);
+
+    // Test definition with timer expression syntax error
+    JSONObject returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"timers\": [{\"name\": \"t1\", \"interval\": \"5*\", \"script\": \";\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    Object errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    JSONArray errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    JSONObject errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing timer 't1' interval expression \"5*\" - Expected expression primary, but found: EndToken", errorJson.getString("message"));
+
+    // Test definition with timer expression semantic error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"timers\": [{\"name\": \"t1\", \"interval\": \"x*\", \"script\": \";\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing timer 't1' interval expression \"x*\" - No definition for symbol 'x' for any category", errorJson.getString("message"));
+
+    // Test definition with timer script syntax error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"timers\": [{\"name\": \"t1\", \"interval\": \"100\", \"script\": \"5*;\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing timer 't1' script \"5*;\" - Expected expression primary, but found: SemicolonOperatorToken", errorJson.getString("message"));
+
+    // Test definition with timer script semantic error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"timers\": [{\"name\": \"t1\", \"interval\": \"100\", \"script\": \"x*;\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing timer 't1' script \"x*;\" - No definition for symbol 'x' for any category", errorJson.getString("message"));
+
+    // Test definition with script syntax error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"scripts\": [{\"name\": \"init\", \"script\": \"5*;\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing 'init' script \"5*;\" - Expected expression primary, but found: SemicolonOperatorToken", errorJson.getString("message"));
+
+    // Test definition with script semantic error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"scripts\": [{\"name\": \"init\", \"script\": \"x*;\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing 'init' script \"x*;\" - No definition for symbol 'x' for any category", errorJson.getString("message"));
+
+    // Test definition with notification script syntax error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"notifications\": [{\"name\": \"test\", \"scripts\": [{\"name\": \"yes\", \"script\": \"5*;\"}]}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing notification 'test' 'yes' script \"5*;\" - Expected expression primary, but found: SemicolonOperatorToken", errorJson.getString("message"));
+
+    // Test definition with notification script semantic error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"notifications\": [{\"name\": \"test\", \"scripts\": [{\"name\": \"yes\", \"script\": \"x*;\"}]}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing notification 'test' 'yes' script \"x*;\" - No definition for symbol 'x' for any category", errorJson.getString("message"));
+
+    // Test definition with notification timeout syntax error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"notifications\": [{\"name\": \"test\", \"timeout\": \"5*\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing notification 'test' timeout expression \"5*\" - Expected expression primary, but found: EndToken", errorJson.getString("message"));
+
+    // Test definition with notification timeout semantic error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"notifications\": [{\"name\": \"test\", \"timeout\": \"x*\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing notification 'test' timeout expression \"x*\" - No definition for symbol 'x' for any category", errorJson.getString("message"));
+
+    // Test definition with notification condition syntax error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"notifications\": [{\"name\": \"test\", \"condition\": \"5*\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing notification 'test' condition expression \"5*\" - Expected expression primary, but found: EndToken", errorJson.getString("message"));
+
+    // Test definition with notification timeout semantic error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"notifications\": [{\"name\": \"test\", \"condition\": \"x*\"}]}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing notification 'test' condition expression \"x*\" - No definition for symbol 'x' for any category", errorJson.getString("message"));
+    
+    // Test definition with trigger interval syntax error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"trigger_interval\": \"5*\"}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing trigger_interval expression \"5*\" - Expected expression primary, but found: EndToken", errorJson.getString("message"));
+
+    // Test definition with trigger interval semantic error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"trigger_interval\": \"x*\"}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing trigger_interval expression \"x*\" - No definition for symbol 'x' for any category", errorJson.getString("message"));
+
+    // Test definition with reporting interval syntax error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"reporting_interval\": \"5*\"}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing reporting_interval expression \"5*\" - Expected expression primary, but found: EndToken", errorJson.getString("message"));
+
+    // Test definition with reporting interval semantic error
+    returnJson = doPostJson(
+        baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"reporting_interval\": \"x*\"}", 400);
+    assertTrue("Return JSON is empty", returnJson != null);
+    assertTrue("Return JSON is missing 'errors'", returnJson.has("errors"));
+    errorsObject = returnJson.get("errors");
+    assertTrue("Errors value is not a JSONArray: " + errorsObject.getClass().getSimpleName(), errorsObject instanceof JSONArray);
+    errorsArrayJson = (JSONArray)errorsObject;
+    assertEquals("Count of errors", 1, errorsArrayJson.length());
+    errorJson = errorsArrayJson.getJSONObject(0);
+    assertTrue("Error JSON is missing 'type'", errorJson.has("type"));
+    assertEquals("Exception type", "com.basetechnology.s0.agentserver.AgentServerException", errorJson.getString("type"));
+    assertTrue("Error JSON is missing 'message'", errorJson.has("message"));
+    assertEquals("Exception message", "ParserException parsing reporting_interval expression \"x*\" - No definition for symbol 'x' for any category", errorJson.getString("message"));
+
+  }
+  
 }
