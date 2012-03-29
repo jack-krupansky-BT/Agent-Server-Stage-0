@@ -18,15 +18,8 @@ package com.basetechnology.s0.agentserver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 import com.basetechnology.s0.agentserver.util.JsonUtils;
 
 public class AgentCondition {

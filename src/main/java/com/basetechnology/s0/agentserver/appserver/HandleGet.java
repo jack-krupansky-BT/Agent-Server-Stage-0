@@ -17,11 +17,13 @@
 package com.basetechnology.s0.agentserver.appserver;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 import org.json.JSONArray;
@@ -233,6 +235,17 @@ public class HandleGet extends HandleHttp {
         throw new AgentServerException("JSON error generating JSON for agent definition status - " + e);
       }
       return true;
+    } else if (path.equalsIgnoreCase("/usage")){
+      log.info("Getting API usage summary text");
+
+      // Get text of API usage summary, api-usage.txt
+      // TODO: Where to read the file from... ./doc or???
+      String apiUsageText = FileUtils.readFileToString(new File("./doc/api-usage.txt"));
+
+      // Return the text
+      response.setContentType("application/json; charset=utf-8");
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.getWriter().println(apiUsageText);
     } else if (path.equalsIgnoreCase("/users")){
       checkAdminAccess();
       log.info("Getting list of all user ids");

@@ -3,6 +3,8 @@
 
 1. Download the zip file from github:
 
+   https://github.com/jack-krupansky-BT/Agent-Server-Stage-0/blob/master/dist/AgentServer-0.1.zip
+
 2. Unzip to a directory of your choice
 
 3. Edit agentserver.properties to change or fill in any blank values that you wish to set 

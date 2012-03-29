@@ -27,6 +27,7 @@
 	<classpathentry kind="lib" path="lib/jetty-distribution-7.5.4.v20111024/jetty-server-7.5.4.v20111024.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-distribution-7.5.4.v20111024/jetty-http-7.5.4.v20111024.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-distribution-7.5.4.v20111024/servlet-api-2.5.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io/commons-io/1.4/commons-io-1.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="logenv"/>
 	<classpathentry kind="lib" path="lib/jetty-distribution-7.5.4.v20111024/jetty-io-7.5.4.v20111024.jar"/>

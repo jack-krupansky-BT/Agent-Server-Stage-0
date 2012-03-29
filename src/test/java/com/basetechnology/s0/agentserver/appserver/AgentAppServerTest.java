@@ -5884,4 +5884,19 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
   }
   
+  @Test
+  public void testApiUsage() throws Exception {
+    // Setup common info
+    String baseUrl = AgentAppServer.appServerApiBaseUrl;
+
+    // Test reading of API usage summary text
+    String url = baseUrl + "/usage";
+    String usageText = doGet(url, 200);
+    assertTrue("Usage text is missing", usageText != null);
+    int usageTextLen = usageText.length();
+    assertTrue("Usage text length is too small: " + usageTextLen, usageTextLen > 1000);
+    String prefix = usageText.substring(0, 200);
+    assertEquals("Usage text prefix (first 200 chars)", "REST API Usage Summary for Base Technology Agent Server\r\n\r\nAPI Version 0.1\r\n\r\nGET http://localhost:8980/API/v0.1/about\r\n\r\n - Summarize the agent server\r\n \r\nGET http://localhost:8980/API/v0.1/config?pa", prefix);
+  }
+  
 }

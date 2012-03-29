@@ -51,73 +51,7 @@ public class HandlePut extends HandleHttp {
     AgentServer agentServer = httpInfo.agentServer;
     String lcPath = path.toLowerCase();
     
-    if (lcPath.matches("^/agent_definitions/[a-zA-Z0-9_.@\\-]*/[a-zA-Z0-9_.@\\-]$")){
-      String userName = pathParts[2];
-      String agentDefinitionName = pathParts[3];
-      BufferedReader reader = request.getReader();
-      JSONObject agentDefinitionJson = getInputJson();
-
-      if (agentDefinitionName == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Missing agent class name path parameter");
-        ((Request)request).setHandled(true);
-      } else if (agentDefinitionName.trim().length() == 0){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Empty agent class name path parameter");
-        ((Request)request).setHandled(true);
-      } else if (agentDefinitionJson == null){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Invalid agent class JSON object");
-        ((Request)request).setHandled(true);
-      } else if (! agentServer.agentDefinitions.containsKey(agentDefinitionName)){
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("text/html");
-        response.getWriter().println("<title>Agent Server</title>");
-        response.getWriter().println("<h1>Bad Request</h1>");
-        response.getWriter().println("Agent class name does not exist");
-        ((Request)request).setHandled(true);
-      } else {
-        AgentDefinition agentDefinition = agentServer.agentDefinitions.get(userName).get(agentDefinitionName);
-        log.info("Updating agent class named: " + agentDefinitionName);
-
-        SymbolManager symbolManager = new SymbolManager();
-
-        // TODO: Process and update changed agent class attributes
-        FieldList newParameters = null;
-        try {
-          if (agentDefinitionJson.has("parameters")){
-            newParameters = new FieldList();
-            JSONArray parametersJson = agentDefinitionJson.getJSONArray("parameters");
-            int numNewParameters = parametersJson.length();
-            for (int i = 0; i < numNewParameters; i ++)
-              newParameters.add(Field.fromJsonx(symbolManager.getSymbolTable("parameters"), parametersJson.getJSONObject(i)));
-          }
-        } catch (Exception e){
-          e.printStackTrace();
-          newParameters = null;
-        }
-        if (newParameters != null)
-          agentDefinition.parameters = newParameters;
-
-        if (agentDefinitionJson.has("description"))
-          agentDefinition.description = agentDefinitionJson.optString("description");
-
-        // Update any modified parameter values
-        log.info("Updated existing agent class named: " + agentDefinitionName);
-        response.setStatus(HttpServletResponse.SC_CREATED);
-        // TODO: Set Location header with URL
-        ((Request)request).setHandled(true);
-      }
-    } else if (path.equalsIgnoreCase("/config")){
+    if (path.equalsIgnoreCase("/config")){
       checkAdminAccess();
       JSONObject configJson = getInputJson();
       log.info("Updating configuration settings");
