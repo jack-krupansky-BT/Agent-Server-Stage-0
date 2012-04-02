@@ -1,3 +1,8 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+TBD - Ignore these ramblings for now
+
 Software agents are a hybrid computing metaphor combining the power and flexibility or a network
 of processes and web resources.
 

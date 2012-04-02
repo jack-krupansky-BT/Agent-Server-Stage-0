@@ -116,7 +116,11 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
   }
 
   public void assertType(String message, Value value, String expectedClassName){
-    assertEquals(message, expectedClassName, value.getClass().getSimpleName());
+    String actualClassName = value.getClass().getSimpleName();
+    if ((! expectedClassName.equalsIgnoreCase("BooleanValue")) ||
+        (! actualClassName.equalsIgnoreCase("TrueValue") &&
+            ! actualClassName.equalsIgnoreCase("FalseValue")))
+    assertEquals(message, expectedClassName, actualClassName);
   }
 
   public void assertValue(String message, String expected, Value value){
@@ -129,6 +133,67 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
 
   public void assertValueInt(String message, int expected, Value value){
     assertEquals(message, expected, value.getIntValue());
+  }
+
+  public Value eval(String expressionString, String type) throws TokenizerException, ParserException, AgentServerException {
+    return eval(expressionString, type, 0);
+  }
+
+  public Value eval(String expressionString, String type, int numExceptionsExpected) throws TokenizerException, ParserException, AgentServerException {
+    // Clear out old exceptions
+    dummyAgentInstance.exceptionHistory.clear();
+    
+    ExpressionNode expressionNode = parser.parseExpressionString(expressionString);
+    assertTrue("Null was returned from expression parser", expressionNode != null);
+    Value valueNode = scriptRuntime.evaluateExpression("", expressionNode);
+    
+    // Check for exceptions
+    List<ExceptionInfo> exceptions = dummyAgentInstance.exceptionHistory;
+    int numExceptions = exceptions.size();
+    String message = null;
+    String exceptionType = null;
+    if (numExceptions > 0){
+      message = exceptions.get(0).message;
+      exceptionType = exceptions.get(0).type;
+    }
+    if (numExceptions > 0 && numExceptionsExpected == 0)
+      fail("Unexpected exception: type: " + exceptionType + " message: " + message);
+    else
+      assertEquals("Number of exceptions that occurred" + (message != null ? "(last was '" + message + "')" : ""), numExceptionsExpected, numExceptions);
+    if (numExceptions == 0){
+      assertReturnedSomething(valueNode);
+      assertType("Returned", valueNode, type);
+    }
+    return valueNode;
+  }
+
+  public Value evalNull(String expressionString) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "NullValue");
+    return value;
+  }
+
+  public Value evalBoolean(String expressionString, boolean expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "BooleanValue");
+    assertEquals("Boolean return value", expected, value.getBooleanValue());
+    return value;
+  }
+
+  public Value evalFloat(String expressionString, double expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "FloatValue");
+    assertEquals("Float  return value", expected, value.getFloatValue(), 0.0001);
+    return value;
+  }
+
+  public Value evalInt(String expressionString, int expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "IntegerValue");
+    assertEquals("Integer return value", expected, value.getIntValue());
+    return value;
+  }
+
+  public Value evalString(String expressionString, String expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "StringValue");
+    assertEquals("String return value", expected, value.getStringValue());
+    return value;
   }
 
   public Value runScript(String script, String type) throws TokenizerException, ParserException, AgentServerException {
@@ -3479,6 +3544,43 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     runStringScript("return '%2Fmypath%2Fabc%2Fdef'.urlDecode;", "/mypath/abc/def");
     runStringScript("return 'http://x.com/x/y.html?param=Hello+World'.urlEncode;", "http%3A%2F%2Fx.com%2Fx%2Fy.html%3Fparam%3DHello%2BWorld");
     runStringScript("return 'http%3A%2F%2Fx.com%2Fx%2Fy.html%3Fparam%3DHello%2BWorld'.urlDecode;", "http://x.com/x/y.html?param=Hello+World");
+  }
+
+  @Test
+  public void testTernaryCondition() throws Exception {
+    // Test ternary condition operator
+    evalBoolean("true ? true : false", true);
+    evalBoolean("false ? true : false", false);
+
+    evalInt("true ? 123 : 456", 123);
+    evalInt("false ? 123 : 456", 456);
+
+    evalFloat("true ? 123.4 : 456.7", 123.4);
+    evalFloat("false ? 123.4 : 456.7", 456.7);
+
+    evalString("true ? 'abc' : 'def'", "abc");
+    evalString("false ? 'abc' : 'def'", "def");
+
+    evalInt("true ? 123 : true ? 456 : 789", 123);
+    evalInt("true ? 123 : false ? 456 : 789", 123);
+    evalInt("false ? 123 : true ? 456 : 789", 456);
+    evalInt("false ? 123 : false ? 456 : 789", 789);
+
+    evalInt("77 > 66 && 'a' < 'b' || 'x' == 'y' ? 123 : 77 > 66 && 'a' < 'b' || 'x' == 'y' ? 456 : 789", 123);
+    evalInt("77 > 66 && 'a' < 'b' || 'x' == 'y' ? 123 : 77 > 66 && 'a' > 'b' || 'x' == 'y' ? 456 : 789", 123);
+    evalInt("77 > 66 && 'a' > 'b' || 'x' == 'y' ? 123 : 77 > 66 && 'a' < 'b' || 'x' == 'y' ? 456 : 789", 456);
+    evalInt("77 > 66 && 'a' > 'b' || 'x' == 'y' ? 123 : 77 > 66 && 'a' > 'b' || 'x' == 'y' ? 456 : 789", 789);
+
+    evalInt("true ? 123 : 'abc'", 123);
+    evalString("false ? 123 : 'abc'", "abc");
+
+    evalInt("true ? 123 : null", 123);
+    evalString("true ? 'abc' : null", "abc");
+    evalInt("false ? null : 123", 123);
+    evalString("false ? null : 'abc'", "abc");
+    evalNull("false ? 123 : null");
+    evalNull("false ? 'abc' : null");
+
   }
   
 }

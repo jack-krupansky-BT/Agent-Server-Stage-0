@@ -74,6 +74,7 @@ import com.basetechnology.s0.agentserver.script.intermediate.SwitchStatementNode
 import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
+import com.basetechnology.s0.agentserver.script.intermediate.TernaryConditionNode;
 import com.basetechnology.s0.agentserver.script.intermediate.ThrowStatementNode;
 import com.basetechnology.s0.agentserver.script.intermediate.TryStatementNode;
 import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
@@ -123,6 +124,7 @@ import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.PeriodOpe
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.PlusEqualOperatorToken;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.PlusOperatorToken;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.PlusPlusOperatorToken;
+import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.QuestionMarkOperatorToken;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.ReturnKeywordToken;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.RightBraceOperatorToken;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.RightParenthesisOperatorToken;
@@ -994,7 +996,37 @@ public class ScriptParser {
       }
     } else
       // Parse non-assignment expression
-      return parseLogicalOperatorSequence();
+      return parseTernaryCondition();
+  }
+
+  protected ExpressionNode parseTernaryCondition() throws ParserException {
+    // Parse initial logical expression
+    ExpressionNode node = parseLogicalOperatorSequence();
+
+    // Check for the '?' conditional operator
+    Token token = tokens.get();
+    if (token instanceof QuestionMarkOperatorToken){
+      // Skip over the '?' operator
+      tokens.skipToken();
+
+      // Parse the left conditional term
+      ExpressionNode leftNode = parseLogicalNotOperator();
+
+      // Check for mandatory ':' operator
+      token = tokens.get();
+      if (! (token instanceof ColonOperatorToken))
+        throw new ParserException("Expected ':' operator to match '?' operator, but found " + token.toString(), token);
+      // Skip over the ':' operator
+      tokens.skipToken();
+
+      // Parse the right conditional term (? : is right-associative)
+      ExpressionNode rightNode = parseTernaryCondition();
+
+      // Compose a node for the operation
+      node = new TernaryConditionNode(node, leftNode, rightNode);
+    }
+
+    return node;
   }
 
   protected ExpressionNode parseLogicalOperatorSequence() throws ParserException {

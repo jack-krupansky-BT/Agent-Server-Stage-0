@@ -16,18 +16,10 @@
 
 package com.basetechnology.s0.agentserver.script.runtime;
 
-import java.util.List;
-import java.util.Map;
-
 import com.basetechnology.s0.agentserver.AgentInstance;
-import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.AgentServerException;
-import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.script.intermediate.ExpressionNode;
 import com.basetechnology.s0.agentserver.script.intermediate.ScriptNode;
-import com.basetechnology.s0.agentserver.script.intermediate.Symbol;
-import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
-import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
 import com.basetechnology.s0.agentserver.script.runtime.value.NullValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 

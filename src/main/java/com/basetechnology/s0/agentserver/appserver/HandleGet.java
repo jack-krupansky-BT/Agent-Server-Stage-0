@@ -422,29 +422,41 @@ public class HandleGet extends HandleHttp {
         throw new AgentAppServerBadRequestException("Missing notification name path parameter");
       if (notificationName.trim().length() == 0)
         throw new AgentAppServerBadRequestException("Empty notification name path parameter");
-      if (responseParam == null)
-        throw new AgentAppServerBadRequestException("Missing response query parameter");
-      if (responseParam.trim().length() == 0)
-        throw new AgentAppServerBadRequestException("Empty response query parameter");
-      if (! NotificationInstance.responses.contains(responseParam))
-        throw new AgentAppServerBadRequestException("Unknown response keyword query parameter");
 
+      // Access the named notification
       AgentInstanceList agentMap = agentServer.agentInstances.get(user.id);
       AgentInstance agent = agentMap.get(agentName);
-
       NotificationInstance notificationInstance = agent.notifications.get(notificationName);
       if (notificationInstance == null)
         throw new AgentAppServerBadRequestException("Undefined notification name for agent instance '" + agentName + "': " + notificationName);
-      if (! notificationInstance.pending)
-        throw new AgentAppServerBadRequestException("Cannot respond to notification '" + notificationName + "' for agent instance '" + agentName + "' since it is not pending");
 
-      // TODO: If no response, maybe it should return current notification info and details
-      log.info("Respond to a pending notification '" + notificationName + "' for agent instance " + agentName + " for user: " + user.id);
+      // If no response, simply return info about the notification
+      if (responseParam == null){
+        // Generate and return a summary of the notification
+        JSONObject notificationSummaryJson = new JsonListMap();
+        notificationSummaryJson.put("agent", agent.name);
+        notificationSummaryJson.put("name", notificationInstance.definition.name);
+        notificationSummaryJson.put("description", notificationInstance.definition.description);
+        notificationSummaryJson.put("details", notificationInstance.details.toJsonObject());
+        notificationSummaryJson.put("type", notificationInstance.definition.type);
+        notificationSummaryJson.put("time", DateUtils.toRfcString(notificationInstance.timeNotified));
+        notificationSummaryJson.put("timeout", notificationInstance.timeout);
+        AgentAppServer.setOutput(httpInfo, notificationSummaryJson);
+      } else {
+        if (responseParam.trim().length() == 0)
+          throw new AgentAppServerBadRequestException("Empty response query parameter");
+        if (! NotificationInstance.responses.contains(responseParam))
+          throw new AgentAppServerBadRequestException("Unknown response keyword query parameter");
+        if (! notificationInstance.pending)
+          throw new AgentAppServerBadRequestException("Cannot respond to notification '" + notificationName + "' for agent instance '" + agentName + "' since it is not pending");
 
-      agent.respondToNotification(notificationInstance, responseParam, responseChoice, comment);
-      
-      // Done
-      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        log.info("Respond to a pending notification '" + notificationName + "' for agent instance " + agentName + " for user: " + user.id);
+
+        agent.respondToNotification(notificationInstance, responseParam, responseChoice, comment);
+
+        // Done
+        response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+      }
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/output$")){
       String userId = pathParts[2];
       String agentName = pathParts[4];

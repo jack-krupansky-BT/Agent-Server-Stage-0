@@ -1,18 +1,55 @@
  * Copyright 2012 John W. Krupansky d/b/a Base Technology
  * Licensed under the Apache License, Version 2.0
 
-Some features known to be missing or incomplete or buggy
+Some features of the Base Technology Agent Server known to be missing, incomplete, or buggy
 
+- There is no UI for the agents or even the agent server itself
+ - Because everything is done via the REST API which is easily accessed via curl commands in bash
+ - That said, it would be nice to have a web and mobile phone UI for starting and managing agents
+  - Web-based interface would cover most cases
+  - Android-based UI
+  - iPhone-based UI
+  - I view this as possible contract work for consuting $$ rather than something I will do on my
+    own time and funding, at least at this stage.
+
+- Currently, the server runs only locally
+ - But my intention is to put up a publically-accessible server on Amazon AWS ASAP
+  - Primarily to instantly demo the server
+   - But also to illustrate how it could be supported commercially
+  
 - Script language features not yet implemented
  - try statement
  - throw statement
  - switch statement
  - ? : operators
+ - date type
+ - money type
 
 - No support for inter-server communications other than raw HTTP network I/O
 
+- Performance is unknown
+ - Dozens of agents is probably fine
+ - Hundreds of agents is probably okay or at least achievable
+ - Thousands of agents is probably beyond Stage 0
+ - Millions of agents is definitely beyond Stage 0
+ 
 - No admin control to force new users to be approved
-
-- No support for email confirmation for new users
+ - User acknowledge by responding to emailed link
+ - Agent server admin approves new users
+ - These are probably Stage 1 features
 
 - Some of the unit tests are too timing sensitive and fail sometimes
+ - Including an occasional persistent file data corruption on restart
+ 
+- Only SMTP is supported right now for email notifications
+ - Additional email protocols would be supported on a contract development basis
+
+- No support for reading POP3 email inboxes (but contemplated)
+
+- No direct support for RSS, although XML can be parsed and generated and any web resource scraped
+
+- No support for POST, PUT, or DELETE HTTP verbs - GET only (read-only web support)
+ - Goal is for initial stages of the server to be trustworthy
+  - Writable Web access is too riky for free-running agents right now
+
+.

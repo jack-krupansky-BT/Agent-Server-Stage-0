@@ -292,7 +292,7 @@ public class AgentServerTestBase {
     HttpResponse response = httpclient.execute(httpGet);
     HttpEntity entity = response.getEntity();
     int statusCode = response.getStatusLine().getStatusCode();
-    String s = EntityUtils.toString(entity);
+    String s = entity == null ? null : EntityUtils.toString(entity);
     //if (statusCode / 100 != 2)
       log.info("HTTP response entity for result code " + statusCode + ": " + s);
     assertEquals("HTTP result code", expectedStatusCode, statusCode);

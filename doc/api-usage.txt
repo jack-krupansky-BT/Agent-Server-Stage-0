@@ -1,3 +1,6 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
 REST API Usage Summary for Base Technology Agent Server
 
 API Version 0.1
@@ -110,9 +113,12 @@ GET http://localhost:8980/API/v0.1/users/<user-id>/agents/<agent-instance-name>/
 
  - Get detail information for a specific notification for the user
 
-PUT http://localhost:8980/API/v0.1/users/<user-id>/agents/<agent-instance-name>/notifications/<notification-name>?password=<user-password>
+PUT http://localhost:8980/API/v0.1/users/<user-id>/agents/<agent-instance-name>/notifications/<notification-name>?password=<user-password>&response=<response-type>
+GET http://localhost:8980/API/v0.1/users/<user-id>/agents/<agent-instance-name>/notifications/<notification-name>?password=<user-password>&response=<response-type>
 
  - Respond to a pending notification
+ - <response-type> is one of:
+     ok, yes, no, accept, decline, confirm, cancel, abort, fail, retry, ignore, skip, pass, choice
 
 PUT http://localhost:8980/API/v0.1/users/<user-id>/agents/<agent-instance-name>/pause?password=<user-password>
 PUT http://localhost:8980/API/v0.1/users/<user-id>/agents/<agent-instance-name>/disable?password=<user-password>

@@ -1,6 +1,7 @@
  * Copyright 2012 John W. Krupansky d/b/a Base Technology
  * Licensed under the Apache License, Version 2.0
 
+
 1. Download the zip file from github:
 
    https://github.com/jack-krupansky-BT/Agent-Server-Stage-0/blob/master/dist/AgentServer-0.1.zip
@@ -89,11 +90,10 @@ curl http://localhost:8980/API/v0.1/config
     "minimum_address_mail_access_interval": "10000"
 }
 
-8. Work through the Intro
+8. Read intro.txt and work trhough tutorial.txt
 
 The agent server now appears to be up and running, so now you can proceed to actually create and work
-with some agents. It is time to jump to intro.txt
-
+with some agents. It is time to jump to intro.txt.
 
 99. Shut the server down
 
@@ -104,4 +104,3 @@ curl -X put http://localhost:8980/API/v0.1/shutdown?password=your-admin-password
 
 Or, just use the "ant stop" target if you have the source from github.
 
-TBD: Using github.

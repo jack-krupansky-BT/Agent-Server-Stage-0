@@ -5186,6 +5186,12 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertError(returnJson, "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
         "Cannot respond to notification 'Not2' for agent instance 'HelloWorld2.mine' since it is not pending");
 
+    // Ditto, but using GET rather than PUT (ala email link response)
+    returnJson = doGetJson(baseUrl +
+        "/users/test-user-1/agents/HelloWorld2.mine/notifications/Not2?password=test-pwd-1&response=accept", 400);
+    assertError(returnJson, "com.basetechnology.s0.agentserver.appserver.AgentAppServerBadRequestException",
+        "Cannot respond to notification 'Not2' for agent instance 'HelloWorld2.mine' since it is not pending");
+
     // Repeat notification, but with a "decline" response and a comment added
     instanceJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify2a?password=test-pwd-1", 204);
     
@@ -5602,6 +5608,146 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertTrue("comment is missing from notification[3]", notificationJson.has("comment"));
     assertEquals("comment for notification[3]", "", notificationJson.getString("comment"));
 
+    // Now test responding using GET
+    // Repeat notification, but with a "pass" response and a different comment added
+    instanceJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify2a?password=test-pwd-1", 204);
+    
+    // Wait for queued notification to be performed
+    server.agentServer.agentScheduler.waitUntilDone(5 * 1000);
+    
+    statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/status?password=test-pwd-1", 200);
+    assertEquals("Status", "notification_pending_suspended: Not2", statusJson.get("status"));
+
+    pendingNotificationsObjectJson =
+        doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/notifications?password=test-pwd-1", 200);
+    assertTrue("Object not returned", pendingNotificationsObjectJson != null);
+    assertEquals("Count of field in wrapped array", 1, pendingNotificationsObjectJson.length());
+    assertTrue("pending_notifications is missing", pendingNotificationsObjectJson.has("pending_notifications"));
+    pendingNotificationsJson = pendingNotificationsObjectJson.getJSONArray("pending_notifications");
+    assertEquals("Count of pending notifications", 1, pendingNotificationsJson.length());
+    pendingNotificationJson = pendingNotificationsJson.getJSONObject(0);
+    assertEquals("Count of fields in pending notification", 7, pendingNotificationJson.length());
+    assertTrue("agent is missing from pending notification", pendingNotificationJson.has("agent"));
+    assertEquals("agent of pending notification", "HelloWorld2.mine", pendingNotificationJson.getString("agent"));
+    assertTrue("name is missing from pending notification", pendingNotificationJson.has("name"));
+    assertEquals("name of pending notification", "Not2", pendingNotificationJson.getString("name"));
+    assertTrue("description is missing from pending notification", pendingNotificationJson.has("description"));
+    assertEquals("description of pending notification", "Second notification", pendingNotificationJson.getString("description"));
+    assertTrue("type is missing from pending notification", pendingNotificationJson.has("type"));
+    assertEquals("type of pending notification", "yes_no", pendingNotificationJson.getString("type"));
+    assertTrue("time is missing from pending notification", pendingNotificationJson.has("time"));
+    timeString = pendingNotificationJson.getString("time");
+    time = DateUtils.parseRfcString(timeString);
+    delta = time - now/1000*1000;
+    assertTrue("Delta time for pending notification is not in range: " + delta, delta >= 0 && delta < 5000);
+    assertTrue("timeout is missing from pending notification", pendingNotificationJson.has("timeout"));
+    assertEquals("timeout of pending notification", 90 * 60 * 1000, pendingNotificationJson.getLong("timeout"));
+    assertTrue("details is missing from pending notification", pendingNotificationJson.has("details"));
+    assertJsonSourceEquals("details of pending notification", "{\"vendor\": \"Delta Ltd.\", \"price\": 250.75, \"purchased\": false}", pendingNotificationJson.getJSONObject("details"));
+
+    // Check GET for specific notification
+    pendingNotificationJson =
+        doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/notifications/Not2?password=test-pwd-1", 200);
+    assertTrue("Object not returned", pendingNotificationJson != null);
+    assertEquals("Count of field in wrapped array", 7, pendingNotificationJson.length());
+    assertTrue("pending_notifications is missing", pendingNotificationsObjectJson.has("pending_notifications"));
+    pendingNotificationsJson = pendingNotificationsObjectJson.getJSONArray("pending_notifications");
+    assertEquals("Count of pending notifications", 1, pendingNotificationsJson.length());
+    pendingNotificationJson = pendingNotificationsJson.getJSONObject(0);
+    assertEquals("Count of fields in pending notification", 7, pendingNotificationJson.length());
+    assertTrue("agent is missing from pending notification", pendingNotificationJson.has("agent"));
+    assertEquals("agent of pending notification", "HelloWorld2.mine", pendingNotificationJson.getString("agent"));
+    assertTrue("name is missing from pending notification", pendingNotificationJson.has("name"));
+    assertEquals("name of pending notification", "Not2", pendingNotificationJson.getString("name"));
+    assertTrue("description is missing from pending notification", pendingNotificationJson.has("description"));
+    assertEquals("description of pending notification", "Second notification", pendingNotificationJson.getString("description"));
+    assertTrue("type is missing from pending notification", pendingNotificationJson.has("type"));
+    assertEquals("type of pending notification", "yes_no", pendingNotificationJson.getString("type"));
+    assertTrue("time is missing from pending notification", pendingNotificationJson.has("time"));
+    timeString = pendingNotificationJson.getString("time");
+    time = DateUtils.parseRfcString(timeString);
+    delta = time - now/1000*1000;
+    assertTrue("Delta time for pending notification is not in range: " + delta, delta >= 0 && delta < 5000);
+    assertTrue("timeout is missing from pending notification", pendingNotificationJson.has("timeout"));
+    assertEquals("timeout of pending notification", 90 * 60 * 1000, pendingNotificationJson.getLong("timeout"));
+    assertTrue("details is missing from pending notification", pendingNotificationJson.has("details"));
+    assertJsonSourceEquals("details of pending notification", "{\"vendor\": \"Delta Ltd.\", \"price\": 250.75, \"purchased\": false}", pendingNotificationJson.getJSONObject("details"));
+
+    // Issue the response, including a user comment
+    returnJson = doGetJson(baseUrl +
+        "/users/test-user-1/agents/HelloWorld2.mine/notifications/Not2?password=test-pwd-1&response=pass&response_choice=Beta&comment=This+is+another+comment.", 204);
+    assertNoError(returnJson);
+
+    // Make sure no notifications are pending
+    pendingNotificationsObjectJson =
+        doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/notifications?password=test-pwd-1", 200);
+    assertTrue("Object not returned", pendingNotificationsObjectJson != null);
+    assertEquals("Count of field in wrapped array", 1, pendingNotificationsObjectJson.length());
+    assertTrue("pending_notifications is missing", pendingNotificationsObjectJson.has("pending_notifications"));
+    pendingNotificationsJson = pendingNotificationsObjectJson.getJSONArray("pending_notifications");
+    assertEquals("Count of pending notifications", 0, pendingNotificationsJson.length());
+    
+    // Check to see that agent is now active again
+    statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/status?password=test-pwd-1", 200);
+    assertTrue("Status not returned", statusJson != null);
+    assertEquals("Count of status fields", countExpectedInstanceKeys, statusJson.length());
+    assertTrue("Name field is missing", statusJson.has("name"));
+    assertEquals("Name", "HelloWorld2.mine", statusJson.get("name"));
+    assertTrue("Definition field is missing", statusJson.has("definition"));
+    assertEquals("Definition", "HelloWorld2", statusJson.get("definition"));
+    assertTrue("Description field is missing", statusJson.has("description"));
+    assertEquals("Description", "Test agent", statusJson.get("description"));
+    assertTrue("Status field is missing", statusJson.has("status"));
+    assertEquals("Status", "active", statusJson.get("status"));
+
+    // Check latest notification history to see that response was stored properly
+    instanceJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine?password=test-pwd-1&state=yes", 200);
+    assertTrue("state missing", instanceJson.has("state"));
+    statesJson = instanceJson.getJSONArray("state");
+    assertEquals("State history size", 10, statesJson.length());
+
+    stateJson = statesJson.getJSONObject(9);
+    assertTrue("notifications missing", stateJson.has("notifications"));
+    notificationsJson = stateJson.getJSONArray("notifications");
+    assertEquals("Count of notifications", 2, notificationsJson.length());
+    notificationHistoryJson = stateJson.getJSONArray("notification_history");
+    assertEquals("Notification history size", 7, notificationHistoryJson.length());
+
+
+    notificationRecordJson = notificationHistoryJson.getJSONObject(6);
+    assertEquals("Count of fields in notification record [6]", 3, notificationRecordJson.length());
+    assertTrue("sequence is missing from notification record [6]", notificationRecordJson.has("sequence"));
+    assertEquals("sequence", 7, notificationRecordJson.getInt("sequence"));
+    assertTrue("time is missing from notification record [6]", notificationRecordJson.has("time"));
+    timeString = notificationRecordJson.getString("time");
+    time = DateUtils.parseRfcString(timeString);
+    delta = time - now/1000*1000;
+    assertTrue("Delta time for time_notified for notification record[6] is not in range: " + delta, delta >= 0 && delta < 5000);
+    assertTrue("notification is missing from notification record [6]", notificationRecordJson.has("notification"));
+    notificationJson = notificationRecordJson.getJSONObject("notification");
+    assertEquals("Count of field in notification[6]", 9, notificationJson.length());
+    assertTrue("name is missing from notification[6]", notificationJson.has("name"));
+    assertEquals("name for notification[1]", "Not2", notificationJson.getString("name"));
+    assertTrue("time_notified is missing from notification[6]", notificationJson.has("time_notified"));
+    timeString = notificationJson.getString("time_notified");
+    time = DateUtils.parseRfcString(timeString);
+    delta = time - now/1000*1000;
+    assertTrue("Delta time for time_notified for notification[6] is not in range: " + delta, delta >= 0 && delta < 4000);
+    assertTrue("time_response is missing from notification[6]", notificationJson.has("time_response"));
+    assertEquals("time_response for notification[3]", "", notificationJson.getString("time_response"));
+    assertTrue("details is missing from notification[6]", notificationJson.has("details"));
+    assertJsonSourceEquals("details for notification[6]", "{\"vendor\": \"Delta Ltd.\", \"price\": 250.75, \"purchased\": false}", notificationJson.getString("details"));
+    assertTrue("pending is missing from notification[6]", notificationJson.has("pending"));
+    assertEquals("pending for notification[6]", false, notificationJson.getBoolean("pending"));
+    assertTrue("timeout is missing from notification[6]", notificationJson.has("timeout"));
+    assertEquals("timeout for notification[6]", 90 * 60 * 1000, notificationJson.getLong("timeout"));
+    assertTrue("response is missing from notification[6]", notificationJson.has("response"));
+    assertEquals("response for notification[6]", "pass", notificationJson.getString("response"));
+    assertTrue("response_choice is missing from notification[6]", notificationJson.has("response_choice"));
+    assertEquals("response_choice for notification[6]", "Beta", notificationJson.getString("response_choice"));
+    assertTrue("comment is missing from notification[6]", notificationJson.has("comment"));
+    assertEquals("comment for notification[3]", "This is another comment.", notificationJson.getString("comment"));
+
     // TODO: Test suspend=false
     
     // TODO: Test timeout
@@ -5895,8 +6041,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertTrue("Usage text is missing", usageText != null);
     int usageTextLen = usageText.length();
     assertTrue("Usage text length is too small: " + usageTextLen, usageTextLen > 1000);
-    String prefix = usageText.substring(0, 200);
-    assertEquals("Usage text prefix (first 200 chars)", "REST API Usage Summary for Base Technology Agent Server\r\n\r\nAPI Version 0.1\r\n\r\nGET http://localhost:8980/API/v0.1/about\r\n\r\n - Summarize the agent server\r\n \r\nGET http://localhost:8980/API/v0.1/config?pa", prefix);
+    String prefix = usageText.substring(0, 312);
+    assertEquals("Usage text prefix (first 312 chars)", " * Copyright 2012 John W. Krupansky d/b/a Base Technology\r\n * Licensed under the Apache License, Version 2.0\r\n\r\nREST API Usage Summary for Base Technology Agent Server\r\n\r\nAPI Version 0.1\r\n\r\nGET http://localhost:8980/API/v0.1/about\r\n\r\n - Summarize the agent server\r\n \r\nGET http://localhost:8980/API/v0.1/config?pa", prefix);
   }
   
 }

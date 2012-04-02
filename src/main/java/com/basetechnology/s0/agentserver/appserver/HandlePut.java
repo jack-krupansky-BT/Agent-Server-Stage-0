@@ -16,12 +16,10 @@
 
 package com.basetechnology.s0.agentserver.appserver;
 
-import java.io.BufferedReader;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.AgentDefinition;
@@ -30,11 +28,8 @@ import com.basetechnology.s0.agentserver.AgentInstanceList;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.ScriptDefinition;
 import com.basetechnology.s0.agentserver.User;
-import com.basetechnology.s0.agentserver.field.Field;
-import com.basetechnology.s0.agentserver.field.FieldList;
 import com.basetechnology.s0.agentserver.notification.NotificationInstance;
 import com.basetechnology.s0.agentserver.scheduler.AgentScheduler;
-import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
 
 public class HandlePut extends HandleHttp {
   static final Logger log = Logger.getLogger(HandlePut.class);
