@@ -183,12 +183,19 @@ public class MapValue extends Value {
       
       // Return the combined string
       return new StringValue(sb.toString());
+    } else if (name.equals("get") && numArguments == 1){
+      // Fetch element with that key
+      String key = arguments.get(0).getStringValue();
+      if (value.containsKey(key))
+        return (Value)value.get(key);
+      else
+        return NullValue.one;
     } else if (name.equals("keys") && numArguments == 0){
       // Build list of key string values
       List<Value> keysList = new ArrayList<Value>();
       for (String key: value.keySet())
         keysList.add(new StringValue(key));
-      
+
       // Generate and return the new value node for list of the key strings for map
       return new ListValue(StringTypeNode.one, keysList);
     } else if (name.equals("remove") && numArguments == 1){
@@ -267,16 +274,16 @@ public class MapValue extends Value {
   
   public Object toJsonObject() throws AgentServerException {
     try {
-    JSONObject json = new JsonListMap();
-    for (String parameterName: value.keySet())
-      json.put(parameterName, value.get(parameterName).toJsonObject());
-    return json;
+      JSONObject json = new JsonListMap();
+      for (String parameterName: value.keySet())
+        json.put(parameterName, value.get(parameterName).toJsonObject());
+      return json;
     } catch (JSONException e){
       e.printStackTrace();
       throw new AgentServerException("JSON exception formatting map object - " + e.getMessage());
     }
   }
-  
+
   public String toString(){
     // Return comma-separated list of element key/value pairs within braces
     StringBuilder sb = new StringBuilder("{");

@@ -196,4 +196,8 @@ public class Value extends ExpressionNode {
   public String toXml(){
     return "";
   }
+  
+  public Value negateValue(){
+    return null;
+  }
 }

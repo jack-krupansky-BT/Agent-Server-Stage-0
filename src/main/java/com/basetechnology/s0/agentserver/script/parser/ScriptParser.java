@@ -1001,7 +1001,7 @@ public class ScriptParser {
 
   protected ExpressionNode parseTernaryCondition() throws ParserException {
     // Parse initial logical expression
-    ExpressionNode node = parseLogicalOperatorSequence();
+    ExpressionNode node = parseLogicalOrOperatorSequence();
 
     // Check for the '?' conditional operator
     Token token = tokens.get();
@@ -1010,7 +1010,7 @@ public class ScriptParser {
       tokens.skipToken();
 
       // Parse the left conditional term
-      ExpressionNode leftNode = parseLogicalNotOperator();
+      ExpressionNode leftNode = parseLogicalOrOperatorSequence();
 
       // Check for mandatory ':' operator
       token = tokens.get();
@@ -1029,24 +1029,23 @@ public class ScriptParser {
     return node;
   }
 
-  protected ExpressionNode parseLogicalOperatorSequence() throws ParserException {
-    // Parse initial logical expression term
-    ExpressionNode node = parseLogicalNotOperator();
+  protected ExpressionNode parseLogicalOrOperatorSequence() throws ParserException {
+    // Parse initial logical expression OR term
+    ExpressionNode node = parseLogicalAndOperatorSequence();
 
-    // Now parse a sequence of logical AND and OR operators
+    // Now parse a sequence of logical OR operators
     do {
       Token token = tokens.get();
 
-      if (! (token instanceof LogicalAndOperatorToken) &&
-          ! (token instanceof LogicalOrOperatorToken))
-        // Done parsing the sequence of logical terms
+      if (! (token instanceof LogicalOrOperatorToken))
+        // Done parsing the sequence of logical OR terms
         return node;
 
       // Skip over the operator
       tokens.skipToken();
 
-      // Parse the next logical term in the sequence
-      ExpressionNode rightNode = parseLogicalNotOperator();
+      // Parse the next logical OR term in the sequence
+      ExpressionNode rightNode = parseLogicalAndOperatorSequence();
 
       // Compose a node for the operation
       if (token instanceof LogicalAndOperatorToken)
@@ -1056,21 +1055,30 @@ public class ScriptParser {
     } while (true);
   }
 
-  protected ExpressionNode parseLogicalNotOperator() throws ParserException {
-    // Check for optional logical NOT operator, '!'
-    Token token = tokens.get();
-    if (token instanceof LogicalNotOperatorToken)
-      // Skip over the logical NOT operator operator
-      tokens.skipToken();
-
-    // Parse the relational operation expression
+  protected ExpressionNode parseLogicalAndOperatorSequence() throws ParserException {
+    // Parse initial logical expression AND term
     ExpressionNode node = parseRelationalOperator();
 
-    // Generate node for the optional logical NOT operator
-    if (token instanceof LogicalNotOperatorToken)
-      return new LogicalNotNode(node);
-    else
-      return node;
+    // Now parse a sequence of logical AND operators
+    do {
+      Token token = tokens.get();
+
+      if (! (token instanceof LogicalAndOperatorToken))
+        // Done parsing the sequence of logical AND terms
+        return node;
+
+      // Skip over the operator
+      tokens.skipToken();
+
+      // Parse the next logical AND term in the sequence
+      ExpressionNode rightNode = parseRelationalOperator();
+
+      // Compose a node for the operation
+      if (token instanceof LogicalAndOperatorToken)
+        node = new LogicalAndNode(node, rightNode);
+      else
+        node = new LogicalOrNode(node, rightNode);
+    } while (true);
   }
 
   protected ExpressionNode parseRelationalOperator() throws ParserException {
@@ -1251,8 +1259,12 @@ public class ScriptParser {
           // Parse the next function argument expression
           ExpressionNode argumentExpression = parseExpression();
 
-          // Peek ahead at delimiter after the expression
+          // Check for comma to continue list
           token = tokens.get();
+          if (token instanceof CommaOperatorToken) {
+            // Skip over the comma
+            token = tokens.getNext();
+          }
 
           // Append to accumulated function argument list
           argumentList.add(argumentExpression);
@@ -1318,6 +1330,15 @@ public class ScriptParser {
 
       // Returned the parsed negation expression
       node = new NegationNode(expressionNode);
+    } else if (token instanceof LogicalNotOperatorToken){
+      // Skip over the unary '!'
+      tokens.skipToken();
+
+      // Parse the primary to be negated
+      ExpressionNode expressionNode = parseExpressionFactor();
+
+      // Returned the parsed negation expression
+      node = new LogicalNotNode(expressionNode);
     } else if (token instanceof ListKeywordToken){
       // 'list' should be followed by '(' to start a list literal
       token = tokens.getNext();

@@ -78,4 +78,8 @@ public class BooleanValue extends Value {
     return valueNode instanceof BooleanValue && this == valueNode;
   }
 
+  public Value negateValue(){
+    return BooleanValue.create(! getBooleanValue());
+  }
+
 }

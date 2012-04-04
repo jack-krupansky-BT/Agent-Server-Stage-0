@@ -1,0 +1,91 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Scripting Language for the Base Technology Software Agent Server
+
+Much of the processing for software agents in the Base Technology Software Agent Server occurs
+automatically down inside the server software itself, but occasionally a modest amount of
+procedural scripting is needed, as well as expressions for numerous parameters. The scripting
+language for the agent server is  based on Java, with a number of simplifications and extensions.
+
+Expressions and most statements follow Java fairly closely. Those who are familiar with expressions and
+statements in C, C++, and Java, should feel right at home. The ++, +=, and ? : operators are
+supported, for example.
+
+Since the purpose of scripts is primarily "small snippets of code", there is no support for defining
+classes and other complex structures that are supported by Java and C++. On the flip side, since lists
+and collection of named data are so common, the 'list' and 'map' types are built into the language.
+The expectation is that any complex structures should be constructed by developing collections of
+agents themselves.
+
+The scripting language does not have a 'new' operator, but lists and maps can trivially constructed
+without it. List and map literals are also supported, more reminiscent of JavaScript than Java. Also,
+typed fields are automatically initialized to their specified type, so there is no need for 'new'
+simply to initialize an empty list or map.
+
+As far as data types, the scripting language supports most of the Java primitive types, as well as
+built-in support for strings, lists, and maps. The various keywords for the types of integers supported
+by Java are supported, but all mapped to on long integer type. Similarly, the various keywords for
+float and double are supported, but are all mapped to double. The 'char' type is supported but mapped
+to string. String literals may be enclosed in quotes or apostrophes (single quote.)
+
+The scripting language also includes support for dates and money, although that support is not yet
+fully implemented. Strings can simply be mapped between ISO date/time format and RFC date/time format
+as well as integers.
+
+Currently, scripts are simply named functions with no parameters. Syntactically, they are a Java block
+but without the braces. Nesting of statements and blocks with local variables is supported, much as
+in Java.
+ 
+Unlike Java, elements of lists and maps map be referenced as if they simple arrays rather than require
+the explicit 'get' and 'put' method calls (which are still supported for compatibility and due to
+their familiarity.) Substrings or sub-ranges of strings and lists can easily be extracted using a pair
+of subscripts to specify the range.
+
+Characters and substrings of strings can be accessed directly using square bracket subscripts as well
+rather than use the 'charAt' method (which is still available for compatibility.)
+
+Another simplification is to treat the 'length' and 'size' methods identically regardless of whether
+the object is a string, list, or map. Further, the useless, empty parentheses can be omitted.
+
+As an additional simplification, the value associated with a string map key can be directly accessed
+with the traditional C/C++/Java dot notation as if it were a class field. This includes both reading
+and assignment.
+
+Quite a few of the Java string operations are supported, in addition to operations such as 'between'
+to find two substrings and return the text between them. The 'before', 'after' and 'between' operations
+also have regex-forms to allow very powerful but concise string manipulation, which makes it very easy
+to extract data from web pages, text files, and XML documents even without using the built-in HTML
+and XML parsing features. It is also easyt to extract word lists from HTML, XML, text, etc., as well as
+to generate strings from list and map structures.
+
+One significant difference from the Java String class is that substrings can be modified in-place.
+Individual characters can be replaced, characters can be deleted, inserted, and substrings can be
+replaced with other substrings whose length may differ. Since the original string is modified, a copy
+of the string is made whenever it is stored in a variable.
+
+Another improvement for strings is that the relational operators can be applied directly to string
+values, as opposed to resorting to the 'equals' method. The 'equals' method is still supported, as is
+the 'equalsIgnoreCase' method.
+
+The Java library is a bit confusing as to when 'add', 'put', and 'set' are to be used in different
+classes, so we treat all three identically for list, map, and string.
+
+All text is presumed to be UTF-8 encoded UNICODE. Explicit character codes code be embedded within
+string literals as in Java.
+
+The so-called bit-wise operators (&, |, ^, ~) are not supported at this time, but the logical boolean
+operators (&&, ||, !) are supported. The shifting and bit rotation operators are also not supported at
+this time, although they may resurface in a future release.
+
+One minor nuance is that types are all lower case since they are all built-in primitive types. This
+includes int, long, string, list, map, and web. There are no "boxed" types as in Java, nor any need
+for them.
+
+Also missing is Java's extensive class library and third-party libraries. But, the built-in 'web' type
+greatly simplifies access to web resources, including HTML web pages, text files, XML files, RSS feeds,
+and REST API web services. A very rich set of functions and methods are already built into the scripting
+language and its runtime, especially with the flexibility of the built-in list and map types. Over time
+additional types and functions will be added as their need becomes apparent.
+
+.

@@ -42,7 +42,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.appserver.AgentAppServer;
 import com.basetechnology.s0.agentserver.config.AgentServerProperties;
 import com.basetechnology.s0.agentserver.util.JsonListMap;
@@ -208,7 +207,7 @@ public class AgentServerTestBase {
       if (expectedJson != null && expectedJson.length() > 0){
         if (expectedJson.charAt(0) == '{')
           json1 = new JSONObject(expectedJson);
-        else if (json.charAt(0) == '[')
+        else if (expectedJson.charAt(0) == '[')
           json1 = new JSONArray(expectedJson);
         else
           json1 = new JSONObject(expectedJson);

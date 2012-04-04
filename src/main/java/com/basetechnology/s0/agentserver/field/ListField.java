@@ -53,7 +53,7 @@ public class ListField extends Field {
 
   public static Field fromJson(SymbolTable symbolTable, JSONObject fieldJson) throws AgentServerException {
     String type = fieldJson.optString("type");
-    if (type == null || ! type.equals("map"))
+    if (type == null || ! type.equals("list"))
       return null;
     String name = fieldJson.has("name") ? fieldJson.optString("name") : null;
     String label = fieldJson.has("label") ? fieldJson.optString("label") : null;

@@ -35,10 +35,13 @@ public class HandlePut extends HandleHttp {
   static final Logger log = Logger.getLogger(HandlePut.class);
 
   static public Thread shutdownThread;
+
+  public HandlePut(HttpInfo httpInfo){
+    super(httpInfo);
+  }
   
-  public boolean handlePut(HttpInfo httpInfo) throws Exception {
+  public boolean handlePut() throws Exception {
     // Extract out commonly used info
-    this.httpInfo = httpInfo;
     String path = httpInfo.path;
     String[] pathParts = httpInfo.pathParts;
     Request request = httpInfo.request;

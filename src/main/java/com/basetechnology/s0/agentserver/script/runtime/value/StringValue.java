@@ -337,6 +337,35 @@ public class StringValue extends Value {
       else
         // Pattern not found
         return new IntegerValue(-1);
+    } else if (name.equals("equals") && numArguments == 1){
+      String otherString = arguments.get(0).getStringValue();
+      return BooleanValue.create(value.equals(otherString));
+    } else if (name.equals("equalsIgnoreCase") && numArguments == 1){
+      String otherString = arguments.get(0).getStringValue();
+      return BooleanValue.create(value.equalsIgnoreCase(otherString));
+    } else if ((name.equals("get") || name.equals("charAt")) && numArguments == 1){
+      int len = value.length();
+      int index = arguments.get(0).getIntValue();
+      if (index < 0)
+        throw new RuntimeException("String index is less than zero: " + index);
+      else if (index >= len)
+        throw new RuntimeException("String index of " + index + " is greater than string length of " + len + " minus 1");
+      
+      return new StringValue(value.substring(index, index + 1));
+    } else if (name.equals("get") && numArguments == 2){
+      int len = value.length();
+      int beginIndex = arguments.get(0).getIntValue();
+      if (beginIndex < 0)
+        throw new RuntimeException("String index is less than zero: " + beginIndex);
+      else if (beginIndex >= len)
+        throw new RuntimeException("String index of " + beginIndex + " is greater than string length of " + len + " minus 1");
+      int endIndex = arguments.get(1).getIntValue();
+      if (endIndex < 0)
+        throw new RuntimeException("String index is less than zero: " + endIndex);
+      else if (endIndex > len)
+        throw new RuntimeException("String index of " + endIndex + " is greater than string length of " + len);
+      
+      return new StringValue(value.substring(beginIndex, endIndex));
     } else if (name.equals("indexOf") && (numArguments == 1 || numArguments == 2)){
       // Returns the index of the first occurrence of a substring, or -1 if not found
       String s = arguments.get(0).getStringValue();
@@ -417,6 +446,39 @@ public class StringValue extends Value {
 
       // Try the match and return the result
       return BooleanValue.create(value.matches(pat));
+    } else if ((name.equals("put") || name.equals("set")) && numArguments == 2){
+      int len = value.length();
+      int index = arguments.get(0).getIntValue();
+      if (index < 0)
+        throw new RuntimeException("String index is less than zero: " + index);
+      else if (index >= len)
+        throw new RuntimeException("String index of " + index + " is greater than string length of " + len + " minus 1");
+      String newSubstring = arguments.get(1).getStringValue();
+
+      // Update string value in-place
+      value = value.substring(0, index) + newSubstring + value.substring(index + 1); 
+      
+      // Return the current string with its revised value
+      return this;
+    } else if ((name.equals("put") || name.equals("set")) && numArguments == 3){
+      int len = value.length();
+      int beginIndex = arguments.get(0).getIntValue();
+      if (beginIndex < 0)
+        throw new RuntimeException("String index is less than zero: " + beginIndex);
+      else if (beginIndex >= len)
+        throw new RuntimeException("String index of " + beginIndex + " is greater than string length of " + len + " minus 1");
+      int endIndex = arguments.get(1).getIntValue();
+      if (endIndex < 0)
+        throw new RuntimeException("String index is less than zero: " + endIndex);
+      else if (endIndex > len)
+        throw new RuntimeException("String index of " + endIndex + " is greater than string length of " + len);
+      String newSubstring = arguments.get(2).getStringValue();
+
+      // Update string value in-place
+      value = value.substring(0, beginIndex) + newSubstring + value.substring(endIndex); 
+      
+      // Return the current string with its revised value
+      return this;
     } else if (name.equals("remove") && (numArguments == 1 || numArguments == 2)){
       int index = arguments.get(0).getIntValue();
       int endIndex = numArguments == 2 ? arguments.get(1).getIntValue() : index + 1;

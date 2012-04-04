@@ -133,5 +133,9 @@ public class IntegerValue extends NumberValue {
   public boolean equals(Value valueNode){
     return valueNode instanceof IntegerValue && (value == valueNode.getLongValue());
   }
-  
+
+  public Value negateValue(){
+    return new IntegerValue(- value);
+  }
+
 }

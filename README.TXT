@@ -1,4 +1,8 @@
-This a very preliminary, pre-alpha, Stage 0 release of the Base Technology Agent Server software.
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+This a very preliminary, pre-alpha, experimental testbed, Stage 0 release of the Base Technology
+Software Agent Server software. It is NOT yet suitable for prime-time production use.
 
 What is a software agent?
 -------------------------
@@ -21,6 +25,12 @@ but larger and more autonomous than mere objects.
 
 The agent server does not have a UI per se. You interact with the server using its REST API, most
 typically with curl commands. See intro.txt.
+
+For a general overview, read 1-page-PDF.txt.
+
+For a detailed introduction, read intro.txt.
+
+And for a hands-on tutorial, read tutorial.txt.
 
 ----
 

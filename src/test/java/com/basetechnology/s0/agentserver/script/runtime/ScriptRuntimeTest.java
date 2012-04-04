@@ -167,8 +167,39 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     return valueNode;
   }
 
+  public void eval(String expressionString, String exceptionTypeExpected,
+      String exceptionMessageExpected) throws TokenizerException, ParserException, AgentServerException {
+    // Clear out old exceptions
+    dummyAgentInstance.exceptionHistory.clear();
+    
+    ExpressionNode expressionNode = parser.parseExpressionString(expressionString);
+    assertTrue("Null was returned from expression parser", expressionNode != null);
+    Value valueNode = scriptRuntime.evaluateExpression("", expressionNode);
+    
+    // Check for exceptions
+    List<ExceptionInfo> exceptions = dummyAgentInstance.exceptionHistory;
+    int numExceptions = exceptions.size();
+    String message = null;
+    String exceptionType = null;
+    if (numExceptions > 0){
+      message = exceptions.get(0).message;
+      exceptionType = exceptions.get(0).type;
+    }
+    if (numExceptions == 0)
+      fail("No exception occurred, but expected exception of type " + exceptionTypeExpected + " and message \"" + exceptionMessageExpected + "\"");
+    else {
+      assertEquals("Exception type", exceptionTypeExpected, exceptionType);
+      assertEquals("Exception message", exceptionMessageExpected, message);
+    }
+  }
+
   public Value evalNull(String expressionString) throws AgentServerException, TokenizerException, ParserException{
     Value value = eval(expressionString, "NullValue");
+    return value;
+  }
+
+  public Value evalNull(String expressionString, int numExceptionsExpected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "NullValue", numExceptionsExpected);
     return value;
   }
 
@@ -228,6 +259,21 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     return valueNode;
   }
 
+  public Value runNullScript(String script) throws AgentServerException, TokenizerException, ParserException{
+    return runNullScript(script, 0);
+  }
+
+  public Value runNullScript(String script, int numExceptionsExpected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = runScript(script, "NullValue", numExceptionsExpected);
+    return value;
+  }
+
+  public Value runBooleanScript(String script, boolean expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = runScript(script, "BooleanValue");
+    assertEquals("Boolean return value", expected, value.getBooleanValue());
+    return value;
+  }
+
   public Value runIntScript(String script, int expected) throws AgentServerException, TokenizerException, ParserException{
     Value value = runScript(script, "IntegerValue");
     assertEquals("Integer return value", expected, value.getIntValue());
@@ -236,7 +282,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
 
   public Value runFloatScript(String script, double expected) throws AgentServerException, TokenizerException, ParserException{
     Value value = runScript(script, "FloatValue");
-    assertEquals("Integer return value", expected, value.getFloatValue(), 0.0001);
+    assertEquals("Float return value", expected, value.getFloatValue(), 0.0001);
     return value;
   }
 
@@ -968,6 +1014,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "a", valueNode.getStringValue());
+    evalString("'abc'.get(0)", "a");
 
     scriptNode = parser.parseScriptString("return 'abc'[1];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -975,6 +1022,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "b", valueNode.getStringValue());
+    evalString("'abc'.get(1)", "b");
 
     scriptNode = parser.parseScriptString("return 'abc'[2];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -982,6 +1030,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "c", valueNode.getStringValue());
+    evalString("'abc'.get(2)", "c");
 
     scriptNode = parser.parseScriptString("return 'abc'[0, 1];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -989,6 +1038,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "a", valueNode.getStringValue());
+    evalString("'abc'.get(0, 1)", "a");
 
     scriptNode = parser.parseScriptString("return 'abc'[1, 2];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -996,6 +1046,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "b", valueNode.getStringValue());
+    evalString("'abc'.get(1, 2)", "b");
 
     scriptNode = parser.parseScriptString("return 'abc'[2, 3];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1003,6 +1054,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "c", valueNode.getStringValue());
+    evalString("'abc'.get(2, 3)", "c");
 
     scriptNode = parser.parseScriptString("return 'abc'[0, 2];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1010,6 +1062,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "ab", valueNode.getStringValue());
+    evalString("'abc'.get(0, 2)", "ab");
 
     scriptNode = parser.parseScriptString("return 'abc'[1, 3];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1017,6 +1070,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "bc", valueNode.getStringValue());
+    evalString("'abc'.get(1, 3)", "bc");
 
     scriptNode = parser.parseScriptString("return 'abc'[0, 3];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1024,6 +1078,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "abc", valueNode.getStringValue());
+    evalString("'abc'.get(0, 3)", "abc");
 
     symbols.clear();
     values.clear();
@@ -1036,6 +1091,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "abc", valueNode.getStringValue());
+    evalString("s.get(0, 3)", "abc");
 
     scriptNode = parser.parseScriptString("return testcat.s[0, 3];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1043,6 +1099,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "abc", valueNode.getStringValue());
+    evalString("testcat.s.get(0, 3)", "abc");
 
     scriptNode = parser.parseScriptString("string s = 'abc'; return s[0];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1050,6 +1107,8 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "a", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.get(0);", "a");
+    runStringScript("string s = 'abc'; return s.charAt(0);", "a");
 
     scriptNode = parser.parseScriptString("string s = 'abc'; return s[1];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1057,6 +1116,8 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "b", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.get(1);", "b");
+    runStringScript("string s = 'abc'; return s.charAt(1);", "b");
 
     scriptNode = parser.parseScriptString("string s = 'abc'; return s[2];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1064,6 +1125,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "c", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.get(2);", "c");
 
     scriptNode = parser.parseScriptString("string s = 'abc'; return s[1, 3];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1071,6 +1133,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "bc", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.get(1, 3);", "bc");
 
     // Test assignment into string characters
     scriptNode = parser.parseScriptString("string s = 'abc'; s[0]='x'; return s;");
@@ -1079,6 +1142,8 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "xbc", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(0, 'x');", "xbc");
+    runStringScript("string s = 'abc'; return s.set(0, 'x');", "xbc");
 
     scriptNode = parser.parseScriptString("string s = 'abc'; s[1]='x'; return s;");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1086,6 +1151,8 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "axc", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(1, 'x');", "axc");
+    runStringScript("string s = 'abc'; return s.set(1, 'x');", "axc");
 
     scriptNode = parser.parseScriptString("string s = 'abc'; s[2]='x'; return s;");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1093,6 +1160,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "abx", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(2, 'x');", "abx");
 
     // Test assignment of multi-char strings into strings
     scriptNode = parser.parseScriptString("string s = 'abc'; s[0]='xyz'; return s;");
@@ -1101,6 +1169,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "xyzbc", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(0, 'xyz');", "xyzbc");
 
     scriptNode = parser.parseScriptString("string s = 'abc'; s[1]='xyz'; return s;");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1108,13 +1177,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "axyzc", valueNode.getStringValue());
-
-    scriptNode = parser.parseScriptString("string s = 'abc'; s[1]='xyz'; return s;");
-    assertTrue("Null was returned from script parser", scriptNode != null);
-    valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
-    assertTrue("No value node returned from executor", valueNode != null);
-    assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
-    assertEquals("Return string value", "axyzc", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(1, 'xyz');", "axyzc");
 
     scriptNode = parser.parseScriptString("string s = 'abc'; s[2]='xyz'; return s;");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1122,6 +1185,56 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "abxyz", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(2, 'xyz');", "abxyz");
+
+    // Test sub-string range replacement
+    scriptNode = parser.parseScriptString("string s = 'abc'; s[0, 1]='xyz'; return s;");
+    assertTrue("Null was returned from script parser", scriptNode != null);
+    valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
+    assertTrue("No value node returned from executor", valueNode != null);
+    assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
+    assertEquals("Return string value", "xyzbc", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(0, 1, 'xyz');", "xyzbc");
+
+    scriptNode = parser.parseScriptString("string s = 'abc'; s[0, 2]='xyz'; return s;");
+    assertTrue("Null was returned from script parser", scriptNode != null);
+    valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
+    assertTrue("No value node returned from executor", valueNode != null);
+    assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
+    assertEquals("Return string value", "xyzc", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(0, 2, 'xyz');", "xyzc");
+
+    scriptNode = parser.parseScriptString("string s = 'abc'; s[0, 3]='xyz'; return s;");
+    assertTrue("Null was returned from script parser", scriptNode != null);
+    valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
+    assertTrue("No value node returned from executor", valueNode != null);
+    assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
+    assertEquals("Return string value", "xyz", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(0, 3, 'xyz');", "xyz");
+
+    scriptNode = parser.parseScriptString("string s = 'abc'; s[1, 2]='xyz'; return s;");
+    assertTrue("Null was returned from script parser", scriptNode != null);
+    valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
+    assertTrue("No value node returned from executor", valueNode != null);
+    assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
+    assertEquals("Return string value", "axyzc", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(1, 2, 'xyz');", "axyzc");
+
+    scriptNode = parser.parseScriptString("string s = 'abc'; s[1, 3]='xyz'; return s;");
+    assertTrue("Null was returned from script parser", scriptNode != null);
+    valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
+    assertTrue("No value node returned from executor", valueNode != null);
+    assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
+    assertEquals("Return string value", "axyz", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(1, 3, 'xyz');", "axyz");
+
+    scriptNode = parser.parseScriptString("string s = 'abc'; s[2, 3]='xyz'; return s;");
+    assertTrue("Null was returned from script parser", scriptNode != null);
+    valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
+    assertTrue("No value node returned from executor", valueNode != null);
+    assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
+    assertEquals("Return string value", "abxyz", valueNode.getStringValue());
+    runStringScript("string s = 'abc'; return s.put(2, 3, 'xyz');", "abxyz");
 
     // Test string 'insert'
     scriptNode = parser.parseScriptString("string s = 'abc'; s = s.insert(0, 'xyz'); return s;");
@@ -1508,6 +1621,17 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "", valueNode.getStringValue());
 
+    // Test equality, inequality, 'equals', and 'equalsIgnoreCase' for strings
+    evalBoolean("'abc' == 'abc'", true);
+    evalBoolean("'abc' == 'abcd'", false);
+    evalBoolean("'abc' == 'def'", false);
+    evalBoolean("'abc' != 'def'", true);
+    evalBoolean("'abc' != 'Abc'", true);
+    evalBoolean("'abc'.equals('abc')", true);
+    evalBoolean("'abc'.equals('Abc')", false);
+    evalBoolean("'abc'.equalsIgnoreCase('abc')", true);
+    evalBoolean("'abc'.equalsIgnoreCase('Abc')", true);
+    
     // Test 'toString'
     scriptNode = parser.parseScriptString("return null.toString;");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1697,6 +1821,9 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "Hello", valueNode.getStringValue());
+    runStringScript("list lst; lst.add('Hello'); lst.add('World'); return lst.get(0);", "Hello");
+    runStringScript("list lst; lst.put('Hello'); lst.put('World'); return lst.get(0);", "Hello");
+    runStringScript("list lst; lst.set('Hello'); lst.set('World'); return lst.get(0);", "Hello");
 
     scriptNode = parser.parseScriptString("list lst; lst.add('Hello'); lst.add('World'); return lst[1];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1704,6 +1831,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "World", valueNode.getStringValue());
+    runStringScript("list lst; lst.add('Hello'); lst.add('World'); return lst.get(1);", "World");
 
     scriptNode = parser.parseScriptString("list lst; lst.add('Hello'); lst.add('World'); lst.add('test'); return lst[0,3];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1726,6 +1854,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("List element[2] is not a string value:" + element.getClass().getSimpleName(), element instanceof StringValue);
     valueNode = (Value)element;
     assertEquals("List element[2] string value", "test", valueNode.getStringValue());
+    runListScript("list lst; lst.add('Hello'); lst.add('World'); lst.add('test'); return lst.get(0,3);", "[Hello, World, test]");
 
     scriptNode = parser.parseScriptString("list lst; lst.add('Hello'); lst.add('World'); lst.add('test'); return lst[0,2];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1744,6 +1873,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("List element[1] is not a string value:" + element.getClass().getSimpleName(), element instanceof StringValue);
     valueNode = (Value)element;
     assertEquals("List element[1] string value", "World", valueNode.getStringValue());
+    runListScript("list lst; lst.add('Hello'); lst.add('World'); lst.add('test'); return lst.get(0, 2);", "[Hello, World]");
 
     scriptNode = parser.parseScriptString("list lst; lst.add('Hello'); lst.add('World'); lst.add('test'); return lst[1,2];");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1758,6 +1888,11 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("List element[0] is not a string value:" + element.getClass().getSimpleName(), element instanceof StringValue);
     valueNode = (Value)element;
     assertEquals("List element[0] string value", "World", valueNode.getStringValue());
+    runListScript("list lst; lst.add('Hello'); lst.add('World'); lst.add('test'); return lst.get(1, 2);", "[World]");
+
+    runListScript("list lst; lst.add('Hello'); lst.add('World'); lst.add('test'); return lst.get(1, 3);", "[World, test]");
+
+    runListScript("list lst; lst.add('Hello'); lst.add('World'); lst.add('test'); return lst.get(2, 3);", "[test]");
 
     // TODO: Test index out of range for list subscripts
 
@@ -1779,6 +1914,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("List element[1] is not a string value:" + element.getClass().getSimpleName(), element instanceof StringValue);
     valueNode = (Value)element;
     assertEquals("List element[1] string value", "World", valueNode.getStringValue());
+    runListScript("list lst; lst.add('Hello'); lst.add('World'); lst.put(0, 'NewWord'); return lst;", "[NewWord, World]");
 
     scriptNode = parser.parseScriptString("list lst; lst.add('Hello'); lst.add('World'); lst[1] = 'NewWord'; return lst;");
     assertTrue("Null was returned from script parser", scriptNode != null);
@@ -1797,6 +1933,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("List element[1] is not a string value:" + element.getClass().getSimpleName(), element instanceof StringValue);
     valueNode = (Value)element;
     assertEquals("List element[1] string value", "NewWord", valueNode.getStringValue());
+    runListScript("list lst; lst.add('Hello'); lst.add('World'); lst.put(1, 'NewWord'); return lst;", "[Hello, NewWord]");
 
     // Test simple map access
     scriptNode = parser.parseScriptString("map m; m.put('name', 'John Doe'); m.put('address', 'Here'); m.put('rank', 123); m.put('amount', 4.56); m.put('valid', true); return m;");
@@ -1866,36 +2003,48 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("String value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof StringValue);
     assertEquals("Return string value", "John Doe", valueNode.getStringValue());
+    runStringScript("map m; m['name'] = 'John Doe'; return m['name'];", "John Doe");
+    runStringScript("map m; m.put('name', 'John Doe'); return m.get('name');", "John Doe");
+    runStringScript("map m; m.set('name', 'John Doe'); return m.get('name');", "John Doe");
+    runStringScript("map m; m.add('name', 'John Doe'); return m.get('name');", "John Doe");
+    runStringScript("map m; m.name = 'John Doe'; return m.name;", "John Doe");
 
     scriptNode = parser.parseScriptString("map m; m['name'] = 'John Doe'; return m['notfound'];");
     assertTrue("Null was returned from script parser", scriptNode != null);
     valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("Null value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof NullValue);
+    runNullScript("map m; m.put('name', 'John Doe'); return m.get('notfound');");
 
     scriptNode = parser.parseScriptString("map m; m['name'] = 'John Doe'; return m['notfound'] == null;");
     assertTrue("Null was returned from script parser", scriptNode != null);
     valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("True value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof TrueValue);
+    runBooleanScript("map m; m.put('name', 'John Doe'); return m.get('notfound') == null;", true);
 
     scriptNode = parser.parseScriptString("map m; m['name'] = 'John Doe'; return m['notfound'] != null;");
     assertTrue("Null was returned from script parser", scriptNode != null);
     valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("False  value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof FalseValue);
+    runBooleanScript("map m; m.put('name', 'John Doe'); return m.get('notfound') != null;", false);
 
     scriptNode = parser.parseScriptString("map m; m['name'] = 'John Doe'; return m['name'] == null;");
     assertTrue("Null was returned from script parser", scriptNode != null);
     valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("False  value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof FalseValue);
+    runBooleanScript("map m; m.put('name', 'John Doe'); return m.get('name') == null;", false);
+    runBooleanScript("map m; m.put('name', 'John Doe'); return m.name == null;", false);
 
     scriptNode = parser.parseScriptString("map m; m['name'] = 'John Doe'; return m['name'] != null;");
     assertTrue("Null was returned from script parser", scriptNode != null);
     valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
     assertTrue("No value node returned from executor", valueNode != null);
     assertTrue("True value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof TrueValue);
+    runBooleanScript("map m; m.put('name', 'John Doe'); return m.get('name') != null;", true);
+    runBooleanScript("map m; m.put('name', 'John Doe'); return m.name != null;", true);
 
     // Test toString for map
     scriptNode = parser.parseScriptString("map m; m.put('name', 'John Doe'); m.put('address', 'Here'); m.put('rank', 123); m.put('amount', 4.56); m.put('valid', true); return m.toString;");
@@ -3580,6 +3729,92 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     evalString("false ? null : 'abc'", "abc");
     evalNull("false ? 123 : null");
     evalNull("false ? 'abc' : null");
+
+  }
+
+  @Test
+  public void testLogicalOps() throws Exception {
+    evalBoolean("false && false", false);
+    evalBoolean("false && true", false);
+    evalBoolean("true && false", false);
+    evalBoolean("true && true", true);
+
+    evalBoolean("false || false", false);
+    evalBoolean("false || true", true);
+    evalBoolean("true || false", true);
+    evalBoolean("true || true", true);
+    
+    evalBoolean("false && false || false", false);
+    evalBoolean("false && false || true", true);
+    evalBoolean("false && true || false", false);
+    evalBoolean("false && true || true", true);
+    evalBoolean("true && false || false", false);
+    evalBoolean("true && false || true", true);
+    evalBoolean("true && true || false", true);
+    evalBoolean("true && true || true", true);
+    
+    evalBoolean("false || false && false", false);
+    evalBoolean("false || false && true", false);
+    evalBoolean("false || true && false", false);
+    evalBoolean("false || true && true", true);
+    evalBoolean("true || false && false", true);
+    evalBoolean("true || false && true", true);
+    evalBoolean("true || true && false", true);
+    evalBoolean("true || true && true", true);
+
+    evalBoolean("-false", true);
+    evalBoolean("-true", false);
+
+    evalInt("-3", -3);
+    evalInt("-(3)", -3);
+    evalInt("- -3", 3);
+    evalInt("- 3", -3);
+    evalInt("- (2 - 5)", 3);
+    evalInt("- (5 - 2)", -3);
+
+    evalFloat("-3.125", -3.125);
+    evalFloat("-(3.125)", -3.125);
+    evalFloat("- -3.125", 3.125);
+    evalFloat("- 3.125", -3.125);
+    evalFloat("- (2 - 5.125)", 3.125);
+    evalFloat("- (5.125 - 2)", -3.125);
+
+    eval("! 1", "com.basetechnology.s0.agentserver.RuntimeException",
+        "Operand of the logical NOT operator must be a boolean, but has type IntegerValue value: 1");
+
+    evalBoolean("! (2 < 3)", false);
+    evalBoolean("! (2 > 3)", true);
+
+    eval("! 2 < 3", "com.basetechnology.s0.agentserver.RuntimeException",
+        "Operand of the logical NOT operator must be a boolean, but has type IntegerValue value: 2");
+
+    evalBoolean("! false && false", false);
+    evalBoolean("! false && true", true);
+    evalBoolean("! true && false", false);
+    evalBoolean("! true && true", false);
+
+    evalBoolean("false && ! false", false);
+    evalBoolean("false && ! true", false);
+    evalBoolean("true && ! false", true);
+    evalBoolean("true && ! true", false);
+
+    // TODO: ! int s.b. exception
+    // TODO: Move ! down in precedence to same as - and ~
+    eval("! 1 > 2 && 1 > 2", "com.basetechnology.s0.agentserver.RuntimeException",
+        "Operand of the logical NOT operator must be a boolean, but has type IntegerValue value: 1");
+    evalBoolean("! (1 > 2) && 1 > 2", false);
+    evalBoolean("! (1 > 2) && 3 < 4", true);
+    evalBoolean("! (3 < 4) && 1 > 2", false);
+    evalBoolean("! (3 < 4) && 3 < 4", false);
+
+    // Note: && is conditional, so right side is not evaluated if left side is true
+    evalBoolean("1 > 2 && ! 1 > 2", false);
+    evalBoolean("1 > 2 && ! (1 > 2)", false);
+    evalBoolean("1 > 2 && ! (3 < 4)", false);
+    eval("3 < 4 && ! 1 > 2", "com.basetechnology.s0.agentserver.RuntimeException",
+        "Operand of the logical NOT operator must be a boolean, but has type IntegerValue value: 1");
+    evalBoolean("3 < 4 && ! (1 > 2)", true);
+    evalBoolean("3 < 4 && ! (3 < 4)", false);
 
   }
   

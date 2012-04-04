@@ -16,10 +16,20 @@
 
 package com.basetechnology.s0.agentserver.script.intermediate;
 
+import com.basetechnology.s0.agentserver.AgentServerException;
+import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
+import com.basetechnology.s0.agentserver.script.runtime.value.Value;
+
 public class NegationNode extends UnaryExpressionNode {
 
   public NegationNode(ExpressionNode node){
     super(node);
+  }
+
+  public Value evaluateExpression(ScriptState scriptState) throws AgentServerException {
+    scriptState.countNodeExecutions();
+    Value valueNode = node.evaluateExpression(scriptState);
+    return valueNode.negateValue();
   }
 
 }

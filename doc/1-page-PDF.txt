@@ -1,33 +1,82 @@
  * Copyright 2012 John W. Krupansky d/b/a Base Technology
  * Licensed under the Apache License, Version 2.0
 
-TBD - Ignore these ramblings for now
+Introducing the Base Technology Software Agent Server
 
-Software agents are a hybrid computing metaphor combining the power and flexibility or a network
-of processes and web resources.
+Conventional computing paradigms such as computer programs, processes, threads, scripts, pipes, sockets,
+web services, etc. used in conjunction with conventional computing hardware such as personal computers,
+networked servers, mobile phones, handheld computers, tablets, etc. simply aren't up to delivering the
+kinds of next-generation computing solutions that our future will soon be demanding.
 
-Agent server infrastructure factors out all of the bookkeeping and housekeeping and resource management
-needed to support asynchronous, interdependent distributed processing computing elements.
+It is that simply that we need more raw computing power, which utility computing services such as
+Amazon AWS provide, but we need much more intellectual leverage. Rather than hiring and organizing
+vast hordes of developers, we need to be enabling individual developers to do much more and to
+simultaneously enable them to leverage the efforts of independent individual developers.
 
-Agents are a fundamental component of distributed processing.
+Although object-oriented programming and component-based software were supposed to spawn incredible
+"re-use" of objects and components, the promise has yet to be fulfilled. Many objects and components
+have been developed and re-used, but somehow the whole just seems to consistently worth less than the
+sum of the parts.
 
-Even the most complex computations can be decomposed into a computing graph of elementary computing
-components.
+Software agent technology has also been held out as having great promise over the past two decades,
+but simply has never come close to fulfilling that great promise. Nonetheless, software agents still
+hold great promise as a first-order approximation of what a true software component should look like.
 
-Agents provide the power and flexibility of asynchronous networked processes without any of the tedious
-and error prone bookkeeping associated with traditional approaches to network computing.
+The Base Technology Software Agent Server is certainly not even close to fulfilling the grand promise
+of software agent technology, but it is a significant leap forward.
 
-The power of agents comes from their simple but powerful internal structure combined with the automated
-interconnection of a graph of agents.
+One of the grand challenges of computing is persistence. A computer program does something wonderful,
+but how does one go about making the computational state of one program available to another program?
+Data interchange is a complex and messy problem. The idea with software agents is that there state is
+automatically maintained (persisted) over an extended period of time, even if the host computer crashes
+or needs to be rebooted. Existing computer program are able to approximately address this problem, but
+other through the great effort and great diligence of its developers, which is expensive and error prone.
+What is needed is a computing paradigm in which persistence and long-life are automatic with zero effort
+on the part of the developer. The Base Technology Software Agent Server provides such support.
 
-Three goals of agents
+Because trust and security is a huge issue for agents, it is important that their implementation be
+absolutely transparent so that any user can see exactly what they are getting. By factoring much of the
+logic of a typical software agent into the agent server itself to the degree that each agent is very
+simple and that any procedural code is very simple and obvious. And finally, with so much of the
+processing occurring inside of the agent server itself, administrative controls can assure that rogue
+or malicious agents will not get very far. For example, the agent server assures that all agents obey
+the robot.txt standard and that the cumulative web access across all agents is kept with limits that
+may be throttled at the administrative level of the agent server.
 
-1. Simplify basic computation
-2. Enable distributed computation
-3. Support long-lived, goal-oriented computing
+Sharing data between computer programs has always been a very challenging problem and traditionally
+has required lots of care and lots of code. The Base Technology Software Agent Server greatly simplifies
+the problem by allowing agents to declares their intentions and to easily share data so that the agent
+server itself can manage the data dependencies and arrange to agents to receive and process the data
+when it becomes available without lots of carefully written code. By using a more declarative style of
+coding for agents, the agent server is able to support automatic recalculation of data dependencies
+without even a single line of error-prone code being needed on the part of the developer. So, it is
+actually possible for an agent to respond to changes in its inputs and produce new outputs of its own
+without any application logic required to manage the update process.
 
-Agent computing is not dependent on direct association with any client device or server. Although
-agents can communicate with and synch up with any client device or server, agents have a computing
-life cycle of their own.
+Distributed computing is another of the grand challenges facing software architects and developers, and
+once again it is software agents to the rescue. Although it is still too soon to apply software agents
+to all distributed computing problems, agents are appropriate for an interesting subset of them. The
+current version of the Base Technology Software Agent Server does not support distributed computing per
+se, other than the fact that it supports access to web resources and REST-based web services, but the
+agent model is designed to eventually accommodate inter-machine agent access. In other words, agents
+would be able to reference agents on other machines in a cluster or elsewhere on the web as well, with
+all of the bookkeeping for inter-agent communications and data synchronization handled 100% automatically
+by the underlying agent servers. 
 
+As with all aspects of life, sometimes it is the little things that can make a big difference. Although
+the emphasis of the Base Technology Software Agent Server is on declaring intentions and automatic
+execution, expressions and snippets of procedural code are essential to completing the full picture.
+Although many of the core features of the Java programming language were used for familiarity, there
+have been a number of omissions, additions, and improvements made to provide agent developers with
+a very powerful collection of language and library features to greatly facilitate the kinds of data
+manipulation that are commonly needed for dealing with strings, text, HTML web pages, XML data, RSS
+feeds, and REST API web services. We have benefited greatly from experience working with the Internet
+and Web in Java, which is reflected in the enhanced scripting language supported by the agent server.
 
+The current implementation of the Base Technology Software Agent Server, Stage 0, is a preliminary,
+experimental testbed to evaluate the concepts introduced by this new server. It is currently a local,
+standalone server, but the vision is for a full-blown, world-wide "agent grid" of such agent servers.
+In the near term, the intention is to put the local server up on Amazon AWS for public access, and then
+scale that one server to a cluster of servers as interest warrants.
+
+.

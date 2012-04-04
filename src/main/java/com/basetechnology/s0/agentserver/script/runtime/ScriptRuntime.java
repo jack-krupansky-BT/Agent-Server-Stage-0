@@ -35,7 +35,14 @@ public class ScriptRuntime {
     ScriptState scriptState = new ScriptState(this, scriptName, expressionNode);
 
     // Evaluate the expression
-    Value returnValueNode = expressionNode == null ? NullValue.one : expressionNode.evaluateExpression(scriptState);
+    Value returnValueNode = null;
+    try {
+      returnValueNode = expressionNode == null ? NullValue.one : expressionNode.evaluateExpression(scriptState);
+    } catch (Exception e){
+      e.printStackTrace();
+      agentInstance.exceptionHistory.add(new ExceptionInfo(e, scriptName));
+      returnValueNode = NullValue.one;
+    }
     return returnValueNode;
   }
 

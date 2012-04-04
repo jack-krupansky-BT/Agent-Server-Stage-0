@@ -378,16 +378,36 @@ public class Tokenizer {
         token = new RightParenthesisOperatorToken();
         czer.skipChar();
       } else if (ch == '-'){
-        if (czer.peekNextChar() == '='){
+        char ch2 = czer.peekNextChar();
+        if (ch2 == '='){
           czer.skipChar();
           token = new MinusEqualOperatorToken();
-        } else if (czer.peekNextChar() == '-'){
+          czer.skipChar();
+        } else if (ch2 == '-'){
           czer.skipChar();
           token = new MinusMinusOperatorToken();
-        } else
-          // TODO: handle negative numbers
+          czer.skipChar();
+        } else if (Character.isDigit(ch2)){
+          StringBuffer sbuf = new StringBuffer("-");
+          boolean sawDot = false;
+          ch = czer.getNextChar();
+          do {
+            sbuf.append(ch);
+            if (ch == '.')
+              if (sawDot)
+                throw new TokenizerException("Extra dot in number at offset " + czer.nextCharIndex);
+              else
+                sawDot = true;
+          } while ((ch = czer.getNextChar()) != 0 && (czer.isDigit || ch == '.'));
+          String numberString = sbuf.toString();
+          if (sawDot)
+            token = new FloatToken(numberString);
+          else
+            token = new IntegerToken(numberString);
+        } else {
           token = new MinusOperatorToken();
-        czer.skipChar();
+          czer.skipChar();
+        }
       } else if (ch == '+'){
         if (czer.peekNextChar() == '='){
           czer.skipChar();

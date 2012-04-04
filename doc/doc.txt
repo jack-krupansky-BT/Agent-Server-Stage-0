@@ -6,13 +6,16 @@ Documentation for the Base Technology Agent Server (Stage 0)
 For now, the documentation for the Base Technology Agent Server (Stage 0) is simply a collection of
 simple text files kept in the "doc" directory.
 
-Read intro.txt first.
+Read 1-page-PDF.txt for a general overview.
+
+Read intro.txt for a detailed introduction.
 
 Then install the software by following the instructions in install.txt.
 
 Then work through the tutorial sequence in tutorial.txt.
 
+Read script.txt for an overview of the scripting language.
+
 More... TBD
 
 .
-

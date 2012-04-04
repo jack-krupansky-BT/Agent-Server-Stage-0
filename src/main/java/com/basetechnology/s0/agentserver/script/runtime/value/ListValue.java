@@ -171,7 +171,7 @@ public class ListValue extends Value {
     int numArguments = arguments.size();
     if ((name.equals("length") || name.equals("size")) && numArguments == 0)
       return new IntegerValue(value.size());
-    else if (name.equals("add") && numArguments == 1){
+    else if ((name.equals("add") || name.equals("put") || name.equals("set")) && numArguments == 1){
       // Append the new value
       appendValue(arguments.get(0));
       // TODO: Find out what this Java return value is really all about
@@ -338,6 +338,73 @@ public class ListValue extends Value {
       
       // Return the index of the matched term(s)
       return new IntegerValue(foundIndex);
+    } else if (name.equals("get") && numArguments == 1){
+      // Fetch element at that index
+      int len = value.size();
+      int index = arguments.get(0).getIntValue();
+      if (index < 0)
+        throw new RuntimeException("List index less than zero: " + index);
+      else if (index >= len)
+        throw new RuntimeException("List index of " + index + " is greater than list length of " + len + " (minus one)");
+      else
+        return (Value)value.get(index);
+    } else if (name.equals("get") && numArguments == 2){
+      // if first argument is a string, treat as a lookup of list of maps
+      if (arguments.get(0) instanceof StringValue){
+        // First argument is the map field name
+        String fieldName = arguments.get(0).getStringValue();
+
+        // Second argument is the value for that field to search for
+        Value fieldValueNode = arguments.get(1);
+
+        // Search through the list
+        Value foundElementValueNode = NullValue.one;
+        for (Value elementValueNode: value){
+          if (elementValueNode instanceof MapValue){
+            MapValue mapValueNode = (MapValue)elementValueNode;
+            Value aFieldValueNode = mapValueNode.value.get(fieldName);
+            if (aFieldValueNode != null && aFieldValueNode.compareValue(fieldValueNode) == 0){
+              foundElementValueNode = elementValueNode;
+              break;
+            }
+          }
+        }
+
+        // Return the element we found (or a null value node)
+        return foundElementValueNode;
+      } else {
+        // Create new list which is a selected range from the list
+        int len = value.size();
+        int index = arguments.get(0).getIntValue();
+        if (index < 0)
+          throw new RuntimeException("List index less than zero: " + index);
+        else if (index >= len)
+          throw new RuntimeException("List index of " + index + " is greater than list length of " + len + " (minus one)");
+        int endIndex = arguments.get(1).getIntValue();
+        if (endIndex < 0)
+          throw new RuntimeException("List index less than zero: " + endIndex);
+        else if (endIndex > len)
+          throw new RuntimeException("List index of " + endIndex + " is greater than list length of " + len + " minus 1");
+        List<Value> newValue = new ArrayList<Value>();
+        for (int i = index; i < endIndex; i++)
+          newValue.add(value.get(i));
+        return new ListValue(type, newValue);
+      }
+    } else if ((name.equals("add") || name.equals("put") || name.equals("set")) && numArguments == 2){
+      // Replace element at that index
+      int len = value.size();
+      int index = arguments.get(0).getIntValue();
+      if (index < 0)
+        throw new RuntimeException("List index less than zero: " + index);
+      else if (index >= len)
+        throw new RuntimeException("List index of " + index + " is greater than list length of " + len + " (minus one)");
+      
+      Value newValue = arguments.get(1);
+      value.set(index, newValue);
+
+      // Return the new element
+      // TODO: Consider whether this should return the list
+      return newValue;
     } else if (name.equals("remove") && numArguments == 1){
       // Get the index of element to remove
       int index = arguments.get(0).getIntValue();
@@ -387,7 +454,7 @@ public class ListValue extends Value {
       else
         return (Value)value.get(index);
     } else if (numSubscripts == 2){
-      // if first argument is s string, treat as a lookup of list of maps
+      // if first argument is a string, treat as a lookup of list of maps
       if (subscriptValues.get(0) instanceof StringValue){
         // First argument is the map field name
         String fieldName = subscriptValues.get(0).getStringValue();
@@ -417,12 +484,12 @@ public class ListValue extends Value {
         if (index < 0)
           throw new RuntimeException("List index less than zero: " + index);
         else if (index >= len)
-          throw new RuntimeException("List index of " + index + " is greater than string length of " + len + " (minus one)");
+          throw new RuntimeException("List index of " + index + " is greater than list length of " + len + " (minus one)");
         int endIndex = subscriptValues.get(1).getIntValue();
         if (endIndex < 0)
-          throw new RuntimeException("String index less than zero: " + endIndex);
+          throw new RuntimeException("List index less than zero: " + endIndex);
         else if (endIndex > len)
-          throw new RuntimeException("String index of " + endIndex + " is greater than string length of " + len);
+          throw new RuntimeException("List index of " + endIndex + " is greater than list length of " + len + " minus 1");
         List<Value> newValue = new ArrayList<Value>();
         for (int i = index; i < endIndex; i++)
           newValue.add(value.get(i));
@@ -435,7 +502,7 @@ public class ListValue extends Value {
   public Value putSubscriptedValue(ScriptState scriptState, List<Value> subscriptValues, Value newValue) throws RuntimeException {
     int numSubscripts = subscriptValues.size();
     if (numSubscripts == 1){
-      // Fetch element at that index
+      // Replace element at that index
       int len = value.size();
       int index = subscriptValues.get(0).getIntValue();
       if (index < 0)

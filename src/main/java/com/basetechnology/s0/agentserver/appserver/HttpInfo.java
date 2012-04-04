@@ -32,6 +32,7 @@ public class HttpInfo {
   public String[] pathParts;
   public String format;
   public AgentServer agentServer;
+  public HandleHttp handleHttp;
   
   public HttpInfo (String target, Request request, HttpServletRequest servletRequest, HttpServletResponse response, String path, String[] pathParts, String format, AgentServer agentServer){
     this.target = target;
@@ -42,5 +43,6 @@ public class HttpInfo {
     this.pathParts = pathParts;
     this.format = format;
     this.agentServer = agentServer;
+    this.handleHttp = null;
   }
 }

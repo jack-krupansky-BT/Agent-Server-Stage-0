@@ -18,9 +18,11 @@ package com.basetechnology.s0.agentserver.appserver;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Iterator;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,9 +30,17 @@ import org.json.JSONTokener;
 
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.User;
+import com.basetechnology.s0.agentserver.util.XmlUtils;
 
 public class HandleHttp {
+  static final Logger log = Logger.getLogger(HandleHttp.class);
+
   public HttpInfo httpInfo;
+  
+  public HandleHttp(HttpInfo httpInfo){
+    this.httpInfo = httpInfo;
+    httpInfo.handleHttp = this;
+  }
   
   public JSONObject getInputJson() throws JSONException, IOException {
     BufferedReader reader = httpInfo.request.getReader();
@@ -163,5 +173,150 @@ public class HandleHttp {
     }
     
     return user;
+  }
+  
+  public void setOutput(JSONObject outputJson){
+    HttpServletResponse response = httpInfo.response;
+    String format = httpInfo.format;
+    response.setStatus(HttpServletResponse.SC_OK);
+    if (format.equals("json")){
+      // Output response in JSON format
+      response.setContentType("application/json; charset=utf-8");
+      try {
+        response.getWriter().println(outputJson.toString(4));
+      } catch (IOException e){
+        // Not much we can do without causing recursion
+        //throw new AgentAppServerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to format output for response - " + e.getMessage());
+        log.info("Unable to format output for response - " + e.getMessage());
+      } catch (JSONException e){
+        // Not much we can do without causing recursion
+        //throw new AgentAppServerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to format output for response - " + e.getMessage());
+        log.info("Unable to format output for response - " + e.getMessage());
+      }
+    } else if (format.equals("xml") || format.equals("rss")){
+      // Output response in XML format
+      response.setContentType("application/xml; charset=utf-8");
+      try {
+        // TODO: Handle entities
+        response.getWriter().println(XmlUtils.formatJsonAsXml(outputJson));
+      } catch (IOException e){
+        // Not much we can do without causing recursion
+        //throw new AgentAppServerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to format output for response - " + e.getMessage());
+        log.info("Unable to format output for response - " + e.getMessage());
+      }
+    } else if (format.equals("html")){
+      // Output response in plain text format
+      // TODO: Leave input in native format so that order of field can be preserved
+      response.setContentType("text/html; charset=utf-8");
+      String title = "Agent Output";
+      StringBuilder sb = new StringBuilder("<html><head><title>" + title + "</title></head><body><h1>Output Field Values</h1><table border=\"1\">");
+      if (outputJson != null){
+        // TODO: If JSON is an array, write multiple rows
+        for (Iterator<String> it = outputJson.keys(); it.hasNext(); ){
+          String key = it.next();
+          sb.append("<tr><td>" + key + "</td><td>" + outputJson.opt(key).getClass().getSimpleName() + "</td><td>");
+          // TODO Handle list and map types
+          String value = outputJson.optString(key);
+          sb.append(value);
+          sb.append("</td></tr>");
+        }
+      }
+      sb.append("</table></body></html>");
+      try {
+        response.getWriter().println(sb.toString());
+      } catch (IOException e){
+        // Not much we can do without causing recursion
+        //throw new AgentAppServerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to format output for response - " + e.getMessage());
+        log.info("Unable to format output for response - " + e.getMessage());
+      }
+    } else if (format.equals("text")){
+      // Output response in plain text format
+      // TODO: Leave input in native format so that order of field can be preserved
+      response.setContentType("text/plain; charset=utf-8");
+      StringBuilder sb = new StringBuilder();
+      if (outputJson != null){
+        // TODO: If JSON is an array, write multiple rows
+        for (Iterator<String> it = outputJson.keys(); it.hasNext(); ){
+          String key = it.next();
+          // TODO Handle list and map types
+          String value = outputJson.optString(key);
+          if (sb.length() > 0)
+            sb.append(' ');
+          sb.append(value);
+        }
+      }
+      try {
+        response.getWriter().println(sb.toString());
+      } catch (IOException e){
+        // Not much we can do without causing recursion
+        //throw new AgentAppServerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to format output for response - " + e.getMessage());
+        log.info("Unable to format output for response - " + e.getMessage());
+      }
+    } else if (format.equals("tab")){
+      // Output response in plain text format
+      // TODO: Leave input in native format so that order of field can be preserved
+      response.setContentType("text/plain; charset=utf-8");
+      StringBuilder sb = new StringBuilder();
+      if (outputJson != null){
+        // TODO: If JSON is an array, write multiple rows
+        for (Iterator<String> it = outputJson.keys(); it.hasNext(); ){
+          String key = it.next();
+          // TODO Handle list and map types
+          String value = outputJson.optString(key);
+          if (sb.length() > 0)
+            sb.append('\t');
+          sb.append(value);
+        }
+      }
+      try {
+        response.getWriter().println(sb.toString());
+      } catch (IOException e){
+        // Not much we can do without causing recursion
+        //throw new AgentAppServerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to format output for response - " + e.getMessage());
+        log.info("Unable to format output for response - " + e.getMessage());
+      }
+    } else if (format.equals("csv")){
+      // Output response in plain text format
+      // TODO: Leave input in native format so that order of field can be preserved
+      response.setContentType("text/plain; charset=utf-8");
+      StringBuilder sb = new StringBuilder();
+      if (outputJson != null){
+        // TODO: If JSON is an array, write multiple rows
+        for (Iterator<String> it = outputJson.keys(); it.hasNext(); ){
+          String key = it.next();
+          // TODO Handle list and map types
+          String value = outputJson.optString(key);
+          if (sb.length() > 0)
+            sb.append(',');
+          if (value.contains(","))
+            sb.append("\"" + value + "\"");
+          // TODO: Verify Add quotes if comma or other quotable characters
+          else
+            sb.append(value);
+        }
+      }
+      try {
+        response.getWriter().println(sb.toString());
+      } catch (IOException e){
+        // Not much we can do without causing recursion
+        //throw new AgentAppServerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to format output for response - " + e.getMessage());
+        log.info("Unable to format output for response - " + e.getMessage());
+      }
+    } else {
+      // Just treat as JSON
+      //throw new AgentAppServerBadRequestException("Unsupported output format: " + format);
+      response.setContentType("application/json; charset=utf-8");
+      try {
+        response.getWriter().println(outputJson.toString(4));
+      } catch (IOException e){
+        // Not much we can do without causing recursion
+        //throw new AgentAppServerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to format output for response - " + e.getMessage());
+        log.info("Unable to format output for response - " + e.getMessage());
+      } catch (JSONException e){
+        // Not much we can do without causing recursion
+        //throw new AgentAppServerException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unable to format output for response - " + e.getMessage());
+        log.info("Unable to format output for response - " + e.getMessage());
+      }
+    }
   }
 }

@@ -456,6 +456,7 @@ public class AgentInstance {
     // Set value for each parameter, as specified or default if not specified
     SymbolValues parameterValues = categorySymbolValues.get("parameters");
     for (Field field: agentDefinition.parameters){
+      // TODO: Should parameters support 'compute' as well?
       // See if user specified an explicit parameter value
       Value valueNode = this.parameterValues.get(field.symbol.name);
       if (valueNode instanceof NullValue){
@@ -471,18 +472,31 @@ public class AgentInstance {
 
     // Set default value for each scratchpad field
     SymbolValues scratchpadValues = categorySymbolValues.get("scratchpad");
-    for (Field field: agentDefinition.scratchpad)
-      scratchpadValues.put(symbolManager.get("scratchpad", field.symbol.name), field.getDefaultValueNode());
+    for (Field field: agentDefinition.scratchpad){
+      if (field.compute != null){
+        Value newValue = evaluateExpression(field.compute);
+        scratchpadValues.put(symbolManager.get("scratchpad", field.symbol.name), newValue);
+        log.info("Computed initial scratchpad value for " + field.symbol.name + ": " + newValue.toJson());
+      } else
+        scratchpadValues.put(symbolManager.get("scratchpad", field.symbol.name), field.getDefaultValueNode());
+    }
 
     // Set default value for each memory field
     log.info("Initialize memory variables for " + name);
     SymbolValues memoryValues = categorySymbolValues.get("memory");
-    for (Field field: agentDefinition.memory)
-      memoryValues.put(symbolManager.get("memory", field.symbol.name), field.getDefaultValueNode());
+    for (Field field: agentDefinition.memory){
+      if (field.compute != null){
+        Value newValue = evaluateExpression(field.compute);
+        memoryValues.put(symbolManager.get("memory", field.symbol.name), newValue);
+        log.info("Computed initial memory value for " + field.symbol.name + ": " + newValue.toJson());
+      } else
+        memoryValues.put(symbolManager.get("memory", field.symbol.name), field.getDefaultValueNode());
+    }
 
     // Set default value for each output field
     SymbolValues outputValues = categorySymbolValues.get("outputs");
     for (Field field: agentDefinition.outputs)
+      // TODO: Should this support 'compute' at this stage or is it okay to come later?
       outputValues.put(symbolManager.get("outputs", field.symbol.name), field.getDefaultValueNode());
     log.info("Initial output values for instance " + name + ": " + categorySymbolValues.get("outputs").toJson());
     

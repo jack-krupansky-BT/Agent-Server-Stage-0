@@ -57,9 +57,12 @@ import com.basetechnology.s0.agentserver.util.NameValue;
 public class HandleGet extends HandleHttp {
   static final Logger log = Logger.getLogger(HandleGet.class);
 
-  public boolean handleGet(HttpInfo httpInfo) throws IOException, ServletException, AgentAppServerException, AgentServerException, InterruptedException, SymbolException, JSONException {
+  public HandleGet(HttpInfo httpInfo){
+    super(httpInfo);
+  }
+  
+  public boolean handleGet() throws IOException, ServletException, AgentAppServerException, AgentServerException, InterruptedException, SymbolException, JSONException {
     // Extract out commonly used info
-    this.httpInfo = httpInfo;
     String path = httpInfo.path;
     String[] pathParts = httpInfo.pathParts;
     Request request = httpInfo.request;
@@ -78,7 +81,7 @@ public class HandleGet extends HandleHttp {
       aboutJson.put("description", agentServer.config.get("description"));
       aboutJson.put("website", agentServer.config.get("website"));
       aboutJson.put("contact", agentServer.config.get("contact"));
-      AgentAppServer.setOutput(httpInfo, aboutJson);
+      setOutput(aboutJson);
     } else if (path.equalsIgnoreCase("/evaluate")){
       try {
         BufferedReader reader = request.getReader();
@@ -199,7 +202,7 @@ public class HandleGet extends HandleHttp {
       }
       JSONObject agentDefinitionsJson = new JSONObject();
       agentDefinitionsJson.put("agent_definitions", agentDefinitionsArrayJson);
-      AgentAppServer.setOutput(httpInfo, agentDefinitionsJson);
+      setOutput(agentDefinitionsJson);
     } else if (path.equalsIgnoreCase("/agents")){
       checkAdminAccess();
       log.info("Getting list of agent instances for all users");
@@ -219,7 +222,7 @@ public class HandleGet extends HandleHttp {
       }
       JSONObject agentInstancesJson = new JSONObject();
       agentInstancesJson.put("agent_instances", agentInstancesArrayJson);
-      AgentAppServer.setOutput(httpInfo, agentInstancesJson);
+      setOutput(agentInstancesJson);
     } else if (path.equalsIgnoreCase("/field_types")){
       try {
         log.info("Getting list of field types");
@@ -260,11 +263,11 @@ public class HandleGet extends HandleHttp {
       }
       JSONObject usersJson = new JSONObject();
       usersJson.put("users", usersArrayJson);
-      AgentAppServer.setOutput(httpInfo, usersJson);
+      setOutput(usersJson);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*$")){
       User user = checkUserAccess(false);
       log.info("Getting detailed info for a specified user Id: " + user.id);
-      AgentAppServer.setOutput(httpInfo, user.toJson());
+      setOutput(user.toJson());
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agent_definitions$")){
       User user = checkUserAccess(false);
       log.info("Getting list of all agent definitions for user Id: " + user.id);
@@ -281,7 +284,7 @@ public class HandleGet extends HandleHttp {
       }
       JSONObject agentDefinitionsJson = new JSONObject();
       agentDefinitionsJson.put("agent_definitions", agentDefinitionsArrayJson);
-      AgentAppServer.setOutput(httpInfo, agentDefinitionsJson);
+      setOutput(agentDefinitionsJson);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agent_definitions/[a-zA-Z0-9_.@\\-]*$")){
       User user = checkUserAccess(false);
       String agentName = pathParts[4];
@@ -295,7 +298,7 @@ public class HandleGet extends HandleHttp {
       log.info("Getting definition for agent definition " + agentName + " for user: " + user.id);
       AgentDefinitionList agentMap = agentServer.agentDefinitions.get(user.id);
       AgentDefinition agentDefinition = agentMap.get(agentName);
-      AgentAppServer.setOutput(httpInfo, agentDefinition.toJson());
+      setOutput(agentDefinition.toJson());
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agent_definitions/[a-zA-Z0-9_.@\\-]*/status$")){
       User user = checkUserAccess(false);
       String agentName = pathParts[4];
@@ -321,7 +324,7 @@ public class HandleGet extends HandleHttp {
           if (agentInstance.agentDefinition == agent)
             numActiveInstances++;
       statusJson.put("num_active_instances", numActiveInstances);
-      AgentAppServer.setOutput(httpInfo, statusJson);
+      setOutput(statusJson);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents$")){
       User user = checkUserAccess(false);
       log.info("Getting list of all agent instances for a user");
@@ -340,7 +343,7 @@ public class HandleGet extends HandleHttp {
       }
       JSONObject agentInstancesJson = new JSONObject();
       agentInstancesJson.put("agent_instances", agentInstancesArrayJson);
-      AgentAppServer.setOutput(httpInfo, agentInstancesJson);
+      setOutput(agentInstancesJson);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*$")){
       User user = checkUserAccess(false);
       String agentName = pathParts[4];
@@ -363,7 +366,7 @@ public class HandleGet extends HandleHttp {
       log.info("Getting detail info for agent instance " + agentName + " for user: " + user.id);
       AgentInstance agentInstance = agentServer.agentInstances.get(user.id).get(agentName);
 
-      AgentAppServer.setOutput(httpInfo, agentInstance.toJson(includeState, count));
+      setOutput(agentInstance.toJson(includeState, count));
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/notifications$")){
       User user = checkUserAccess(false);
       String agentName = pathParts[4];
@@ -402,7 +405,7 @@ public class HandleGet extends HandleHttp {
       wrapperJson.put("pending_notifications", pendingNotificationsJson);
 
       // Return the wrapped list
-      AgentAppServer.setOutput(httpInfo, wrapperJson);
+      setOutput(wrapperJson);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/notifications/[a-zA-Z0-9_.@\\-]*$")){
       User user = checkUserAccess(false);
       String agentName = pathParts[4];
@@ -441,7 +444,7 @@ public class HandleGet extends HandleHttp {
         notificationSummaryJson.put("type", notificationInstance.definition.type);
         notificationSummaryJson.put("time", DateUtils.toRfcString(notificationInstance.timeNotified));
         notificationSummaryJson.put("timeout", notificationInstance.timeout);
-        AgentAppServer.setOutput(httpInfo, notificationSummaryJson);
+        setOutput(notificationSummaryJson);
       } else {
         if (responseParam.trim().length() == 0)
           throw new AgentAppServerBadRequestException("Empty response query parameter");
@@ -490,7 +493,7 @@ public class HandleGet extends HandleHttp {
         outputJson.put(fieldName, agent.getOutput(fieldName).toJsonObject());
       }
 
-      AgentAppServer.setOutput(httpInfo, outputJson);
+      setOutput(outputJson);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/output_history$")){
       User user = checkUserAccess(false);
       String agentName = pathParts[4];
@@ -537,7 +540,7 @@ public class HandleGet extends HandleHttp {
       // Wrap the array in an object since that is what output code expects
       JSONObject outputHistory = new JsonListMap();
       outputHistory.put("output_history", outputJson);
-      AgentAppServer.setOutput(httpInfo, outputHistory);
+      setOutput(outputHistory);
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/state$")){
       User user = checkUserAccess(false);
       String agentName = pathParts[4];
@@ -557,7 +560,7 @@ public class HandleGet extends HandleHttp {
       log.info("Getting full state and detail info for agent instance " + agentName + " for user: " + user.id);
       AgentInstanceList agentMap = agentServer.agentInstances.get(user.id);
       AgentInstance agentInstance = agentMap.get(agentName);
-      AgentAppServer.setOutput(httpInfo, agentInstance.toJson(true, count));
+      setOutput(agentInstance.toJson(true, count));
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-]*/agents/[a-zA-Z0-9_.@\\-]*/status$")){
       User user = checkUserAccess(false);
       String agentName = pathParts[4];
@@ -598,11 +601,11 @@ public class HandleGet extends HandleHttp {
       statusJson.put("outputs_changed", lastOutput > 0 ? DateUtils.toRfcString(lastOutput) : "");
       
       // Done
-      AgentAppServer.setOutput(httpInfo, statusJson);
+      setOutput(statusJson);
       */
       AgentInstanceList agentMap = agentServer.agentInstances.get(user.id);
       AgentInstance agentInstance = agentMap.get(agentName);
-      AgentAppServer.setOutput(httpInfo, agentInstance.toJson(includeState, count));
+      setOutput(agentInstance.toJson(includeState, count));
     } else if (lcPath.matches("^/users/[a-zA-Z0-9_.@\\-*]*/website_access$")){
       User user = checkAdminUserAccess();
 
@@ -617,7 +620,7 @@ public class HandleGet extends HandleHttp {
         accessListJson.put(url, accessList.get(url));
 
       // Done
-      AgentAppServer.setOutput(httpInfo, accessListJson);
+      setOutput(accessListJson);
     } else {
       throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "Path does not address any existing object");
     }

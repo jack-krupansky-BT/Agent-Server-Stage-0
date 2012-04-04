@@ -33,9 +33,12 @@ import com.basetechnology.s0.agentserver.User;
 public class HandleDelete extends HandleHttp {
   static final Logger log = Logger.getLogger(HandleDelete.class);
 
-  public boolean handleDelete(HttpInfo httpInfo) throws IOException, ServletException, AgentAppServerException, AgentServerException {
+  public HandleDelete(HttpInfo httpInfo){
+    super(httpInfo);
+  }
+
+  public boolean handleDelete() throws IOException, ServletException, AgentAppServerException, AgentServerException {
     // Extract out commonly used info
-    this.httpInfo = httpInfo;
     String path = httpInfo.path;
     String[] pathParts = httpInfo.pathParts;
     Request request = httpInfo.request;

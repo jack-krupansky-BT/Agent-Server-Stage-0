@@ -1,0 +1,63 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+What is a software agent?
+-------------------------
+
+According to my "standard" definition:
+(http://agtivity.com/agdef.htm)
+
+"A Software Agent (or Autonomous Agent or Intelligent Agent) is a computer program which works toward
+ goals (as opposed to discrete tasks) in a dynamic environment (where change is the norm) on behalf of 
+ another entity (human or computational), possibly over an extended period of time, without continuous
+ direct supervision or control, and exhibits a significant degree of flexibility and even creativity in
+ how it seeks to transform goals into action tasks."
+
+Stage 0 is a subset of the more grand vision and is simply a server environment in which small but
+powerful "programs" can run continuously, accessing resources on the Web and bth using the outputs
+of other agents and generating output that other agents can use.
+
+In short, Stage 0 agents are a new model for "software components", smaller than full-blown processes
+but larger and more autonomous than mere objects.
+
+The agent server does not have a UI per se. You interact with the server using its REST API, most
+typically with curl commands. See intro.txt.
+
+Another important aspect of software agents is "persistent computing", which means that the internal
+and user-visible state of an agent remains alive and available even if a server crashes and needs to
+be rebooted.
+
+Meanwhile, the term "agent" has been used in a variety of ways over the years that do not fully express
+the more modern sentiments for a software agent.
+
+Traditional usages of "agent" and similar concepts:
+
+ - system daemons
+  - printer spoolers
+  - mail servers
+  - web servers
+ - database triggers
+ - email alerts
+ - anti-virus checking
+ - email filters
+ - email auto-responders
+ - email list managers
+ - web browsers
+  - In IETF RFC request/response parlance the two endpoints of a communication are "user agents" (UA)
+   - User Agent Client (UAC)
+   - User Agent Server (UAS) 
+ - Multi-Agent Systems (MAS), simulation systems
+  - agent models a real-world "agent" (e.g., person, business, machine, or anything that is active)
+
+Some of the differences of our agents from these traditional uses of "agent"
+
+ - User-oriented - not for "the system", such as daemons, web servers, et al
+ - Flexible and fully customizable - unlike hard-wired "alerts"
+ - Focus is on web resources - unlike database triggers
+ - Much of the agent logic is built into the agent server infrastructure
+ - Simple, high-level scripting language for expressions and procedural code - no experts needed
+ - Run on a dedicated server designed for these high-level, user-oriented agents
+ - Built-in administrative controls - rather than dependent on discipline of expert developers
+ 
+ .
+ 

@@ -6044,5 +6044,60 @@ public class AgentAppServerTest extends AgentServerTestBase {
     String prefix = usageText.substring(0, 312);
     assertEquals("Usage text prefix (first 312 chars)", " * Copyright 2012 John W. Krupansky d/b/a Base Technology\r\n * Licensed under the Apache License, Version 2.0\r\n\r\nREST API Usage Summary for Base Technology Agent Server\r\n\r\nAPI Version 0.1\r\n\r\nGET http://localhost:8980/API/v0.1/about\r\n\r\n - Summarize the agent server\r\n \r\nGET http://localhost:8980/API/v0.1/config?pa", prefix);
   }
+
+  @Test
+  public void testMemoryListInit() throws Exception {
+    // Setup common info
+    String baseUrl = AgentAppServer.appServerApiBaseUrl;
+
+    // Create a test user
+    doPostJson(baseUrl + "/users?id=test-user-1&password=test-pwd-1", "{}", 201);
+
+    // Create one agent definition that says "Hello World" in its output
+    doPostJson(baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\"," +
+            "\"memory\": [" +
+            " {\"name\": \"m1\", \"type\": \"list\", \"compute\": \"['abc', 'def', 123, true]\"}, " +
+            " {\"name\": \"m2\", \"type\": \"map\", \"compute\": \"{name: 'John Doe', address: 'Here', phone: 123}\"}], " +
+            "\"outputs\": [" +
+            "  {\"name\": \"field1\", \"type\": \"list\", \"compute\": \"m1\"}, " +
+            "  {\"name\": \"field2\", \"type\": \"map\", \"compute\": \"m2\"}]}", 201);
+
+    // Instantiate the agent definition once
+    doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"definition\": \"HelloWorld\"}", 201);
+
+    // Get the agent instance's output as JSON
+    JSONObject outputJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld/output?password=test-pwd-1", 200);
+    assertTrue("Output JSON is missing", outputJson != null);
+    assertEquals("Count of fields in output", 2, outputJson.length());
+    assertTrue("Output field1 is missing", outputJson.has("field1"));
+    assertJsonSourceEquals("Output field1", "[\"abc\",\"def\",\"123\",\"true\"]", outputJson.get("field1").toString());
+    assertTrue("Output field2 is missing", outputJson.has("field2"));
+    assertJsonSourceEquals("Output field2", "{\"name\": \"John Doe\", \"address\": \"Here\", \"phone\": 123}", outputJson.get("field2").toString());
+    // TODO: 123 and true should not be strings!
+    assertJsonSourceEquals("Output JSON", "{\"field1\":[\"abc\",\"def\",\"123\",\"true\"], \"field2\": {\"name\": \"John Doe\", \"address\": \"Here\", \"phone\": 123}}", outputJson.toString());
+
+    // Get the agent instance's output as XML
+    String outputString = doGet(baseUrl + "/users/test-user-1/agents/HelloWorld/output.xml?password=test-pwd-1", 200);
+    assertTrue("Output XML is missing", outputString != null);
+    assertEquals("Output XML", "<?xml version=\"1.0\" encoding=\"UTF-8\"?><field1>[abc, def, 123, true]</field1><field2><address>Here</address><name>John Doe</name><phone>123</phone></field2>", outputString.trim());
+
+    // Get the agent instance's output as plain text
+    outputString = doGet(baseUrl + "/users/test-user-1/agents/HelloWorld/output.text?password=test-pwd-1", 200);
+    assertTrue("Output XML is missing", outputString != null);
+    assertEquals("Output plain text", "[abc, def, 123, true] {\"name\":\"John Doe\",\"address\":\"Here\",\"phone\":123}", outputString.trim());
+
+    // Get the agent instance's output as CSV
+    outputString = doGet(baseUrl + "/users/test-user-1/agents/HelloWorld/output.csv?password=test-pwd-1", 200);
+    assertTrue("Output CSV is missing", outputString != null);
+    assertEquals("Output CSV", "\"[abc, def, 123, true]\",\"{\"name\":\"John Doe\",\"address\":\"Here\",\"phone\":123}\"", outputString.trim());
+
+    // Get the agent instance's output as tab-delimited
+    outputString = doGet(baseUrl + "/users/test-user-1/agents/HelloWorld/output.tab?password=test-pwd-1", 200);
+    assertTrue("Output tab-delimited text is missing", outputString != null);
+    assertEquals("Output tab-delimited text", "[abc, def, 123, true]\t{\"name\":\"John Doe\",\"address\":\"Here\",\"phone\":123}", outputString.trim());
+
+  }
   
 }

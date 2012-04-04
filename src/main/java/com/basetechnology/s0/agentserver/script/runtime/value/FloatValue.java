@@ -126,4 +126,8 @@ public class FloatValue extends NumberValue {
     return valueNode instanceof FloatValue && (Math.abs(value - valueNode.getDoubleValue()) < EPSILON);
   }
 
+  public Value negateValue(){
+    return new FloatValue(- value);
+  }
+
 }

@@ -32,6 +32,8 @@ public class LogicalNotNode extends LogicalOperatorNode {
   public Value evaluateExpression(ScriptState scriptState) throws AgentServerException {
     scriptState.countNodeExecutions();
     Value valueNode = node.evaluateExpression(scriptState);
+    if (! (valueNode instanceof BooleanValue))
+      throw new RuntimeException("Operand of the logical NOT operator must be a boolean, but has type " + valueNode.getClass().getSimpleName() + " value: " + valueNode);
     boolean value = valueNode.getBooleanValue();
     boolean notValue = ! value;
     return BooleanValue.create(notValue);

@@ -37,9 +37,12 @@ import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerExcept
 public class HandlePost extends HandleHttp {
   static final Logger log = Logger.getLogger(HandlePut.class);
 
-  public boolean handlePost(HttpInfo httpInfo) throws IOException, ServletException, AgentAppServerException, SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException {
+  public HandlePost(HttpInfo httpInfo){
+    super(httpInfo);
+  }
+
+  public boolean handlePost() throws IOException, ServletException, AgentAppServerException, SymbolException, RuntimeException, AgentServerException, JSONException, TokenizerException, ParserException {
     // Extract out commonly used info
-    this.httpInfo = httpInfo;
     String path = httpInfo.path;
     String[] pathParts = httpInfo.pathParts;
     Request request = httpInfo.request;

@@ -89,8 +89,11 @@ public abstract class Field {
   }
 
   public static TypeNode getType(String typeName) throws AgentServerException {
+    // TODO: Decide whether null is acceptable or not
+    // Or if it should be created as "object"
     if (typeName == null)
-      throw new AgentServerException("'typeName' is null");
+      //throw new AgentServerException("'typeName' is null");
+      return null;
     else if (typeName.trim().length() == 0)
       throw new AgentServerException("'typeName' is empty");
     else if (typeName.equals("string"))
