@@ -29,4 +29,8 @@ public class IntegerTypeNode extends TypeNode {
   public String toString(){
     return "integer";
   }
+
+  public boolean isCompatibleType(TypeNode other){
+    return other instanceof IntegerTypeNode || other instanceof FloatTypeNode;
+  }
 }

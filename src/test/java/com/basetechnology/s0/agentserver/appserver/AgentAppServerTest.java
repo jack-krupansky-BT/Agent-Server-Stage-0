@@ -4894,7 +4894,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("Count of pending notifications", 0, pendingNotificationsJson.length());
 
     // Trigger a notification
-    instanceJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify2?password=test-pwd-1&state=yes", 204);
+    instanceJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify2?password=test-pwd-1&state=yes", 200);
 
     // Sleep a little since notification processing gets queued
     Thread.sleep(50);
@@ -5193,7 +5193,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
         "Cannot respond to notification 'Not2' for agent instance 'HelloWorld2.mine' since it is not pending");
 
     // Repeat notification, but with a "decline" response and a comment added
-    instanceJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify2a?password=test-pwd-1", 204);
+    instanceJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify2a?password=test-pwd-1", 200);
     
     // Wait for queued notification to be performed
     server.agentServer.agentScheduler.waitUntilDone(5 * 1000);
@@ -5411,7 +5411,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
         "Cannot respond to notification 'Not2' for agent instance 'HelloWorld2.mine' since it is not pending");
 
     // Now test the other notification which is a simple notify-only
-    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify1?password=test-pwd-1", 204);
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify1?password=test-pwd-1", 200);
     assertNoError(returnJson);
     statusJson = doGetJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/status?password=test-pwd-1", 200);
     assertEquals("Status", "active", statusJson.get("status"));
@@ -5610,7 +5610,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
 
     // Now test responding using GET
     // Repeat notification, but with a "pass" response and a different comment added
-    instanceJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify2a?password=test-pwd-1", 204);
+    instanceJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld2.mine/run_script/do_notify2a?password=test-pwd-1", 200);
     
     // Wait for queued notification to be performed
     server.agentServer.agentScheduler.waitUntilDone(5 * 1000);
@@ -6097,6 +6097,69 @@ public class AgentAppServerTest extends AgentServerTestBase {
     outputString = doGet(baseUrl + "/users/test-user-1/agents/HelloWorld/output.tab?password=test-pwd-1", 200);
     assertTrue("Output tab-delimited text is missing", outputString != null);
     assertEquals("Output tab-delimited text", "[abc, def, 123, true]\t{\"name\":\"John Doe\",\"address\":\"Here\",\"phone\":123}", outputString.trim());
+
+  }
+
+  @Test
+  public void testRunScript() throws Exception {
+    // Setup common info
+    String baseUrl = AgentAppServer.appServerApiBaseUrl;
+
+    // Create a test user
+    doPostJson(baseUrl + "/users?id=test-user-1&password=test-pwd-1", "{}", 201);
+
+    // Create one agent definition with some scripts (functions)
+    doPostJson(baseUrl + "/users/test-user-1/agent_definitions?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\"," +
+            "\"memory\": [" +
+            " {\"name\": \"p\", \"type\": \"int\", \"default_value\": 123}, " +
+            " {\"name\": \"q\", \"type\": \"float\", \"default_value\": 456.25}, " +
+            " {\"name\": \"r\", \"type\": \"string\", \"default_value\": \"abc\"}], " +
+            "\"scripts\": [" +
+            "  {\"name\": \"f\", \"script\": \"f(int x, int y){return x + y;}\", \"public\": true}, " +
+            "  {\"name\": \"g\", \"script\": \"g(object x, object y){return min(x, y);}\", \"public\": true}, " +
+            "  {\"name\": \"h\", \"script\": \"string h(object x, object y){return f(x, y) + ' ' + g(x, y);}\", \"public\": true}, " +
+            "  {\"name\": \"get_p\", \"script\": \"int get_p(){return p;}\", \"public\": true}, " +
+            "  {\"name\": \"set_p\", \"script\": \"int get_p(object new_p){return p = new_p;}\", \"public\": true}, " +
+            "  {\"name\": \"get_q\", \"script\": \"float get_q(){return q;}\", \"public\": true}, " +
+            "  {\"name\": \"get_r\", \"script\": \"string get_r(){return r;}\", \"public\": true} " +
+            "  ]}", 201);
+
+    // Instantiate the agent definition once
+    doPostJson(baseUrl + "/users/test-user-1/agents?password=test-pwd-1",
+        "{\"user\": \"Test-User\", \"name\": \"HelloWorld\", \"definition\": \"HelloWorld\"}", 201);
+    
+    // Call function and check return value
+    JSONObject returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/get_p?password=test-pwd-1", 200);
+    assertJsonSourceEquals("Return value JSON", "{\"return_value\": 123}", returnJson);
+
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/f?password=test-pwd-1&arg=98&arg=76", 200);
+    assertJsonSourceEquals("Return value JSON", "{\"return_value\": 174}", returnJson);
+
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/f?password=test-pwd-1&arg=98.125&arg=76.25", 200);
+    assertJsonSourceEquals("Return value JSON", "{\"return_value\": 174.375}", returnJson);
+
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/f?password=test-pwd-1&arg=false&arg=false", 200);
+    assertJsonSourceEquals("Return value JSON", "{\"return_value\": false}", returnJson);
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/f?password=test-pwd-1&arg=false&arg=true", 200);
+    assertJsonSourceEquals("Return value JSON", "{\"return_value\": true}", returnJson);
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/f?password=test-pwd-1&arg=true&arg=false", 200);
+    assertJsonSourceEquals("Return value JSON", "{\"return_value\": true}", returnJson);
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/f?password=test-pwd-1&arg=true&arg=true", 200);
+    assertJsonSourceEquals("Return value JSON", "{\"return_value\": true}", returnJson);
+
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/f?password=test-pwd-1&arg=%22abc%22&arg=%22def%22", 200);
+    assertJsonSourceEquals("Return value JSON", "{\"return_value\": \"abcdef\"}", returnJson);
+
+    // TODO: Test list and map arguments
+    
+    // Test wrong number of arguments
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/f?password=test-pwd-1&arg=98", 400);
+    assertJsonSourceEquals("Return value JSON", "{\"errors\": [{\"type\": \"com.basetechnology.s0.agentserver.AgentServerException\", \"message\": \"Incorrect number of arguments for function 'f' - expected 2 but got 1\"}]}", returnJson);
+
+    // Test call of user function that calls two other user functions
+    returnJson = doPutJson(baseUrl + "/users/test-user-1/agents/HelloWorld/run_script/h?password=test-pwd-1&arg=123&arg=456", 200);
+    assertJsonSourceEquals("Return value JSON", "{\"return_value\": \"579 123\"}", returnJson);
 
   }
   

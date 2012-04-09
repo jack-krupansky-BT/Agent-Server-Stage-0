@@ -31,4 +31,7 @@ public class TypeNode extends Node {
     return NullValue.one;
   }
 
+  public boolean isCompatibleType(TypeNode other){
+    return false;
+  }
 }

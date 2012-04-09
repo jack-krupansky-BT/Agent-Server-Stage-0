@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -310,6 +311,93 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
 
   public Value runListScript(String script, String expected) throws AgentServerException, TokenizerException, ParserException{
     Value value = runScript(script, "ListValue");
+    assertEquals("List return value", expected, value.toString());
+    return value;
+  }
+
+  public Value callFunction(String script, List<Value> arguments, String type) throws TokenizerException, ParserException, AgentServerException {
+    return callFunction(script, arguments, type, 0);
+  }
+
+  public Value callFunction(String script, List<Value> arguments, String type, int numExceptionsExpected) throws TokenizerException, ParserException, AgentServerException {
+    // Clear out old exceptions
+    dummyAgentInstance.exceptionHistory.clear();
+    
+    ScriptNode scriptNode = parser.parseScriptString(script);
+    assertTrue("Null was returned from script parser", scriptNode != null);
+    Value valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode, arguments);
+    
+    // Check for exceptions
+    List<ExceptionInfo> exceptions = dummyAgentInstance.exceptionHistory;
+    int numExceptions = exceptions.size();
+    String message = null;
+    String exceptionType = null;
+    if (numExceptions > 0){
+      message = exceptions.get(0).message;
+      exceptionType = exceptions.get(0).type;
+    }
+    if (numExceptions > 0 && numExceptionsExpected == 0)
+      fail("Unexpected exception: type: " + exceptionType + " message: " + message);
+    else
+      assertEquals("Number of exceptions that occurred" + (message != null ? "(last was '" + message + "')" : ""), numExceptionsExpected, numExceptions);
+    if (numExceptions == 0){
+      assertReturnedSomething(valueNode);
+      assertType("Returned", valueNode, type);
+    }
+    return valueNode;
+  }
+
+  public Value callNullFunction(String script, List<Value> arguments) throws AgentServerException, TokenizerException, ParserException{
+    return callNullFunction(script, arguments, 0);
+  }
+
+  public Value callNullFunction(String script, List<Value> arguments, int numExceptionsExpected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = callFunction(script, arguments, "NullValue", numExceptionsExpected);
+    return value;
+  }
+
+  public Value callBooleanFunction(String script, List<Value> arguments, boolean expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = callFunction(script, arguments, "BooleanValue");
+    assertEquals("Boolean return value", expected, value.getBooleanValue());
+    return value;
+  }
+
+  public Value callIntFunction(String script, List<Value> arguments, int expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = callFunction(script, arguments, "IntegerValue");
+    assertEquals("Integer return value", expected, value.getIntValue());
+    return value;
+  }
+
+  public Value callFloatFunction(String script, List<Value> arguments, double expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = callFunction(script, arguments, "FloatValue");
+    assertEquals("Float return value", expected, value.getFloatValue(), 0.0001);
+    return value;
+  }
+
+  public Value callStringFunction(String script, List<Value> arguments, String expected) throws AgentServerException, TokenizerException, ParserException{
+    return callStringFunction(script, arguments, expected, 0);
+  }
+
+  public Value callStringFunction(String script, List<Value> arguments, String expected, int numExceptionsExpected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = callFunction(script, arguments, "StringValue", numExceptionsExpected);
+    if (dummyAgentInstance.exceptionHistory.size() == 0)
+      assertEquals("String return value", expected, value.getStringValue());
+    return value;
+  }
+
+  public Value callMapFunction(String script, List<Value> arguments, String expected) throws AgentServerException, TokenizerException, ParserException{
+    return callMapFunction(script, arguments, expected, 0);
+  }
+
+  public Value callMapFunction(String script, List<Value> arguments, String expected, int numExceptionsExpected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = callFunction(script, arguments, "MapValue", numExceptionsExpected);
+    if (dummyAgentInstance.exceptionHistory.size() == 0)
+      assertEquals("Map return value", expected, value.toString());
+    return value;
+  }
+
+  public Value callListFunction(String script, List<Value> arguments, String expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = callFunction(script, arguments, "ListValue");
     assertEquals("List return value", expected, value.toString());
     return value;
   }
@@ -3798,8 +3886,6 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     evalBoolean("true && ! false", true);
     evalBoolean("true && ! true", false);
 
-    // TODO: ! int s.b. exception
-    // TODO: Move ! down in precedence to same as - and ~
     eval("! 1 > 2 && 1 > 2", "com.basetechnology.s0.agentserver.RuntimeException",
         "Operand of the logical NOT operator must be a boolean, but has type IntegerValue value: 1");
     evalBoolean("! (1 > 2) && 1 > 2", false);
@@ -3815,6 +3901,130 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
         "Operand of the logical NOT operator must be a boolean, but has type IntegerValue value: 1");
     evalBoolean("3 < 4 && ! (1 > 2)", true);
     evalBoolean("3 < 4 && ! (3 < 4)", false);
+
+  }
+
+  @Test
+  public void testObjectType() throws Exception {
+    runIntScript("object ob = 123; return ob;", 123);
+    runListScript("object ob = list(123, 456); return ob;", "[123, 456]");
+    runNullScript("object ob; return ob;");
+
+  }
+
+  @Test
+  public void testMinMax() throws Exception {
+    evalInt("min(123)", 123);
+    evalInt("min(123, 456)", 123);
+    evalInt("min(456, 123)", 123);
+    evalInt("min(123, 456, 789)", 123);
+    evalInt("min(789, 456, 123)", 123);
+    evalInt("min(789, 123, 456)", 123);
+
+    evalFloat("min(123.125)", 123.125);
+    evalFloat("min(123.125, 456.25)", 123.125);
+    evalFloat("min(456.25, 123.125)", 123.125);
+    evalFloat("min(123.125, 456.25, 789.5)", 123.125);
+    evalFloat("min(789.5, 456.25, 123.125)", 123.125);
+    evalFloat("min(789.5, 123.125, 456.25)", 123.125);
+
+    evalInt("max(123)", 123);
+    evalInt("max(123, 456)", 456);
+    evalInt("max(456, 123)", 456);
+    evalInt("max(123, 456, 789)", 789);
+    evalInt("max(789, 456, 123)", 789);
+    evalInt("max(456, 789, 123)", 789);
+
+    evalFloat("max(123.125)", 123.125);
+    evalFloat("max(123.125, 456.25)", 456.25);
+    evalFloat("max(456.25, 123.125)", 456.25);
+    evalFloat("max(123.125, 456.25, 789.5)", 789.5);
+    evalFloat("max(789.5, 456.25, 123.125)", 789.5);
+    evalFloat("max(456.25, 789.5, 123.125)", 789.5);
+
+  }
+
+  @Test
+  public void testSumAvg() throws Exception {
+    evalInt("sum(123)", 123);
+    evalInt("sum(123, 456)", 579);
+    evalInt("sum(123, 456, 789)", 1368);
+    evalInt("sum(456, 123, 789)", 1368);
+
+    evalFloat("sum(123.125)", 123.125);
+    evalFloat("sum(123.125, 456.25)", 579.375);
+    evalFloat("sum(123.125, 456.25, 789.5)", 1368.875);
+    evalFloat("sum(456.25, 123.125, 789.5)", 1368.875);
+
+    evalInt("avg(123)", 123);
+    evalInt("avg(123, 456)", 289);
+    evalInt("avg(123, 456, 789)", 456);
+    evalInt("avg(456, 123, 789)", 456);
+
+    evalFloat("avg(123.125)", 123.125);
+    evalFloat("avg(123.125, 456.25)", 289.6875);
+    evalFloat("avg(123.125, 456.25, 789.5)", 456.291666);
+    evalFloat("avg(456.25, 123.125, 789.5)", 456.291666);
+
+  }
+
+  @Test
+  public void testUserFunctionCall() throws Exception {
+    // Simple functions
+    callIntFunction("int f(int x, int y){return x + y;}",
+        Arrays.asList((Value)(new IntegerValue(123)), new IntegerValue(456)), 579);
+    callFloatFunction("float f(float x, float y){return x + y;}",
+        Arrays.asList((Value)(new FloatValue(123.125)), new FloatValue(456.25)), 579.375);
+    callFloatFunction("int f(int x, int y){return x + y;}",
+        Arrays.asList((Value)(new FloatValue(123.125)), new FloatValue(456.25)), 579.375);
+    callStringFunction("string f(string x, string y){return x + y;}",
+        Arrays.asList((Value)(new StringValue("abc")), new StringValue("def")), "abcdef");
+    
+    // Zero-arg functions
+    callIntFunction("int f(){return 123;}", null, 123);
+    callFloatFunction("int f(){return 123.25;}", null, 123.25);
+    callStringFunction("string f(){return 'abc';}", null, "abc");
+    
+    // No return type
+    callIntFunction("f(){return 123;}", null, 123);
+    callFloatFunction("f(){return 123.25;}", null, 123.25);
+    callStringFunction("f(){return 'abc';}", null, "abc");
+
+    // Use 'object' type for any type of arguments
+    callIntFunction("object f(object x, object y){return x + y;}",
+        Arrays.asList((Value)(new IntegerValue(123)), new IntegerValue(456)), 579);
+    callFloatFunction("object f(object x, object y){return x + y;}",
+        Arrays.asList((Value)(new FloatValue(123.125)), new FloatValue(456.25)), 579.375);
+    callStringFunction("object f(object x, object y){return x + y;}",
+        Arrays.asList((Value)(new StringValue("abc")), new StringValue("def")), "abcdef");
+    callStringFunction("object f(object x, object y){return x + y;}",
+        Arrays.asList((Value)(new StringValue("abc")), new IntegerValue(123)), "abc123");
+
+    // Pass a 'list' argument
+    ListValue listValue = new ListValue(IntegerTypeNode.one, Arrays.asList((Value)(
+        new IntegerValue(123)), new IntegerValue(456), new IntegerValue(789)));
+    callIntFunction("int f(list lst){return lst.min;}", Arrays.asList((Value)(listValue)), 123);
+    callIntFunction("int f(list lst){return lst.max;}", Arrays.asList((Value)(listValue)), 789);
+    callIntFunction("int f(list lst){return lst.sum();}", Arrays.asList((Value)(listValue)), 1368);
+    callIntFunction("int f(list lst){return lst.avg();}", Arrays.asList((Value)(listValue)), 456);
+    callIntFunction("int get(list lst, int i){return lst[i];}",
+        Arrays.asList((Value)(listValue), new IntegerValue(0)), 123);
+    callIntFunction("int get(list lst, int i){return lst[i];}",
+        Arrays.asList((Value)(listValue), new IntegerValue(1)), 456);
+    callIntFunction("int get(list lst, int i){return lst[i];}",
+        Arrays.asList((Value)(listValue), new IntegerValue(2)), 789);
+    callIntFunction("int add(list lst, int i, int j){return lst[i] + lst[j];}",
+        Arrays.asList((Value)(listValue), new IntegerValue(0), new IntegerValue(0)), 246);
+    callIntFunction("int add(list lst, int i, int j){return lst[i] + lst[j];}",
+        Arrays.asList((Value)(listValue), new IntegerValue(0), new IntegerValue(1)), 579);
+    callIntFunction("int add(list lst, int i, int j){return lst[i] + lst[j];}",
+        Arrays.asList((Value)(listValue), new IntegerValue(0), new IntegerValue(2)), 912);
+    callIntFunction("int add(list lst, int i, int j){return lst[i] + lst[j];}",
+        Arrays.asList((Value)(listValue), new IntegerValue(1), new IntegerValue(2)), 1245);
+    
+    // Eval a string passed as an argument
+    callIntFunction("int evalx(string expr){return eval(expr);}",
+        Arrays.asList((Value)(new StringValue("2 * 7"))), 14);
 
   }
   

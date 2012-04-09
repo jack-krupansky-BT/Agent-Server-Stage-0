@@ -19,6 +19,8 @@ package com.basetechnology.s0.agentserver.script.runtime.value;
 import java.util.List;
 
 import com.basetechnology.s0.agentserver.RuntimeException;
+import com.basetechnology.s0.agentserver.script.intermediate.IntegerTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
 import com.basetechnology.s0.agentserver.util.DateUtils;
 
@@ -29,6 +31,10 @@ public class IntegerValue extends NumberValue {
   
   public IntegerValue(long value){
     this.value = value;
+  }
+
+  public TypeNode getType(){
+    return IntegerTypeNode.one;
   }
 
   public Value clone(){
@@ -75,6 +81,14 @@ public class IntegerValue extends NumberValue {
       return new FloatValue(Math.sqrt(this.getFloatValue()));
     else
       return super.getMethodValue(scriptState, name, arguments);
+  }
+
+  public Value add(Value otherValue){
+    return new IntegerValue(value + otherValue.getLongValue());
+  }
+
+  public Value divide(int divisor){
+    return new IntegerValue(value / divisor);
   }
 
   public int compareValue(Value otherValue){

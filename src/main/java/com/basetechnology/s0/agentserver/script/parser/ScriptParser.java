@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.basetechnology.s0.agentserver.AgentInstance;
+import com.basetechnology.s0.agentserver.field.FieldList;
 import com.basetechnology.s0.agentserver.script.intermediate.AddNode;
 import com.basetechnology.s0.agentserver.script.intermediate.AssignmentNode;
 import com.basetechnology.s0.agentserver.script.intermediate.AssignmentStatementNode;
@@ -146,6 +147,7 @@ import com.basetechnology.s0.agentserver.script.runtime.value.NowValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.NullValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.StringValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.TrueValue;
+import com.basetechnology.s0.agentserver.util.ListMap;
 
 public class ScriptParser {
   public AgentInstance agentInstance;
@@ -211,6 +213,55 @@ public class ScriptParser {
   }
 
   public ScriptNode parseScript() throws ParserException {
+    // Check for optional function header
+    int startPosition = tokens.getPosition();
+    boolean lastTokenWasName = false;
+    while (true){
+      // Looking for initial left parenthesis following a name
+      Token token = tokens.get();
+      if (token instanceof EndToken || token instanceof LeftBraceOperatorToken)
+        // Oops, went too far - no function header present
+        break;
+      if (token instanceof IdentifierToken)
+        lastTokenWasName = true;
+      else if (token instanceof LeftParenthesisOperatorToken){
+        if (! lastTokenWasName)
+          // Oops, not a function header
+          break;
+        
+        // Saw a possible function name and '('; scan for matching ')'
+        int parenthesisLevel = 1;
+        while (true){
+          token = tokens.getNext();
+          if (token instanceof LeftParenthesisOperatorToken)
+            parenthesisLevel++;
+          else if (token instanceof RightParenthesisOperatorToken){
+            if (--parenthesisLevel == 0){
+              // Hit the matching ')' for the possible function header
+              token = tokens.getNext();
+              if (token instanceof LeftBraceOperatorToken){
+                // Bingo, this actually looks like a function header; reset position and parse it
+                tokens.setPosition(startPosition);
+                return parseFunction();
+              } else
+                // Definitely not a function header; presume it is a simple script
+                break;
+            }
+          } else if (token instanceof EndToken)
+            // Oops, not a function header
+            break;
+        }
+        
+        // If we got here, then this definitely is not a function header
+        break;
+      } else
+        lastTokenWasName = false;
+      tokens.skipToken();
+    }
+
+    // No function header; restart token scan from the beginning
+    tokens.setPosition(startPosition);
+    
     // Parse the Script
     BlockStatementNode blockNode = parseBlockBody();
 
@@ -224,6 +275,98 @@ public class ScriptParser {
     return scriptNode;
   }
 
+  public ScriptNode parseFunction() throws ParserException {
+    // Parse the function header
+    // Parse the optional return type before function name
+    Token token = tokens.get();
+    TypeNode returnType = null;
+    if (token instanceof TypeKeywordToken)
+      returnType = parseType();
+    token = tokens.get();
+    
+    // Parse the function name
+    if (! (token instanceof IdentifierToken)) 
+        throw new ParserException("Expected function name but found " + token.getClass().getSimpleName());
+    String functionName = ((IdentifierToken)token).identifier;
+    token = tokens.getNext();
+
+    // Save previous block state
+    String savedBlockCategoryName = blockCategoryName;
+    List<Symbol> savedLocalVariables = localVariables;
+    Map<String, Symbol> savedLocalVariableMap = localVariableMap;
+
+    // Start a new symbol category for this function
+    blockCategoryName = "parameters-" + functionName;
+
+    // Keep track of local variables
+    localVariables = new ArrayList<Symbol>();
+    localVariableMap = new HashMap<String, Symbol>();
+
+    // Parse the function parameter list
+    ListMap<String, Symbol> parameters = new ListMap<String, Symbol>();
+    if (! (token instanceof LeftParenthesisOperatorToken))
+      throw new ParserException("Expected '(' after function name but found " + token.getClass().getSimpleName());
+    while (true){
+      // Check for end of function parameter list
+      token = tokens.getNext();
+      if (token instanceof RightParenthesisOperatorToken){
+        // ')' signals end of function parameter list
+        token = tokens.getNext();
+        break;
+      }
+      
+      // Parse parameter type
+      if (! (token instanceof TypeKeywordToken))
+        throw new ParserException("Expected parameter type or ')' but found " + token.getClass().getSimpleName());
+      TypeNode parameterType = parseType();
+      
+      // Parse parameter name
+      token = tokens.get();
+      if (! (token instanceof IdentifierToken)) 
+        throw new ParserException("Expected function parameter name but found " + token.getClass().getSimpleName());
+      String parameterName = ((IdentifierToken)token).identifier;
+      token = tokens.getNext();
+
+      Symbol parameterSymbol = null;
+      try {
+        parameterSymbol = blockSymbolManager.put(blockCategoryName, parameterName, parameterType);
+      } catch (SymbolException e){
+        throw new ParserException("Parser Exception: " + e.getMessage());
+      }
+      localVariableMap.put(parameterName, parameterSymbol);
+      localVariables.add(parameterSymbol);
+      parameters.put(parameterName, parameterSymbol);
+      
+      // Parse the comma for parameter list
+      if (token instanceof CommaOperatorToken)
+        continue;
+        //token = tokens.getNext();
+      else if (token instanceof RightParenthesisOperatorToken){
+        // ')' signals end of function parameter list
+        token = tokens.getNext();
+        break;
+      } else
+        throw new ParserException("Expected ',' to continue or ')' to end function parameter list but found " + token.getClass().getSimpleName());
+    }
+
+    // Parse the function body
+    if (! (token instanceof LeftBraceOperatorToken))
+      throw new ParserException("Expected '{' to start block statement but found " + token.getClass().getSimpleName());
+    BlockStatementNode blockStatementNode = parseBlockStatement(); 
+
+    // Generate the script node
+    ScriptNode scriptNode = new ScriptNode(returnType, functionName, parameters, blockStatementNode);
+
+    // Restore previous block state
+    // TODO: Put this in try finally
+    blockSymbolManager.removeCategory(blockCategoryName);
+    blockCategoryName = savedBlockCategoryName;
+    localVariables = savedLocalVariables;
+    localVariableMap = savedLocalVariableMap;
+
+    return scriptNode;
+  }
+
   protected BlockStatementNode parseBlockStatement() throws ParserException {
     BlockStatementNode blockNode = null;
 
@@ -234,7 +377,7 @@ public class ScriptParser {
 
     Token token = tokens.get();
     if (! (token instanceof RightBraceOperatorToken))
-      throw new ParserException("Expected '{' to start block statement but found " + token.getClass().getSimpleName());
+      throw new ParserException("Expected '}' to end block statement but found " + token.getClass().getSimpleName());
     tokens.getNext();
 
     return blockNode;

@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -318,5 +319,32 @@ public class HandleHttp {
         log.info("Unable to format output for response - " + e.getMessage());
       }
     }
+  }
+
+  public void handleException(int statusCode, Exception e) throws IOException {
+    // TODO: This should use common code with similar method in AppServer
+    Request request = httpInfo.request;
+    HttpServletResponse response = httpInfo.response;
+    String type = e.getClass().getName();
+    String message = e.getMessage();
+    log.error("Logger: " + message, e);
+    log.info(type + ": " + e);
+    e.printStackTrace();
+    JSONObject errorsObjectJson = new JSONObject();
+    JSONArray errorsArrayJson = new JSONArray();
+    JSONObject errorJson = new JSONObject();
+    try {
+      errorJson.put("type", type);
+      errorJson.put("message", message);
+      errorsArrayJson.put(errorJson);
+      errorsObjectJson.put("errors", errorsArrayJson);
+      (httpInfo.handleHttp == null ? new HandleGet(httpInfo) : httpInfo.handleHttp).setOutput(errorsObjectJson);
+    } catch (JSONException e1){
+      // Not sure what we can do, but fall back to raw JSON
+      response.getWriter().println("{\"errors\": [{\"type\": \"" + type + "\", \"message\": \"" + message + "\"}]}");
+    }
+    response.setStatus(statusCode);
+    response.setContentType("application/" + type + "; charset=utf-8");
+    ((Request)request).setHandled(true);
   }
 }

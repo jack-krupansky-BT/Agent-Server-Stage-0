@@ -16,6 +16,9 @@
 
 package com.basetechnology.s0.agentserver.appserver;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
@@ -30,6 +33,11 @@ import com.basetechnology.s0.agentserver.ScriptDefinition;
 import com.basetechnology.s0.agentserver.User;
 import com.basetechnology.s0.agentserver.notification.NotificationInstance;
 import com.basetechnology.s0.agentserver.scheduler.AgentScheduler;
+import com.basetechnology.s0.agentserver.script.runtime.ExceptionInfo;
+import com.basetechnology.s0.agentserver.script.runtime.value.StringValue;
+import com.basetechnology.s0.agentserver.script.runtime.value.Value;
+import com.basetechnology.s0.agentserver.util.JsonUtils;
+import com.basetechnology.s0.agentserver.util.StringUtils;
 
 public class HandlePut extends HandleHttp {
   static final Logger log = Logger.getLogger(HandlePut.class);
@@ -338,6 +346,18 @@ public class HandlePut extends HandleHttp {
       String agentName = pathParts[4];
       String scriptName = pathParts[6];
 
+      // Capture and convert the arguments to be passed to the script
+      List<Value> arguments = new ArrayList<Value>();
+      String [] argumentStrings = request.getParameterValues("arg");
+      if (argumentStrings != null){
+        int numArgs = argumentStrings.length;
+        for (int i = 0; i < numArgs; i++){
+          String argumentString = argumentStrings[i];
+          Value argumentValue = JsonUtils.parseJson(argumentString);
+          arguments.add(argumentValue);
+        }
+      }
+      
       if (agentName == null)
         throw new AgentAppServerBadRequestException("Missing agent instance name path parameter");
       if (agentName.trim().length() == 0)
@@ -361,10 +381,20 @@ public class HandlePut extends HandleHttp {
       AgentInstance agent = agentMap.get(agentName);
 
       // Call the script
-      agent.runScript(scriptName);
-      
-      // Done
-      response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+      List<ExceptionInfo> exceptions = agent.exceptionHistory;
+      int numExceptions = exceptions.size();
+      Value returnValue = agent.runScript(scriptName, arguments);
+
+      // Check for exceptions
+      int numExceptionsAfter = exceptions.size();
+      if (numExceptions != numExceptionsAfter)
+        handleException(400, exceptions.get(numExceptions).exception);
+      else {
+        // Done; successful
+        JSONObject returnValueObject = new JSONObject();
+        returnValueObject.put("return_value", returnValue.toJsonObject());
+        setOutput(returnValueObject);
+      }
     } else {
       throw new AgentAppServerException(HttpServletResponse.SC_NOT_FOUND, "Path does not address any existing object");
     }

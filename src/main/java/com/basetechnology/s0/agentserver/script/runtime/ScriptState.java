@@ -28,6 +28,7 @@ import com.basetechnology.s0.agentserver.script.intermediate.Node;
 import com.basetechnology.s0.agentserver.script.intermediate.ScriptNode;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
+import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.value.NullValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 
@@ -94,5 +95,9 @@ public class ScriptState {
     nodeExecutionCount++;
     if (nodeExecutionCount > nodeExecutionLimit)
       throw new NodeExecutionLimitException(((node instanceof ScriptNode) ? "Script " + scriptName : "Non-script") + " has excceded operation execution limit of " + nodeExecutionLimit + " operations");
+  }
+
+  public ScriptNode get(String functionName, List<TypeNode> argumentTypes){
+    return agentInstance.get(functionName, argumentTypes);
   }
 }

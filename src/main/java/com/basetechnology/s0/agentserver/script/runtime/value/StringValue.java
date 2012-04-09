@@ -28,6 +28,7 @@ import org.apache.log4j.Logger;
 
 import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
 import com.basetechnology.s0.agentserver.util.JsonUtils;
 import com.basetechnology.s0.agentserver.util.StringUtils;
@@ -44,6 +45,10 @@ public class StringValue extends Value {
   
   public StringValue(String value){
     this.value = value;
+  }
+
+  public TypeNode getType(){
+    return StringTypeNode.one;
   }
 
   public Value getDefaultValue(){

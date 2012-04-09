@@ -1,0 +1,23 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Some Details about the Base Technology Software Agent Server
+
+- Written in 100% Java
+- An "app server" based on Embedded Jetty
+- Uses port 8980, but that can be configured in agentserver.properties
+- Most default configuration settings can be overridden in the agentserver.properties file
+- 100% open source, licensed under the Apache License, Version 2.0
+- Experimental, not really ready for prime-time
+- Designed for low-volume experiments, not quite ready to scale
+- Persistent store is a fully custom JSON-based text file "database"
+ - Any number of tables
+  - Each is a simple key/value store
+   - Any number of keys
+    - Key is any length string
+    - Value is any length string
+     - Typically, expected to be JSON
+     - But can be an text value
+
+.
+ 

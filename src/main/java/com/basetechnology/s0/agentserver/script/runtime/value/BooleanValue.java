@@ -19,6 +19,8 @@ package com.basetechnology.s0.agentserver.script.runtime.value;
 import java.util.List;
 
 import com.basetechnology.s0.agentserver.RuntimeException;
+import com.basetechnology.s0.agentserver.script.intermediate.BooleanTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
 
 public class BooleanValue extends Value {
@@ -28,6 +30,10 @@ public class BooleanValue extends Value {
       return TrueValue.one;
     else
       return FalseValue.one;
+  }
+
+  public TypeNode getType(){
+    return BooleanTypeNode.one;
   }
   
   public Object getValue(){
@@ -56,6 +62,10 @@ public class BooleanValue extends Value {
 
   public Value getMethodValue(ScriptState scriptState, String name, List<Value> arguments) throws RuntimeException {
       return super.getMethodValue(scriptState, name, arguments);
+  }
+
+  public Value add(Value otherValue){
+    return BooleanValue.create(getBooleanValue()|| otherValue.getBooleanValue());
   }
   
   public String toString(){

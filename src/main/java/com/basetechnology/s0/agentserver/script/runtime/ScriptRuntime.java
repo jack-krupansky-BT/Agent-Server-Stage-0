@@ -16,6 +16,9 @@
 
 package com.basetechnology.s0.agentserver.script.runtime;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.basetechnology.s0.agentserver.AgentInstance;
 import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.script.intermediate.ExpressionNode;
@@ -47,6 +50,10 @@ public class ScriptRuntime {
   }
 
   public Value runScript(String scriptName, ScriptNode scriptNode) throws AgentServerException {
+    return runScript(scriptName, scriptNode, new ArrayList<Value>());
+  }
+
+  public Value runScript(String scriptName, ScriptNode scriptNode, List<Value> argumentValues) throws AgentServerException {
     // Create new state for the script execution
     ScriptState scriptState = new ScriptState(this, scriptName, scriptNode);
     
@@ -54,7 +61,7 @@ public class ScriptRuntime {
     // TODO: Do this in a separate thread
     try {
     if (scriptNode != null)
-      scriptNode.run(scriptState);
+      scriptNode.run(scriptState, argumentValues);
     } catch (Exception e){
       e.printStackTrace();
       agentInstance.exceptionHistory.add(new ExceptionInfo(e, scriptName));

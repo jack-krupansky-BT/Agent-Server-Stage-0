@@ -42,4 +42,8 @@ public class ListTypeNode extends TypeNode {
   public String toString(){
     return "list<" + elementType.toString() + ">";
   }
+
+  public boolean isCompatibleType(TypeNode other){
+    return other instanceof ListTypeNode || other.getClass() == ObjectTypeNode.class;
+  }
 }

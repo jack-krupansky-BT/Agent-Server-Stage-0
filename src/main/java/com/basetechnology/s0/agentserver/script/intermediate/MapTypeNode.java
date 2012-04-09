@@ -46,4 +46,8 @@ public class MapTypeNode extends TypeNode {
     return "map<" + keyType.toString() + ", " + entryType.toString() + ">";
   }
 
+  public boolean isCompatibleType(TypeNode other){
+    return other instanceof MapTypeNode || other.getClass() == ObjectTypeNode.class;
+  }
+
 }

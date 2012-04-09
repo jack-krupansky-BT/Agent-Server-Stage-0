@@ -30,4 +30,8 @@ public class WebTypeNode extends TypeNode {
     return "web";
   }
 
+  public boolean isCompatibleType(TypeNode other){
+    return other instanceof WebTypeNode || other.getClass() == ObjectTypeNode.class;
+  }
+
 }

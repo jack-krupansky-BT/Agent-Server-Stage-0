@@ -30,7 +30,10 @@ import org.apache.log4j.Logger;
 import com.basetechnology.s0.agentserver.AgentServer;
 import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.appserver.AgentAppServer;
+import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.WebTypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessManager;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebPage;
@@ -40,6 +43,10 @@ public class WebValue extends Value {
   public boolean wait = true;
 
   public WebValue(){
+  }
+
+  public TypeNode getType(){
+    return WebTypeNode.one;
   }
 
   public Object getValue(){

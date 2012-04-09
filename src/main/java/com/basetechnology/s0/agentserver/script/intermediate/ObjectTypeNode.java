@@ -22,4 +22,9 @@ public class ObjectTypeNode extends TypeNode {
   public String toString(){
     return "object";
   }
+
+  public boolean isCompatibleType(TypeNode other){
+    // 'object' is compatible with any type
+    return true;
+  }
 }

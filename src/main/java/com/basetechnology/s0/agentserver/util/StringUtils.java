@@ -29,4 +29,24 @@ public class StringUtils {
       return s.substring(0, i) + removeCommas(s.substring(i + 1));
   }
 
+  static public String parseQuotedString(String quotedString){
+    if (quotedString == null)
+      return null;
+    int len = quotedString.length();
+    if (len == 0)
+      return quotedString;
+    if (quotedString.charAt(0) == '"'){
+      StringBuilder sb = new StringBuilder();
+      for (int i = 1; i < len; i++){
+        char ch = quotedString.charAt(i);
+        if (ch == '"')
+          break;
+        else if (ch == '\\')
+          ch = quotedString.charAt(++i);
+        sb.append(ch);
+      }
+      return sb.toString();
+    } else
+      return quotedString;
+  }
 }

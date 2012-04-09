@@ -16,6 +16,7 @@
 
 package com.basetechnology.s0.agentserver.script.intermediate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.basetechnology.s0.agentserver.AgentServerException;
@@ -38,10 +39,14 @@ public class FunctionCallNode extends ExpressionNode {
   public Value evaluateExpression(ScriptState scriptState) throws AgentServerException {
     scriptState.countNodeExecutions();
     int numArgs = argumentList.size();
-    if (functionName.equals("sqrt") && numArgs == 1){
-      Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
-      double value = Math.sqrt(arg1.getDoubleValue(scriptState));
-      return new FloatValue(value);
+
+    if (functionName.equals("avg") && numArgs >= 1){
+      Value sumValue = argumentList.get(0).evaluateExpression(scriptState);
+      for (int i = 1; i < numArgs; i++){
+        Value nextValue = argumentList.get(i).evaluateExpression(scriptState);
+        sumValue = sumValue.add(nextValue);
+      }
+      return sumValue.divide(numArgs);
     } if (functionName.equals("centuries") && numArgs == 1){
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);
@@ -63,10 +68,26 @@ public class FunctionCallNode extends ExpressionNode {
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);
       return new IntegerValue((long)(value * 60 * 60 * 1000));
+    } if (functionName.equals("max") && numArgs >= 1){
+      Value maxValue = argumentList.get(0).evaluateExpression(scriptState);
+      for (int i = 1; i < numArgs; i++){
+        Value nextValue = argumentList.get(i).evaluateExpression(scriptState);
+        if (nextValue.compareValue(maxValue) > 0)
+          maxValue = nextValue;
+      }
+      return maxValue;
     } if (functionName.equals("minutes") && numArgs == 1){
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);
       return new IntegerValue((long)(value * 60 * 1000));
+    } if (functionName.equals("min") && numArgs >= 1){
+      Value minValue = argumentList.get(0).evaluateExpression(scriptState);
+      for (int i = 1; i < numArgs; i++){
+        Value nextValue = argumentList.get(i).evaluateExpression(scriptState);
+        if (nextValue.compareValue(minValue) < 0)
+          minValue = nextValue;
+      }
+      return minValue;
     } if (functionName.equals("months") && numArgs == 1){
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);
@@ -91,6 +112,17 @@ public class FunctionCallNode extends ExpressionNode {
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);
       return new IntegerValue((long)(value * 1000));
+    } else if (functionName.equals("sqrt") && numArgs == 1){
+      Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
+      double value = Math.sqrt(arg1.getDoubleValue(scriptState));
+      return new FloatValue(value);
+    } if (functionName.equals("sum") && numArgs >= 1){
+      Value sumValue = argumentList.get(0).evaluateExpression(scriptState);
+      for (int i = 1; i < numArgs; i++){
+        Value nextValue = argumentList.get(i).evaluateExpression(scriptState);
+        sumValue = sumValue.add(nextValue);
+      }
+      return sumValue;
     } if (functionName.equals("weeks") && numArgs == 1){
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);
@@ -103,12 +135,26 @@ public class FunctionCallNode extends ExpressionNode {
         // Ignore the exception
       }
       return NullValue.one;
-
     } if (functionName.equals("years") && numArgs == 1){
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = Math.sqrt(arg1.getDoubleValue(scriptState));
       return new IntegerValue((long)(value * 365 * 24 * 60 * 60 * 1000));
-    } else
-      throw new RuntimeException("Unknown function: " + functionName + " with " + numArgs + " arguments");
+    } else {
+      // Check for user-defined functions
+      List<Value> argumentValues = new ArrayList<Value>();
+      List<TypeNode> argumentTypes = new ArrayList<TypeNode>();
+      for (ExpressionNode argumentNode: argumentList){
+        Value argumentValue = argumentNode.evaluateExpression(scriptState);
+        argumentValues.add(argumentValue);
+        TypeNode argumentType = argumentValue.getType();
+        argumentTypes.add(argumentType);
+      }
+      ScriptNode scriptNode = scriptState.get(functionName, argumentTypes);
+      if (scriptNode != null){
+        Value valueNode = scriptState.scriptRuntime.runScript(functionName, scriptNode, argumentValues);
+        return valueNode;
+      } else
+        throw new RuntimeException("Unknown function: " + functionName + " with " + numArgs + " arguments");
+    }
   }
 }

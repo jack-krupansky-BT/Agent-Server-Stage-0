@@ -47,10 +47,12 @@ import com.basetechnology.s0.agentserver.script.intermediate.SymbolException;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolManager;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolTable;
 import com.basetechnology.s0.agentserver.script.intermediate.SymbolValues;
+import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.parser.ParserException;
 import com.basetechnology.s0.agentserver.script.parser.ScriptParser;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenizerException;
 import com.basetechnology.s0.agentserver.script.runtime.ExceptionInfo;
+import com.basetechnology.s0.agentserver.script.runtime.ParsedScripts;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptRuntime;
 import com.basetechnology.s0.agentserver.script.runtime.value.FieldValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.MapValue;
@@ -98,6 +100,7 @@ public class AgentInstance {
   public ScriptRuntime scriptRuntime;
   public SymbolManager symbolManager;
   public Map<String, SymbolValues> categorySymbolValues;
+  public ParsedScripts parsedScripts;
   public boolean scheduledInit;
   public boolean ranInit;
   public List<AgentInstance> dependentInstances;
@@ -197,6 +200,7 @@ public class AgentInstance {
     this.lastTriggerReady = 0;
     this.lastTriggered = 0;
     this.scriptRuntime = new ScriptRuntime(this);
+    this.parsedScripts = new ParsedScripts();
     this.outputHistory = new OutputHistory();
     this.exceptionHistory = new ArrayList<ExceptionInfo>();
     // TODO: How to default this:
@@ -208,9 +212,14 @@ public class AgentInstance {
     
     if (! update && ! check)
       this.enabled = false;
-    
+
+    // Build the symbol manager
     if (! update || check)
       buildSymbols();
+
+    // Pre-parse scripts (especially functions)
+    if (! update && ! check)
+    parseScripts();
 
     // Set initial state for instance.
 
@@ -647,6 +656,14 @@ public class AgentInstance {
   }
   
   public Value runScript(String scriptName, boolean captureInputs) throws TokenizerException, ParserException, SymbolException, RuntimeException, JSONException, AgentServerException {
+    return runScript(scriptName, null, captureInputs);
+  }
+  
+  public Value runScript(String scriptName, List<Value> arguments) throws TokenizerException, ParserException, SymbolException, RuntimeException, JSONException, AgentServerException {
+    return runScript(scriptName, arguments, true);
+  }
+  
+  public Value runScript(String scriptName, List<Value> arguments, boolean captureInputs) throws TokenizerException, ParserException, SymbolException, RuntimeException, JSONException, AgentServerException {
     // Reset script status
     scriptStartTime.put(scriptName, null);
     scriptEndTime.put(scriptName, null);
@@ -681,7 +698,7 @@ public class AgentInstance {
 
     // Run the compiled script
     scriptStatus.put(scriptName, "running");
-    Value valueNode = scriptRuntime.runScript(scriptName, scriptNode);
+    Value valueNode = scriptRuntime.runScript(scriptName, scriptNode, arguments);
     scriptStatus.put(scriptName, "ran");
 
     // Record the script return value, if any
@@ -1283,5 +1300,27 @@ public class AgentInstance {
       AgentInstance agentInstance = dataSourceInstances.get(dsr);
       agentInstance.deReference(this);
     }
+  }
+  
+  public void parseScripts() throws AgentServerException {
+    parsedScripts.clear();
+    if (agentDefinition != null && agentDefinition.scripts != null)
+      for (NameValue<ScriptDefinition> scriptDefinitionNameValue: agentDefinition.scripts){
+        ScriptDefinition scriptDefinition = scriptDefinitionNameValue.value;
+        ScriptParser parser = new ScriptParser(this);
+        String script = agentDefinition.scripts.get(scriptDefinition.name).script;
+        try {
+          ScriptNode scriptNode = parser.parseScriptString(script);
+          parsedScripts.add(scriptNode);
+        } catch (TokenizerException e){
+          throw new AgentServerException("TokenizerException: " + e.getMessage());
+        } catch (ParserException e){
+          throw new AgentServerException("TokenizerException: " + e.getMessage());
+        }
+      }
+  }
+
+  public ScriptNode get(String functionName, List<TypeNode> argumentTypes){
+    return parsedScripts.get(functionName, argumentTypes);
   }
 }

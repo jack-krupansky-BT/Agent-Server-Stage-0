@@ -1,0 +1,80 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Fields and Variables
+
+Like Java, the scripting language uses the terms "field" and "variable" in a semi-interchangeable and
+confusing manner. To be clear, all fields are technically variables.
+
+There are a number of "categories" of fields (variables):
+
+ - parameter - for the overall agent (not function parameters)
+ - input
+ - memory
+ - scratchpad
+ - output
+ - local variables, AKA block variables
+ 
+Field names need only be unique within their category.
+ 
+Provided that a field name is unique across all categories, its simple name can be used in script
+references.
+ 
+But if a field name is defined in multiple categories, its name must be qualified by the category
+name using the usual Java dot notation in any script references. For example, "output.x = memory.x".
+
+The input category is a little odd in that its "fields" are the names associated with the various
+agents which are inputs to the current agent. Each of those agents then in turn has a collection of
+output fields which are in turn represented as a map for each input listed for the current agent.
+In other words, we have a two-level hierarchy of names for the input category. Schematically, a
+reference to an input "field" has the form "input.<input-name>.<field-name>". Note that there is
+an implicit map for each input, so one can assign the full map to a memory field and then access
+individual field values without the cumbersome qualification. For example, if x is a memory field
+which is uniquely named:
+
+  x = input.agent_Xyz; y = x.field1; z = x.field2
+
+Note that the name for an input is arbitrary and distinct from the actual name of the agent. It is
+essentially a shorthand or convenience. In essence, it is a logical name for the agent, independent
+of its actual name.
+
+Local or block variables behave similar to Java except that they are automatically initialized to a
+value of their declared type, including an empty list or empty map for the list and map types. They
+can of course be initialized explicitly in their declarations using assignment of literals, but no
+'new' operator is needed for list and map values, similar to JavaScript (but not Java.)
+
+Field Attributes
+----------------
+
+Each field has a number of attributes, some of which depend on the "type" of the field, but all fields
+have at least three common attributes:
+
+ - Name - Java/C/C++ conventions for name
+ - Description - English prose description of purpose of field
+ - Type
+  - object - any type
+  - boolean
+  - int or integer (or long, short, or byte, but all treated as 'int')
+  - float or double (treated as float)
+  - string or char (treated as string)
+  - list' or list<element-type>
+  - map or map<string, element-type> or map<element-type>
+  - web
+  - date (not fully supported yet - but string and int forms of data are supported)
+  - money (not fully supported yet)
+ - default value - optional
+  - If not specified, the default value will be dependent on type
+   - zero for numbers
+   - empty string for strings
+   - empty list for list
+   - empty map for map
+   - empty web object for web
+  - Other attributes based on type and to be used by UI for querying user for parameter values
+   - For numbers (int, float)
+    - minimum and maximum value
+   - For strings
+    - minimum and maximum length
+    - nominal width for text entry box in UI
+   - TBD - other
+
+.

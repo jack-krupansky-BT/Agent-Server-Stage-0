@@ -88,4 +88,13 @@ and REST API web services. A very rich set of functions and methods are already 
 language and its runtime, especially with the flexibility of the built-in list and map types. Over time
 additional types and functions will be added as their need becomes apparent.
 
+User-defined functions are supported within an agent. Unlike normal scripts which are Java-style blocks
+without the enclosing braces, a user-defined function has something very similar to the function header
+and block block syntax of Java.
+
+The developer of an agent may optionally decide that selected scripts and functions are to be "public",
+which means that they can be called directly using the REST API. This presumes that the user provides
+the proper user ID and password, so this feature should be reasonably secure. And, of course, the
+developer can opt to make none of the scripts or functions public for maximum security.
+ 
 .

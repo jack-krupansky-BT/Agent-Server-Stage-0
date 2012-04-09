@@ -29,4 +29,8 @@ public class StringTypeNode extends TypeNode {
   public String toString(){
     return "string";
   }
+
+  public boolean isCompatibleType(TypeNode other){
+    return other instanceof StringTypeNode || other.getClass() == ObjectTypeNode.class;
+  }
 }

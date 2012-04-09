@@ -29,4 +29,8 @@ public class BooleanTypeNode extends TypeNode {
   public String toString(){
     return "boolean";
   }
+
+  public boolean isCompatibleType(TypeNode other){
+    return other instanceof BooleanTypeNode;
+  }
 }

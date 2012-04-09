@@ -24,6 +24,7 @@ import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.RuntimeException;
 import com.basetechnology.s0.agentserver.script.intermediate.ExpressionNode;
 import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
+import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
 
 public class Value extends ExpressionNode {
@@ -121,6 +122,14 @@ public class Value extends ExpressionNode {
     throw new RuntimeException("Subscripting assignment is not supported for value of type " + getTypeString());
   }
 
+  public Value add(Value otherValue){
+    return otherValue;
+  }
+
+  public Value divide(int divisor){
+    return NullValue.one;
+  }
+  
   public int compareValue(Value otherValue){
     // Shouldn't get here
     // TODO: Maybe this should throw an exception
@@ -152,6 +161,10 @@ public class Value extends ExpressionNode {
     return "";
   }
 
+  public TypeNode getType(){
+    return ObjectTypeNode.one;
+  }
+  
   public String getTypeString(){
     return "<value-node>";
   }

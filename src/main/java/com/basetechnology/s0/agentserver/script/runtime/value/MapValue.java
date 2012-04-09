@@ -23,6 +23,7 @@ import org.json.JSONObject;
 
 import com.basetechnology.s0.agentserver.AgentServerException;
 import com.basetechnology.s0.agentserver.RuntimeException;
+import com.basetechnology.s0.agentserver.script.intermediate.MapTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.ObjectTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
@@ -51,6 +52,10 @@ public class MapValue extends Value {
         newValueMap.put(fieldValueNode.fieldName, fieldValueNode.valueNode);
     }
     this.value = newValueMap;
+  }
+
+  public TypeNode getType(){
+    return MapTypeNode.one;
   }
 
   public Object getValue(){

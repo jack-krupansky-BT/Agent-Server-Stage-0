@@ -93,6 +93,8 @@ public class JsonUtils {
       return NullValue.one;
     String sTrim = s.trim();
     int len = s.length();
+    if (len == 0)
+      return NullValue.one;
     char ch = len < 1 ? 0 : sTrim.charAt(0);
     try {
     if (ch == '['){
@@ -101,8 +103,32 @@ public class JsonUtils {
     } else if (ch == '{'){
       JSONObject objectJson = new JSONObject(s);
       return convertJsonObject(objectJson);
-    } else
-      throw new RuntimeException("parseJson exception - JSON text must start with '{' or '[', but starts with '" + ch + "'");
+    } else {
+      // Must be a simple Java object
+      // Check for boolean
+      if (s.equalsIgnoreCase("true"))
+        return BooleanValue.create(true);
+      else if (s.equalsIgnoreCase("false"))
+        return BooleanValue.create(false);
+      
+      // Check for string
+      if (len > 1 && s.charAt(0) == '"')
+        return new StringValue(StringUtils.parseQuotedString(s));
+
+      // Try for an integer
+      try {
+        long longInteger = Long.parseLong(s);
+        return new IntegerValue(longInteger);
+      } catch (NumberFormatException e){
+        // Try for a real number
+        try {
+          double doubleFloat = Double.parseDouble(s);
+          return new FloatValue(doubleFloat);
+        } catch (NumberFormatException e1){
+          throw new RuntimeException("parseJson exception - string is not a valid JSON value: '" + s + "'");
+        }
+      }
+    }
     } catch (Exception e){
       throw new RuntimeException("parseJson exception: " + e.getMessage());
     }
