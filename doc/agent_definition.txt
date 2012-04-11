@@ -1,0 +1,154 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Agent Definition for the Base Technology Software Agent Server
+
+A software agent for the Base Technology Software Agent Server is defined using JSON via the REST API.
+
+An agent definition is a collection of attribute or property values, some of which may be strings, some
+of which are simple names or keywords and some of which are free-form descriptive text, numbers,
+expressions (written as strings), or lists (arrays) of nested structures.
+
+At the top level, an agent definition contains these attributes, most of which are optional:
+
+- "name" - name of the agent definition (letters, digits, underscore)
+- "description" - text description of the purpose of the agent
+- "user" - User ID of the user who owns the agent definition
+
+- "parameters" - list/array of parameters, each a JSON object with these attributes (most optional):
+  Parameters are analogous to parameters of a Java class constructor
+   - "name" - name of the parameter
+   - "type" - type of the parameter, one of:
+     - "boolean"
+     - "integer"
+     - "float"
+     - "string"
+     - "list"
+     - "map"
+   - "description" - free-form text describing purpose of the parameter
+   - "default_value" - default value for the parameter
+
+- "inputs" - list/array of input agents for this agent, each has a JSON object with:
+  - "name" - local, internal name for the external agent
+  - "data_source" - the actual name for the external agent
+  - "parameter_values" - the parameter values to be used to instantiate the referenced external agent
+    This is a JSON object with name/value pairs, one per parameter
+
+- "timers" - list/array of timers for the agent, each a JSON object:
+  - "name" - name of the timer
+  - "description" - free-form text describing purpose of the timer
+  - "interval" - timer interval in milliseconds; may be simple number or an expression as a string
+  - "script" - script (string) to be executed when the timer fires
+  - "enabled" - boolean for whether timer is enabled
+
+- "conditions" - list/array of conditions which must be true for agent to execute, each a JSON object:
+  - "name" - name associated with the condition
+  - "description" - free-form text describing purpose of the condition
+  - "interval" - timer interval for condition checking in milliseconds; may be simple number or an
+                 expression as a string
+  - "condition" - expression (string) which must evaluate to true for the condition to be true                 
+  - "script" - script (string) to be executed when the condition becomes true
+  - "enabled" - boolean for whether checking of the condition is enabled
+
+- "notifications" - list/array of all possible notifications that agent can make to user
+  - "name" - name for the notification
+  - "description" - free-form text describing purpose of the notification
+  - "condition" - expression (string) which must evaluate to true to trigger the notification                 
+  - "type" - keyword which specifies type of notification:
+    - "notify_only" - user is notified, but no response is expected
+    - "confirm" - user must confirm that notification was received
+    - "yes_no" - user must choose "yes" or "no as a response
+    - "choice" - user must pick from a list of choices of response
+  - "manual" - boolean which is true if the notification only occurs when a script explicitly triggers it;
+               usually a notification is triggered by its condition expression
+  - "timeout" - timer interval until notification expires as not responded to;
+                may be simple number or an expression as a string
+  - "details" - list/array of detail values to be offered to user in the notification;
+                typically one or map values with named fields
+  - "scripts" - list/array of scripts to be executed for various user responses to the notification;
+                response scripts are optional; there may be one for each of the possible responses;
+                each script will have a JSON object:
+    - "name" - name of the script; standard, predefined names are:
+      - "ok"
+      - "yes"
+      - "no"
+      - "accept"
+      - "decline"
+      - "confirm"
+      - "cancel"
+      - "abort"
+      - "fail"
+      - "retry"
+      - "ignore"
+      - "skip"
+      - "pass"
+      - "choice"
+    - "description" - free-form text describing the purpose of the script
+    - "script" - code (string) for the script; see script.txt
+    - "execution_level" - (see the "scripts" section below)
+
+  - "enabled" - boolean for whether the notification is enabled
+  - "suspend" - boolean true for whether the overall agent execution should be suspended pending a user
+                response to the notification; default is "false" (don't suspend)
+
+- "scripts" - list/array of scripts for various general events that can occur during the life of an agent;
+              scripts may be "standard" - known to the agent server, "internal" - called from other scripts,
+              or "public" - available to the outside world via the REST API 
+              scripts are always optional; each has a JSON object with the following fields:
+  - "name" - name of the script; standard, predefined names are:
+    - "init" - called when an agent instance is instantiated
+    - "inputs_changed" - called whenever any of the outputs of the input agents have changed
+  - "description" - free-form text describing the purpose of the script
+  - "script" - code (string) for the script; see script.txt
+  - "execution_level" - integer indicating number of execution steps script may require;
+                        scripts are intended to be very short; the intent is to quickly abort any scripts
+                        which are running too long; the limits may be configured in agentserver.properties
+    - 1 - Only up to 10 steps permitted
+    - 2 - Up to 100 steps permitted (the default)
+    - 3 - Up to 1,000 steps permitted
+    - 4 - Up to 10,000 steps permitted
+  - "public" - boolean which is "true" if script can be run directly via the REST API
+
+- "outputs" - list/array of output fields to be produced by the agent, each described by a JSON object:
+   - "name" - name of the field
+   - "type" - type of the field, one of:
+     - "boolean"
+     - "integer"
+     - "float"
+     - "string"
+     - "list"
+     - "map"
+   - "description" - free-form text describing purpose of the field
+   - "default_value" - default value for the field
+   - "compute" - expression (string) which implicitly computes the field value
+
+- "memory" - list/array of important data fields that will be persisted as part of the agent state, each
+             described by a JSON object:
+   - "name" - name of the field
+   - "type" - type of the field, one of:
+     - "boolean"
+     - "integer"
+     - "float"
+     - "string"
+     - "list"
+     - "map"
+     - "web"
+   - "description" - free-form text describing purpose of the field
+   - "default_value" - default value for the field
+   - "compute" - expression (string) which implicitly computes the initial field value
+
+- "scratchpad" - list/array of temporary fields used internally by agent scripts that are not persisted;
+                 same form as "memory"
+
+- "reporting_interval" - the maximum frequently the agent is expected to produce output changes;
+                         either an integer number of milliseconds or an expression (string);
+                         this is a default - each agent instance can supply its own override
+- "trigger_interval" - the maximum frequently the agent can respond to input agent changes;
+                         either an integer number of milliseconds or an expression (string);
+                         this is a default - each agent instance can supply its own override
+- "enabled" - boolean which is "true" to permit the agent to be active; an inactive agent will not
+              respond to input changes, timers, or anything else
+- "created" - the date and time when the agent definition was created
+- "modified" - the date and time when the agent definition was last modified
+
+.

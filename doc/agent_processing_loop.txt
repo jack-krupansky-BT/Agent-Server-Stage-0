@@ -1,0 +1,129 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Agent Processing Loop for the Base Technology Software Agent Server
+
+The heart and soul of the agent server is the agent processing loop which automatically sequences the
+numerous processing steps needed for an agent to be active and aware. This includes timers, propagating
+data dependencies and notifications, and output generation and propagation.
+
+There are two types of agent:
+
+1. Data source agents - which typically use timers to periodically check web resources for changes and
+   produce outputs which typically some sort of distillation of their inputs.
+   These agents run like clockwork, although the speed of their clocks can vary greatly.
+
+2. Normal agents - which don't use timers, but depend on the outputs of other agents. These agents are
+   normally "quiescent" or idle, and only go "active" when their inputs change. They may also supply
+   "conditions" so that they can be very selective as to what types or ranges of input changes they
+   will respond to.
+
+It is also possible to have hybrid agents which have input agent dependencies as well as timer-based
+processing.
+
+This description will be for a hybrid agent; some of the steps can simply be ignored for agents which
+are pure data source agents or pure normal agents.
+
+Read agent_life_cycle.txt for a description of the full context of an agent's life cycle. In this
+section we will focus on agents which have already been instantiated and are active (enabled.)
+
+The rest of the agent life cycle is quite important and essential, but the main agent processing loop
+is where the real "action" occurs. This is where an agent responds to changes in its environment.
+
+Collectively, this sequence of steps (other than step #1, the initialization step) are known as
+"turning the crank" in the sense that agent processing is a cycle of an "engine."
+
+The steps of "turning the crank":
+
+1. As soon as an agent instance is instantiated and enabled, the following initial processing occurs:
+
+     1. All dependencies on other agents are registered.
+     
+        a. In some cases, a dependent input agent instance is already running. It can be shared.
+           All that needs to occur is to add the new agent to the list of dependent agents for
+           that agent dependency.
+        b. In all other cases, the agent server will automatically instantiate a new instance of
+           the dependent input agent. The current agent will then be automatically registered by
+           the agent server as a dependent.
+           
+     2. All enabled timers are queued for execution at their next available interval. This entails
+        queuing up an "activity" on the agent scheduler queue for execution at a time equal to
+        the current time plus the interval of the particular timer.
+        
+     3. The agent's "init" script is called for any additional, custom initialization that the
+        agent may need.
+        
+   Technically, this step #1 (initialization) is not part of each "turn of the crank", but the
+   processing is essential to the understanding of what happens on each "cycle" of the "engine".
+   It is essentially the "bootstrapping" or "booting" of the agent engine.
+     
+2. Whenever the outputs of any agent change, the agent server will propagate those changes to all
+   agents which have declared the changing agent as an input.
+   
+   The agent server does not directly invoke the dependent agents, but simply queues up an "activity"
+   that is placed on the agent server's scheduler queue.
+   
+   There are two important "throttles" on such activity:
+   
+     1. Each agent has a "reporting interval" which controls how frequently it will generate output
+        and have that generated output propagated to its dependent agents.
+     2. Each agent has a "trigger interval" which controls how frequently it will respond to any
+        changes in its inputs.
+        
+        Each agent also has any number of "conditions" which must be true before it will respond to
+        changes in its inputs.
+        
+   One of the important functions of the agent server is to moderate between agents that are
+   generating output and activities and agents which are consuming or responding to that data.
+   Agents can be developed independently and operate on different time scales, and the agent server
+   will assure that they all get along, without the need for complex application logic to deal
+   with time-scale mismatches between the producers and consumers of data.
+   
+3. Whenever any of the inputs of an agent change, the following processing occurs:
+
+     1. The agent server queues up or "schedules" an "activity" for the agent and continues on
+        with its own internal processing.
+     2. As soon as possible, the agent scheduler pulls the "activity" off of the agent scheduler
+        queue and invokes the activity processing for that agent instance. This is multi-threaded,
+        so the agent server and agent scheduler continue processing for the agent server and
+        other agents in parallel with the activity processing of this agent.
+        The scheduler does have a limit on how many threads can be active simultaneously. Any
+        queued activities remain queued until a thread is available.
+     3. In this separate activity thread, the most recent outputs of each of the agent's input agents
+        are captured and stored in a map object, one map object per input agent. The keys of each
+        map object are the field names of the outputs of the corresponding input agent.
+     4. All "conditions" for the the agent are evaluated and processing continues only if all
+        conditions are "true." Otherwise, if any condition is "false", the agent remains idle or
+        "quiescent" until the next input change (or timer) comes along.
+     5. If all "conditions" are true, the optional "inputs_changed" script of the agent is called,
+        if present. Commonly, this script will not typically be needed since the agent's output
+        fields can use the "compute" attribute to access and manipulate the outputs of the input agents.
+     6. Any output fields with the "compute" attribute will automatically compute their new output
+        values. Otherwise, each output field will retain its most recent value, or its default
+        value if never set either explicitly or implicitly by the "compute" attribute.
+     7. All output values will be "captured" and stored in a history of the output values.
+        Actually, the history will only grow if any of the output values changed.
+        The output history includes a sequence number and a timestamp in addition to a snapshot
+        of the output fields.
+     8. If any of the output values did change, those changes will be propagated to all dependent
+        agents as detailed by step #1 above.
+
+4. Whenever a timer fires for an agents, the following processing occurs:
+
+     1. T
+     1. If the timer has a "condition", that expression is evaluated and processing for the timer
+        continues only if the condition expression evaluates to "true." Otherwise, skip to step #4.
+     2. The timer's optional script is executed, if present. Commonly a timer script will access
+        a resource in the environment, such as reading a web page, and manipulate, store, and
+        possibly output some data.
+     3. Upon complete of script execution (or even if no script was executed), the agent server
+        will automatically perform steps 2.6 through 2.8 as detailed above. In other words, do
+        any automatic output generation, capture output changes, and propagate output changes to
+        any dependent agents.
+     4. Reschedule the timer for its text interval and return the agent to its idle, "quiescent" state.
+        Special note on timer intervals: timer processing does not occur exactly like clockwork.
+        The agent scheduler makes a best effort to activate an 
+
+...
+
+.

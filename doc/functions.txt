@@ -1,0 +1,125 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Script Functions for the Base Technology Software Agent Server
+
+Unlike Java, the agent server supports both object-oriented methods and non-object functions.
+
+Non-object functions accept arguments of any type, although specific functions may require specific
+paramters to be of a specific type.
+
+The "number" pseudo-type accepts either integer or float values.
+
+Note that "int"/"integer" is implemented as Java "long", and "float" is implemented as Java "double".
+
+------
+
+number avg(number arg1, ...)
+
+  - Computes the average for a list of numbers, which may be any combination of integer and float
+
+int centuries(number n)
+
+  - Returns a time value representing the number of milliseconds in "n" centuries
+    - arg1 may be a float with a fractional value
+  
+int days(number arg1)
+
+  - Returns a time value representing the number of milliseconds in "n" days
+    - arg1 may be a float with a fractional value
+
+int decades(number arg1)
+
+  - Returns a time value representing the number of milliseconds in "n" decades
+    - arg1 may be a float with a fractional value
+
+Object eval(string expression)
+
+  - Parse and evaluate an expression and return its value
+
+void exit()
+
+  - Terminate the agent instance ASAP
+    - Script execution continues
+    - Instance will be shut down gracefully as soon as script returns
+      
+int hours(number arg1)
+
+  - Returns a time value representing the number of milliseconds in "n" hours
+    - arg1 may be a float with a fractional value
+
+int max(number arg1, ...)
+
+  - Returns the largest value from a list of values
+  
+int minutes(number arg1)
+
+  - Returns a time value representing the number of milliseconds in "n" minutes
+    - arg1 may be a float with a fractional value
+
+int min(number arg1, ...)
+
+  - Returns the smallest value of from a list of values
+
+int months(number arg1)
+
+  - Returns a time value representing the number of milliseconds in "n" months
+    - arg1 may be a float with a fractional value
+
+int ms(number arg1)
+
+  - Returns a time value representing the number of milliseconds in "n" milliseconds
+    - arg1 may be a float with a fractional value
+  - This function is more for documentation and clarity of intent in expressions
+
+void notify(string notificationName)
+
+  - Manually initiate a user notification
+  
+int now()
+
+  - Returns the current data and time in milliseconds
+
+float pi()
+
+  - Returns the value of pi.
+    - Based on Java Math.PI, which is approximately 15 decimal digits of precision
+
+object runScript(string expression)
+
+  - Parse and execute a script (code as s string) and return its return value
+  
+int seconds(int arg1)
+
+  - Returns a time value representing the number of milliseconds in "n" seconds
+    - arg1 may be a float with a fractional value
+  
+void sleep(int numMilliseconds)
+
+  - Suspend script execution for specified number of milliseconds
+  - Same as the "wait" function
+
+float sqrt(number arg1)
+
+  - Returns the square root of a number
+
+number sum(number arg1, ...)
+
+  - Returns the sum of a list of numbers
+  
+int weeks(int arg1)
+
+  - Returns a time value representing the number of milliseconds in "n" weeks
+    - arg1 may be a float with a fractional value
+
+void wait(int numMilliseconds)
+
+  - Suspend script execution for specified number of milliseconds
+  - Same as the "sleep" function
+  
+int years(int arg1)
+
+  - Returns a time value representing the number of milliseconds in "n" years
+    - arg1 may be a float with a fractional value
+
+.

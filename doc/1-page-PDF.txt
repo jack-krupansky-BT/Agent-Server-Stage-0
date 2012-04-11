@@ -73,6 +73,10 @@ manipulation that are commonly needed for dealing with strings, text, HTML web p
 feeds, and REST API web services. We have benefited greatly from experience working with the Internet
 and Web in Java, which is reflected in the enhanced scripting language supported by the agent server.
 
+The heart and soul of the agent server is the agent processing loop which automatically sequences the
+numerous processing steps needed for an agent to be active and aware. This includes timers, propagating
+data dependencies and notifications, and output generation and propagation.
+
 The current implementation of the Base Technology Software Agent Server, Stage 0, is a preliminary,
 experimental testbed to evaluate the concepts introduced by this new server. It is currently a local,
 standalone server, but the vision is for a full-blown, world-wide "agent grid" of such agent servers.

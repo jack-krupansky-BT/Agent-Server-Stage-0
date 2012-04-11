@@ -1030,6 +1030,12 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("Float value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof FloatValue);
     assertEquals("Return float value", 1.41421, valueNode.getFloatValue(), 0.0001);
 
+    evalFloat("pi()", 3.14159);
+    evalFloat("pi() * 2", 6.28318);
+    evalFloat("pi() / 2", 1.57079);
+    evalFloat("pi() * 0.5", 1.57079);
+    
+    // Other function calls
     scriptNode = parser.parseScriptString("return 'abc'.length;");
     assertTrue("Null was returned from script parser", scriptNode != null);
     valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);
@@ -4026,6 +4032,19 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     callIntFunction("int evalx(string expr){return eval(expr);}",
         Arrays.asList((Value)(new StringValue("2 * 7"))), 14);
 
+  }
+
+  @Test
+  public void testExit() throws Exception {
+    assertTrue("Should not be deleted", ! dummyAgentInstance.deleted);
+    evalNull("exit()");
+    assertTrue("Should be deleted", dummyAgentInstance.deleted);
+    dummyAgentInstance.deleted = false;
+
+    assertTrue("Should not be deleted", ! dummyAgentInstance.deleted);
+    runNullScript("exit();");
+    assertTrue("Should be deleted", dummyAgentInstance.deleted);
+    dummyAgentInstance.deleted = false;
   }
   
 }

@@ -134,7 +134,7 @@ public class NotificationInstance {
       throw new AgentServerException("Unable to parse notification time ('" + timeNotifiedString + "') - " + e.getMessage());
     }
     
-    String timeResponseString = notificationInstanceJson.optString("time_notified", null);
+    String timeResponseString = notificationInstanceJson.optString("time_response", null);
     long timeResponse = -1;
     try {
       timeResponse = timeResponseString != null ? DateUtils.parseRfcString(timeResponseString): -1;

@@ -241,9 +241,9 @@ public class HandleGet extends HandleHttp {
     } else if (path.equalsIgnoreCase("/usage")){
       log.info("Getting API usage summary text");
 
-      // Get text of API usage summary, api-usage.txt
+      // Get text of API usage summary, api_usage.txt
       // TODO: Where to read the file from... ./doc or???
-      String apiUsageText = FileUtils.readFileToString(new File("./doc/api-usage.txt"));
+      String apiUsageText = FileUtils.readFileToString(new File("./doc/api_usage.txt"));
 
       // Return the text
       response.setContentType("application/json; charset=utf-8");

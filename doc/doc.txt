@@ -6,7 +6,7 @@ Documentation for the Base Technology Agent Server (Stage 0)
 For now, the documentation for the Base Technology Agent Server (Stage 0) is simply a collection of
 simple text files kept in the "doc" directory.
 
-Read 1-page-PDF.txt for a general overview.
+Read 1-page-PDF.txt for a general overview of agents and the agent server.
 
 Read intro.txt for a detailed introduction.
 
@@ -14,7 +14,25 @@ Then install the software by following the instructions in install.txt.
 
 Then work through the tutorial sequence in tutorial.txt.
 
+Read api_usage.txt for a summary of the various entry points of the REST API.
+
+Read agent_definition.txt for the detailed attributes of an agent definition. This information is
+needed to use the REST API, although many of the detailed attributes can be omitted for most agents.
+
+Read agent_life_cycle.txt for a description of the phases in the lefe of an agent.
+
+Read agent_processing_loop.txt for a description of the "main action" for an agent, the processing
+which occurs automatically on behalf of the agent by the agent server itself.
+
 Read script.txt for an overview of the scripting language.
+
+Read function.txt for a summary list of the non-object functions that a script can call.
+
+Read fields.txt for a description of the various categories of fields and variables for an agent.
+
+Read nuts_and_bolts.txt for some of the details of the implementation of the agent server.
+
+Read what_is_a_software_agent.txt for a more abstract look at what it means to be a software agent.
 
 More... TBD
 

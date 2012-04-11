@@ -158,8 +158,8 @@ public class AgentState {
 
     // Parse notification history
     NotificationHistory notificationHistory = null;
-    if (stateJson.has("notifications")){
-      JSONArray notificationsJson = stateJson.optJSONArray("notifications");
+    if (stateJson.has("notification_history")){
+      JSONArray notificationsJson = stateJson.optJSONArray("notification_history");
       notificationHistory = NotificationHistory.fromJson(null, notificationsJson);
     }
 

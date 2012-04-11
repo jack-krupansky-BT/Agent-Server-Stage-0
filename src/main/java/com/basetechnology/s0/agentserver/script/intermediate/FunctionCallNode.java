@@ -64,6 +64,10 @@ public class FunctionCallNode extends ExpressionNode {
       String expression = arg1.getStringValue();
       Value returnValue = scriptState.agentInstance.evaluateExpression(expression);
       return returnValue;
+    } if (functionName.equals("exit") && numArgs == 0){
+      // Mark the agent for deletion ASAP
+      scriptState.agentInstance.delete();
+      return NullValue.one;
     } if (functionName.equals("hours") && numArgs == 1){
       Value arg1 = argumentList.get(0).evaluateExpression(scriptState);
       double value = arg1.getDoubleValue(scriptState);
@@ -101,6 +105,9 @@ public class FunctionCallNode extends ExpressionNode {
       String notificationName = arg1.getStringValue(scriptState);
       scriptState.agentInstance.queueNotify(notificationName);
       return NullValue.one;
+    } if (functionName.equals("pi") && numArgs == 0){
+      double pi = Math.PI;
+      return new FloatValue(pi);
     } if (functionName.equals("now") && numArgs == 0){
       return new IntegerValue(System.currentTimeMillis());
     } if (functionName.equals("runScript") && numArgs == 1){

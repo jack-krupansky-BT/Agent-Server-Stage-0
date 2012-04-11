@@ -1,0 +1,88 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Agent Life Cycle for the Base Technology Software Agent Server
+
+There are a number of stages in the life of a software agent:
+
+1. Define the "agent definition."
+
+2. Instantiate the agent definition, creating an "agent instance."
+
+2a. User instantiates the agent via the REST API.
+2b. The agent server automatically instantiates agents that are referenced as inputs to an agent
+    definition that is being instantiated.
+
+3. An agent instance optionally be instantiated in a "disabled" or "inactive" state
+
+  - No activity will occur
+  - But all input, output, memory, and scratchpad variables will be initialized
+  
+3a. User can then manually enable or activate the agent instance
+3b. Unless optionally disabled, the agent instance will automatically be activated.
+
+4. When an agent instance is first activated, its optional "init" script will be executed
+
+  - In many cases this is not needed since the agent server automatically initializes all inputs,
+    outputs, and memory variables
+    - And the "compute" option can even be used to transfer input fields to output fields, including
+      some significant amount of processing
+      
+5. When enabled, an agent can respond to changes in its environment:
+
+5a. Timers fire. Agent then manually checks its environment (e.g., read web pages.)
+5b. Outputs of input agents can change and those changes activate the agent
+5c. User responds to notifications
+5d. Rinse and repeat, forever. This is the "agent processing loop."
+
+Some environmental changes can be propagated automatically, such as output fields which are defined
+using the "compute" option with expressions that references input fields.
+
+Other environmental changes are handled manually in scripts, such as the "inputs_changed" script and
+the script for each timer.
+
+To be clear, an agent instance will quickly fall into this phase of its life and stay here, forever,
+subject to the conditions detailed below.
+
+6. Full state of the agent is persisted after any agent activity
+
+  - Whenever the outputs change
+  - Whenever a script finishes executing
+
+7. Agent server automatically restarts and restores the state of all agents if the server restarts
+
+  - Including shutdown and restart of the agent server
+  - As well as server crashes and restarts
+  
+8. User can pause and resume the agent instance at any time.
+
+9. User can query the state of the agent instance at any time.
+
+  - This includes its current outputs
+  - As well as current inputs
+  - And internal state (e.g., memory fields and scratchpad fields)
+  - Status of any user notifications
+  - Any exceptions that may have occurred
+  - History of state can also be queried
+  - Agent definition can also be queried
+
+10. User is responsible for responding to notifications from agent instances
+
+  - Typically a notification will be an email to the user with links to the REST API that the user
+    can click on to confirm or make a choice selection based on the specification values in the
+    notification.
+  - The user or an application can also use the REST API directly to query and respond to notifications.
+    
+11. User stops (deletes) the agent instance.
+
+11a. A script within the agent can decide to "exit" the instance.
+
+12. User can create new instances of the same agent definition at any time.
+
+  - Multiple, simultaneous instances are supported
+
+13. User may revise the agent definition and re-instantiate it
+
+14. User may delete the agent definition.
+
+.

@@ -1,0 +1,72 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Agent Instance for the Base Technology Software Agent Server
+
+An agent consists of two parts, a definition and an instance, or any number of instances.
+
+An agent instance is described via the REST API in JSON.
+
+An agent instance is a collection of attribute or property values, some of which may be strings, some
+of which are simple names or keywords and some of which are free-form descriptive text, numbers,
+expressions (written as strings), or lists (arrays) of nested structures.
+
+At the top level, an agent instance contains these attributes, some of which are optional:
+
+- "name" - name of the agent instance (letters, digits, underscore)
+- "description" - text description of the purpose of the agent instance
+- "user" - User ID of the user who owns the agent instance
+- "definition" - the name of the agent definition which is being instantiated
+- "parameter_values" - a map (JSON object with key/value pairs) of the values for each parameter
+                       required by the agent definition;
+                       these are analogous to Java constructor argument values
+- "reporting_interval" - the maximum frequently the agent is expected to produce output changes;
+                         either an integer number of milliseconds or an expression (string);
+                         if not specified, the default comes from the agent definition
+- "trigger_interval" - the maximum frequently the agent can respond to input agent changes;
+                         either an integer number of milliseconds or an expression (string);
+                         if not specified, the default comes from the agent definition
+- "public_output" - boolean which is "true" if the output of the agent instance is to be publicly
+                    available to all users without requiring a password; default is "false"
+- "enabled" - boolean which is "true" if the agent instance is "active" - responsive to changes in
+              the environment
+- "instantiated" - time stamp (string) of when the agent instance was instantiated
+- "updated" - time stamp (string) of last time that the agent instance description was modified by
+              the user via the REST API
+- "limit_instance_states_stored" - number of state changes of the instance to store (persist);
+                                   -1 means use the default, which is 25, with a maximum of 1000,
+                                   but the defaults can be configured
+
+- "state" - list/array of stored states of the agent instance, each a JSON object:
+  - "time" - time stamp of when the agent instance state snapshot was captured
+  - "parameters" - a map (JSON object with key/value pairs) of the value for each parameter
+  - "inputs" - a map (JSON object with key/value pairs) of the value for each input;
+               this will be a map for each input agent - a two-level map
+  - "memory" - a map (JSON object with key/value pairs) of the value for each memory field
+  - "outputs" - a map (JSON object with key/value pairs) of the value for each output field
+  - "exceptions" - list/array for history of exceptions, each a JSON object:
+    - "time" - time stamp (string) of when the exception occurred
+    - "type" - the Java class for the exception type
+    - "message" - the text of the exception message
+    - "script" - the name of the script (if any) in which the exception occurred
+  - "last_dismissed_exception" - time stamp (string) of the last time when exceptions were dismissed
+                                 by the user; the idea is that the instance status display will only
+                                 say "exception" if another exception has occurred since the last time
+                                 the user examined the exception history and explicitly dismissed the
+                                 exception
+  - "notifications" - list of the notifications declared for the agent, each a JSON object:
+    - "definition" - name of the notification definition
+    - "details" - map of the value for each detail item
+    - "time_notified" - time stamp of when the notification went out
+    - "time_response" time stamp of when the user responded to this notification
+    - "pending" - boolean which is "true" if the notification is currently awaiting response by the user
+    - "response" - the most recent user response value (string)
+    - "response_choice" - the most recent user response choice (string)
+    - "timeout" - timeout interval in milliseconds for this notification
+    - "comment" - comment text for this notification
+  - "notification_history" - list of past and current notifications, each a JSON object:
+    - "time" - time stamp for the notification
+    - "sequence" - sequence number for the history
+    - "notification" - JSON object for one notification, as detailed above
+.
+

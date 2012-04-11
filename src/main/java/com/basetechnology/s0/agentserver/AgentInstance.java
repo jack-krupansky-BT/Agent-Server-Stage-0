@@ -118,6 +118,7 @@ public class AgentInstance {
   public boolean suppressEmail;
   public boolean autoCreated = false;
   public boolean check;
+  public boolean deleted;
 
   public static int autoNameCounter = 0;
   
@@ -209,6 +210,7 @@ public class AgentInstance {
     this.notificationHistory = new NotificationHistory();
     this.pendingSuspended = false;
     this.suppressEmail = false;
+    this.deleted = false;
     
     if (! update && ! check)
       this.enabled = false;
@@ -317,6 +319,11 @@ public class AgentInstance {
     }
   }
 
+  public void delete() throws AgentServerException {
+    this.deleted = true;
+    disable();
+  }
+  
   public void buildSymbols() throws SymbolException {
     // Re-build symbol manager tables
     symbolManager = new SymbolManager();
@@ -642,6 +649,14 @@ public class AgentInstance {
     // Run the compiled expression
     Value valueNode = scriptRuntime.evaluateExpression(expression, expressionNode);
     
+    // Detect expression that exits the instance
+    if (deleted){
+      // Yes, remove the deleted instance
+      log.info("Expression evaluation of '" + expression + "' is exiting instance '" + name + "'");
+      agentServer.removeAgentInstance(this);
+      return valueNode;
+    }
+    
     // Return the return value of the evaluated expression
     return valueNode;
     } catch (TokenizerException e){
@@ -711,6 +726,14 @@ public class AgentInstance {
     captureState();
     
     log.info("Finished running script '" + scriptName + "' for instance '" + name + "'");
+    
+    // Detect script that exits the instance
+    if (deleted){
+      // Yes, remove the deleted instance
+      log.info("Script '" + scriptName + "' is exiting instance '" + name + "'");
+      agentServer.removeAgentInstance(this);
+      return valueNode;
+    }
     
     // Trigger dependent instances if output values of this instance changed
     checkpointOutput();
@@ -1010,7 +1033,7 @@ public class AgentInstance {
     try {
       timeUpdated = modified != null ? (modified.length() > 0 ? DateUtils.parseRfcString(modified) : 0): -1;
     } catch (ParseException e){
-      throw new AgentServerException("Unable to parse modified date ('" + modified + "') - " + e.getMessage());
+      throw new AgentServerException("Unable to parse updated date ('" + modified + "') - " + e.getMessage());
     }
 
     // Parse state history
