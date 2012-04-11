@@ -46,12 +46,23 @@ The steps of "turning the crank":
            the dependent input agent. The current agent will then be automatically registered by
            the agent server as a dependent.
            
-     2. All enabled timers are queued for execution at their next available interval. This entails
+     2. All variables for the instance are initialized, including output fields.
+     
+     3. The initial state of the instance is captured.
+     
+     4. The initial output of the instance is made available via the REST API.
+     
+          - If the instance has the "public_output" attribute, the output fields will be available
+            without any need for the user to supply the user password.
+     
+     5. All enabled timers are queued for execution at their next available interval. This entails
         queuing up an "activity" on the agent scheduler queue for execution at a time equal to
         the current time plus the interval of the particular timer.
         
-     3. The agent's "init" script is called for any additional, custom initialization that the
+     6. The agent's "init" script is called for any additional, custom initialization that the
         agent may need.
+        
+     7. Steps 3 and 4 will be reppeated if any of the output fields were changed by the init script.
         
    Technically, this step #1 (initialization) is not part of each "turn of the crank", but the
    processing is essential to the understanding of what happens on each "cycle" of the "engine".
@@ -110,7 +121,6 @@ The steps of "turning the crank":
 
 4. Whenever a timer fires for an agents, the following processing occurs:
 
-     1. T
      1. If the timer has a "condition", that expression is evaluated and processing for the timer
         continues only if the condition expression evaluates to "true." Otherwise, skip to step #4.
      2. The timer's optional script is executed, if present. Commonly a timer script will access
@@ -122,8 +132,24 @@ The steps of "turning the crank":
         any dependent agents.
      4. Reschedule the timer for its text interval and return the agent to its idle, "quiescent" state.
         Special note on timer intervals: timer processing does not occur exactly like clockwork.
-        The agent scheduler makes a best effort to activate an 
+        The agent scheduler makes a best effort to activate an agent instance as soon as the
+        requested time has been reached, but there may be a delay of an indeterminate duration.
+        When scheduling the next timer, the requested time will be the current time plus the
+        requested interval. Using this approach the timer may not fire as frequently as desired,
+        but at least it is guaranteed that the timer will not re-fire too soon or even while the
+        current interval is being processed.  
 
-...
+5. Upon completion of the execution of any top-level script, the following processing occurs:
+
+     1. Capture current output field values.
+     2. If outputs have changed:
+     
+        a. Add an output record to the output history.
+        b. Propagate the output changes to dependent agents as per main step 2 above.
+
+A key aspect of the agent processing loop is that except for timers which dictate the degree of
+activity for an agent, a normal agent can be simultaneously very idle or quiescent but at the same
+time very alert and ready to immediately respond to any changes in the environment without the
+need to be constantly running and constantly checking or pinging resources.
 
 .
