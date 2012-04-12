@@ -1,0 +1,40 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+User Support for the Base Technology Software Agent Server
+
+Every agent is owned by a user. A user creates an agent definition, instantiates it, manages it,
+monitors it, utilizes its output, and may eventually delete the agent instance and even its
+definition.
+
+A user has a name, ID, and password, plus other optional attributes.
+
+The user ID is incorporated in all URLs that refer to agents that the user is working with.
+
+The password is what assures that only the user themselves can access their agents.
+
+Here is the complete list of user attributes that can be given when creating or updating a user
+via the REST API using JSON:
+
+- "id" - User ID (letters, digits, underscore, dash, dot, at-sign - can even be an email address)
+- "password" - the user's password
+- "password_hint" - free-form text to aid the user in password recall; not currently implemented 
+- "full_name" - the user's full, legal name
+- "display_name" - the user's name as it is to be displayed
+- "nick_name" - short-form name for the user
+- "organization" - the user's company, organization, etc.
+- "bio" - free-form text bio description for the user
+- "interests" - free-form test describing the interests of the user
+- "incognito" - boolean which is true if the user does not want to be displayed in the list of
+                active users in the REST API
+- "email" - email address of the user, for notifications
+- "comment" - free-form text for user to annotate status of the user ID
+- "approved" - boolean which is true if a new user is approved for activity;
+               currently this is always true, but the intent is to have an administrative mode
+               where new users can create new user IDs, but they will not be activated until the
+- "enabled" - boolean which is false if a user is essentially locked out from any activity
+- "new_activity_enabled" - boolean which is false if a user is not permitted to engage in new
+                           activity, such as defining new agent definitions and instantiating agents,
+                           but is permitted to update and monitor existing agents
+
+.

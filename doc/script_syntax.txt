@@ -1,0 +1,35 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Script Syntax for the Base Technology Software Agent Server
+
+Java control statements not currently implemented:
+
+  - try/catch/throw
+  - switch/case
+
+Java statements implemented:
+
+  - expression;
+  - assignment;
+  - variable declaration;
+  - { statement ... }
+  - if (expression) statement1 [else statement2]
+  - while (expression) statement
+  - do statement while (expression);
+  - for (initializer; test; increment) statement
+  - continue;
+  - break;
+  - return expression;
+
+The overall syntax for a script is a block body, which is a sequence of statements and declarations
+without the enclosing braces.
+
+In addition, user-defined functions can be declared as scripts. In this case the syntax is quite
+similar to a Java function definition:
+
+  - return-type function-name ( type parameter-name, ... ) { block-body }
+
+Java-style comments can be used freely in scripts, both // and /* */.
+
+.

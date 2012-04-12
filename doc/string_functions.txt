@@ -1,0 +1,199 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+String Functions for the Base Technology Software Agent Server
+
+The "string" type is built-in, as opposed to being a class in Java.
+
+It does support quite a few functions or "methods" as in Java, although not absolutely identical.
+
+There are two important differences from Java:
+
+  1. Characters and substring ranges can be directly read using the subscript operators.
+  2. Characters and substring ranges can be directly written using the subscript operators.
+
+In other words, strings are modifiable. That can be a little dangerous, but string values are
+always copied when they are assigned to a variable.
+
+As in Java, string index values start at 0 for the first character. And if an "end" index is
+specified, it specifies the ending character plus one.
+
+String functions (methods):
+(Note: The empty parentheses can be omitted, unlike Java.)
+  
+string after(string match)
+string after(string match, int startIndex)
+
+  - Returns the portion of a string after the first occurrence of a matching substring
+   - Optionally start search for match at designated index
+
+string afterRegex(string pattern)
+string afterRegex(string pattern, int startIndex)
+
+  - Returns the portion of a string after the first match of a regex pattern
+   - Optionally start search for match at designated index
+  
+string before(string match)
+string before(string match, int startIndex)
+
+  - Returns the portion of a string before the first occurrence of a matching substring
+   - Optionally start search for match at designated index
+
+string beforeRegex(string pattern)
+string beforeRegex(string pattern, int startIndex)
+
+  - Returns the portion of a string before the first match of a regex pattern
+   - Optionally start search for match at designated index
+  
+string between(string match1, string match2)
+string between(string match, string match2, int startIndex)
+
+  - Returns the portion of a string between the first occurrence of the first match substring
+    the the first occurrence of the second match substring
+   - Optionally start search for match at designated index
+
+string betweenRegex(string pattern1, string pattern2)
+string betweenRegex(string pattern1, string pattern2, int startIndex)
+
+  - Returns the portion of a string between the first occurrence of the first match of the first
+    regex pattern and the the the first occurrence of the second regex pattern
+   - Optionally start search for match at designated index
+
+string copy()
+
+  - Make a copy of a string.
+
+int endIndexOfRegex(string pattern)
+int endIndexOfRegex(string pattern, int startIndex)
+
+  - Return the end index of the first match of the regex pattern
+   - Optionally start search for match at designated index
+   - See also: indexOfRegex
+   
+boolean equals(string s)
+
+  - Returns true if the current string matches the specified string, exactly
+   
+boolean equalsIgnoreCase(string s)
+
+  - Returns true if the current string matches the specified string, ignoring case differences
+
+string get(int index)
+string charAt(int index)
+
+  - Returns the character at the specified position of the string
+    - This is equivalent to str[index]
+
+string get(int startIndex, int endIndex)
+
+  - Returns the substring from the specified range of the string
+    - This is equivalent to str[startIndex, endIndex]
+
+map html()
+
+  - Parse the string as HTML and return it as a map hierarchy
+
+int indexOf(string s)
+int indexOf(string s, int startIndex)
+
+  - Returns the index of the first occurrence of a matching substring
+   - Optionally start search for match at designated index
+
+int indexOfRegex(string pattern)
+int indexOfRegex(string pattern, int startIndex)
+
+  - Return the index of the first match of the regex pattern
+   - Optionally start search for match at designated index
+   - See also: endIndexOfRegex
+
+string insert(int index, string s)
+
+  - Inserts a substring at the specified position in the current string, shifting all characters
+    at and beyond that position to the right to make room for inserting the substring
+   - Modifies the string in-place
+   - Returns the current string (after being modified)
+
+map json()
+
+  - Parse the string as JSON and return it as a map hierachy
+   - Is may also be a list
+    - Or even a simple object
+
+int length()
+
+  - Returns the length of the string.
+    
+string lower()
+
+  - Converts all upper case letters to lower case
+   - Conversion is done in-place
+   - Returns the current string (after being modified)
+
+boolean matches(string pattern)
+
+  - Returns true if the regex pattern matchs the entire string
+
+string put(int index, string s)
+string set(int index, string s)
+
+  - Replaces the character at the specified index with the specified string
+   - If the substring is more than a single character, the characters at the index plus one and
+     beyond are shifted to the right to make room for inserting the rest of the substring
+   - Modifies the string in-place
+   - Returns the current string (after being modified)
+   - This is equivalent to str[index] = s
+
+string put(int startIndex, int endIndex, string s)
+string set(int startIndex, int endIndex, string s)
+
+  - Replaces the substring between the start index and the end index with the specified string
+   - If the replacement substring is longer than the original substring, the characters at and
+     beyond the end index are shifted to the right to make room for inserting the rest of the substring
+   - If the replacement substring is shorter than the original substring, the characters at and
+     beyond the end index are shifted left to fill the hole
+   - The end index is the index of the last character of the original substring plus one
+   - Modifies the string in-place
+   - Returns the current string (after being modified)
+   - This is equivalent to str[startIndex, endIndex] = s
+
+string remove(int index)
+string remove(int startIndex, int endIndex)
+
+  - Removes one character or a range of characters from the specified position of the string
+   - Shifts all characters beyond the single character or substring to the left to fill in the hold
+   - Returns the current string (after being modified)
+
+list split(string pattern)
+
+  - Splits the string into substrings that are separated by the specified regex pattern and returns
+    them as a list  
+
+string substr(int startIndex, int endIndex)
+string substring(int startIndex, int endIndex)
+
+  - Returns the substring between the start and end indexes
+    - The end index is the index of the last character of the substring plus one
+    
+string upper()
+
+  - Converts all lower case letters to upper case
+   - Conversion is done in-place
+   - Returns the current string (after being modified)
+
+string urlDecode()
+
+  - Returns a copy of the string after it has been URL decoded
+
+string urlEncode()
+
+  - Returns a copy of the string after it has been URL encoded
+
+list words()
+
+  - Analyzes the text of the string and returns a list of words    
+
+map xml()
+
+  - Parse the string as XML and returns it as a map hierarchy
+
+.

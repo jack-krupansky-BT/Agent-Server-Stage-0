@@ -85,7 +85,7 @@ public class StringValue extends Value {
     else if (name.equals("html")){
       XmlUtils xml = new XmlUtils();
       return xml.parseHtml(scriptState, value);
-    } else if (name.equals("length"))
+    } else if (name.equals("length") || name.equals("size"))
       return new IntegerValue(value.length());
     else if (name.equals("json"))
       return JsonUtils.parseJson(value);
@@ -134,7 +134,7 @@ public class StringValue extends Value {
 
   public Value getMethodValue(ScriptState scriptState, String name, List<Value> arguments) throws RuntimeException {
     int numArguments = arguments.size();
-    if (name.equals("length") && numArguments == 0){
+    if ((name.equals("length") || name.equals("size")) && numArguments == 0){
       return new IntegerValue(value.length());
     } else if (name.equals("after") && (numArguments == 1 || numArguments == 2)){
       // Extract and return text after the first occurrence of a substring

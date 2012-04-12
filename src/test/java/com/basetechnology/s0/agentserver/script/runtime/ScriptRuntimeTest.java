@@ -1043,6 +1043,11 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     assertTrue("Integer value not returned from evaluate:" + valueNode.getClass().getSimpleName(), valueNode instanceof IntegerValue);
     assertEquals("Return interger value", 3, valueNode.getIntValue());
 
+    evalInt("'abc'.length", 3);
+    evalInt("'abc'.size", 3);
+    evalInt("'abc'.length()", 3);
+    evalInt("'abc'.size()", 3);
+    
     scriptNode = parser.parseScriptString("return 'abc'.length();");
     assertTrue("Null was returned from script parser", scriptNode != null);
     valueNode = scriptRuntime.runScript(parser.scriptString, scriptNode);

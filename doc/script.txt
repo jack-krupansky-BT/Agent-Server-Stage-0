@@ -6,7 +6,7 @@ Scripting Language for the Base Technology Software Agent Server
 Much of the processing for software agents in the Base Technology Software Agent Server occurs
 automatically down inside the server software itself, but occasionally a modest amount of
 procedural scripting is needed, as well as expressions for numerous parameters. The scripting
-language for the agent server is  based on Java, with a number of simplifications and extensions.
+language for the agent server is based on Java, with a number of simplifications and extensions.
 
 Expressions and most statements follow Java fairly closely. Those who are familiar with expressions and
 statements in C, C++, and Java, should feel right at home. The ++, +=, and ? : operators are
@@ -14,20 +14,23 @@ supported, for example.
 
 Since the purpose of scripts is primarily "small snippets of code", there is no support for defining
 classes and other complex structures that are supported by Java and C++. On the flip side, since lists
-and collection of named data are so common, the 'list' and 'map' types are built into the language.
-The expectation is that any complex structures should be constructed by developing collections of
-agents themselves.
+and collection of named data are so common, the 'list' and 'map' types are built into the language,
+and the built-in "web" type dramatically facilitates access to web resources. The expectation is that
+any complex structures should be constructed by developing collections of agents themselves. Also,
+simple map objects are very convenient for collecting related information, without any of the tedium
+of defining and implementing full-blown classes. That said, I am sure that some future stage of the
+agent server will add support for classes, in some form.
 
-The scripting language does not have a 'new' operator, but lists and maps can trivially constructed
-without it. List and map literals are also supported, more reminiscent of JavaScript than Java. Also,
-typed fields are automatically initialized to their specified type, so there is no need for 'new'
-simply to initialize an empty list or map.
+The scripting language does not have a 'new' operator, but lists and maps can be trivially constructed
+without it using list and map literals, more reminiscent of JavaScript than Java. Also, typed fields
+are automatically initialized to their specified type, so there is no need for 'new' simply to
+initialize an empty list or map.
 
 As far as data types, the scripting language supports most of the Java primitive types, as well as
-built-in support for strings, lists, and maps. The various keywords for the types of integers supported
-by Java are supported, but all mapped to on long integer type. Similarly, the various keywords for
-float and double are supported, but are all mapped to double. The 'char' type is supported but mapped
-to string. String literals may be enclosed in quotes or apostrophes (single quote.)
+built-in support for strings, lists, maps, and web objects. The various keywords for the types of
+integers supported by Java are supported, but are all mapped to one long integer type. Similarly, the
+various keywords for float and double are supported, but are all mapped to double. The 'char' type is
+supported but mapped to string. String literals may be enclosed in quotes or apostrophes (single quote.)
 
 The scripting language also includes support for dates and money, although that support is not yet
 fully implemented. Strings can simply be mapped between ISO date/time format and RFC date/time format

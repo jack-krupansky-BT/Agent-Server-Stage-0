@@ -1,0 +1,122 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Expression Syntax for the Base Technology Software Agent Server
+
+Expressions used within software agents of the Base Technology Software Agent Server are based on
+the Java expression syntax, minus a few things, plus a number of things.
+
+Expressions serve two purposes: as a core component of the agent scripting language, and to add
+flexibility in agent definition where values must be specified. So, expressions perform a double
+duty, but essentially the same purpose in both cases.
+
+Before we delve into the detailed syntax, here is a summary of the differences from Java:
+
+What's missing:
+
+  - the "instanceof" operator
+  - the "new" operator
+    - instead, JavaScript-like list and map literal values are supported which accomplish
+      essentially the same effect
+  - the bit-wise operators (&, |, ~, ^, &=, |=, ~=, ^=)
+  - the shift and rotation operators (<<, >>, <<=, >>=, >>>=)
+
+There may be some holes in the implementation so far, but all of the rest of the Java expression
+syntax should be supported. Here is a short list of the operators, in order of decreasing precedence
+
+  - .name .name(...)  name(...) expr[...]
+  - expr++ expr--
+  - -expr !expr ++expr --expr
+  - * / %
+  - + -
+  - < <= == != >= >
+  - &&
+  - ||
+  - ? :
+  - = += -= *= /= %=
+
+As mentioned, there is no "new" operator, but instead literals of the various object types can be
+directly referenced using the type name followed by an optional list of values enclosed within
+parentheses.
+
+To create a new list in an expression:
+
+  - list(element1, element2, ...)
+  - list()
+
+where element1, etc. are expressions much as in function calls
+
+The second form creates an empty list which can be dynamically extended.
+
+Alternatively, the JavaScript-like literal notation can be used:
+
+  - [element1, element2, ...]
+  - []
+
+The second form creates an empty list which be be dynamically extended.
+
+To create a new web object:
+
+  - web()
+  - web(url-string-expression)
+
+To create a new map object with values assigned to keys:
+
+  - map(key1: value1, key2: value2, ...)
+  - map()
+
+The keys are simple identifiers, not quotes needed. The values are expressions as in function
+argument lists.
+
+The second form creates an empty map object to which key/value pairs can be added dynamically.
+
+Alternatively, the JavaScript-like literal notation can be used:
+
+  - {key1: value1, key2: value2, ...}
+  - {}
+
+The second form creates an empty map object to which key/value pairs can be added dynamically.
+
+Additional Features beyond Java
+
+ - empty parentheses can be dropped for method calls
+   - e.g., mylist.size vs. mylist.size()
+   
+...
+
+Array and Map Access
+
+Although the Java-compatible access methods (get/put) are supported, you can simply use the
+simple subscript operators to access array and map elements:
+
+  - mylist[i] vs. mylist.get(i)
+  - mylist[i] = value vs. mylist.put(i, value)
+  - mymap["key"] vs. mymap.get("key")
+  - mymap["key"] = value vs. mymap.put("key", value)
+
+As a further simplification, you can access keys as if they were members of a structure using the
+simple dot notation:
+
+  - mymap.key vs. mymap.get("key")
+  - mymap.key = value vs. mymap.put("key", value)
+
+You can also extract a sub-list from a list using a subscript range:
+
+  - mylist2 = mylist[i, j] - extracts the ith through jth elements and creates a new list
+
+Characters and subtrings of strings can be accessed in a similar manner
+
+  - str[0]
+  - str[i] = 'x'
+  
+See string_functions.txt for more on string manipulation.
+
+Java-style comments can be used freely in expressions as well, both // and /* */.
+
+At the bottom of the syntax for expressions we have variables and literal values. Variables are
+defined as in Java, as a sequence of letters, digits, and underscore, but not starting with a digit.
+Literal values include "null", "true", "false", integers, floating real values, string literals
+(enclosed in quotes as in Java or in apostrophes as well for convenience when scripting within
+JSON code), and list and map literals. String literals may be escaped as in Java. 
+
+.

@@ -1,0 +1,31 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Data Types for the Base Technology Software Agent Server
+
+The data types supported by the Base Technology Software Agent Server are based on the Java data
+types, but with some additions and omissions.
+
+The basic types are:
+
+  - boolean
+  - integer
+  - float
+  - string
+  - list
+  - map
+  - web
+
+The "integer" type is equivalent to Java "long". The various Java variations for integer are
+supported, but are all mapped to "integer":
+
+  - byte
+  - short
+  - int
+  - long
+
+  The "float" type is equivalent to Java "double". Java "double" is supported, but simply mapped to
+  "float".
+  
+  .
+  
