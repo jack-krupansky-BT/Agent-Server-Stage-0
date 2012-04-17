@@ -1,0 +1,92 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Introducing the Base Technology Software Agent Server
+
+(This doc is a work in progress, just trying out some ideas here right now.)
+
+Software agents are a new paradigm for software components which make it possible for developers and even
+advanced users of only average skill to develop and deploy software that accesses web-based resources to
+provide information to users on an ongoing basis that theywould not normally be able to normally access
+without expensive, tedious, cumbersome, and error-prone server applications. Software agents have the
+potential to bring distributed, persistent, web-computing to the masses.
+
+This new approach to distributed, persistent, web-computing has three key aspects:
+
+1. A powerful server environment which enables safe and efficient to deploy large numbers of software agents.
+2. A rich infrastructure that dramatically facilitates development of individual agents that access web resources.
+3. A software agent model that greatly facilitates the use of the outputs of any number software agents for
+   each individual agent and to simultaneously generate output that in turn fuels any number of other
+   software agents. In other words, agents can leverage other agents
+
+What distinguishes a software agent from other forms of software:
+
+1. Autonomy. An agent is long-running, independent of a user's personal computing devices (PC, phone, tablet,
+   etc.) and does not require the direct supervision of the user.
+2. Agency. An agent is developed and controlled by the user not some high-end server developer or system administrator.
+3. Persistent. An agent and its state persists regardless of what happens with the servers that it may run on.
+4. Robust. An agent is tolerant of failures of hardware and software and its environment.
+5. Transparency and simplicity. Not a large opaque mass of code. Easy to see what is at stake
+6. Trustworthy. Agents are transparent and inherently trustworthy. And the server enforces the rules.
+7. Cooperate. Agents can build on the activity of other agents.
+8. Goal-oriented. More than just specific tasks, agents can work towards goals.
+
+----
+
+Much as with the advent of the PC with spreadsheets and word processors, software agent technology offer the
+promise of bringing a whole new level of computing to the masses.
+
+Until now, web-computing was restricted to the technical elite. Sure, anybody can put of a web site with some
+PHP scripts and even some e-commerce features, but actually doing web-computing with web resources, as opposed
+to server-base applications which merely offer browser-bsaed front-ends is a quantum leap above and beyond that
+level of relatively simple processing.
+
+Your average sophisticated web site leverages a relatively small development team over a relatively large
+number of users. User-centric web-computing seeks to deliver computing power to users on a 1-on-1 basis. In
+other words, the user themselves develops their own program and is able to deploy, operate, and maintain it
+without any team of elite devlopers. That is a steep challenge, but that is what saoftware agent technology
+is all about.
+
+This requires five new levels of capability:
+
+1. A much more sophisticated server - the agent server.
+2. A much richer infrastructure that enables software agents - web resource managers
+3. A rich code library to enable individual agents
+4. A powerful but easy to use scripting language
+5. A declarative framework that connects agents together to leverage their capabilities
+
+Five main types of agents:
+
+1. Data source agents. Directly access web resources and transform and repackage essential information in
+   a form that is easily consumed by other agents.
+2. Aggregation agents. Combine data from multiple sources, producing a distilled result that can be easily
+   consumed by other agents.
+3. Utility agents. Perform common data transformations of value to many agents.
+4. Worker agents. Perform subsets of data processing for main agents.
+5. Main agents. The agents that actually produce the output to be consumed by the end user.
+
+All of those functional types are still implemented with a single agent model, but there is one distintion
+between the data source agents and all the rest, namely the use of timers to control the reading of web
+resources, while all other forms of agent simply use declared dependencies to assure that agents run
+when new data becomes available from agents they depend on.
+
+A number of forms of "throttling" are supported to streamline operation of both individual agents,
+collections of realted agents, and the overall universe of agents on a server at an administrative level.
+
+1. Explicit timers - primarily for the data source agents
+2. Trigger throttling - controls how often an agent will run when its inputs have changed
+3. Report throttling - how frequently an agent will change its own outputs
+4. Administrative throttling - the admin can set the maximum frequency for the agent-level throttling
+   controls
+
+A variety of data formats are supported to cope with the forms of data on the web and web APIs, including
+
+1. HTML
+2. XML
+3. Text
+4. CSV
+5. JSON
+6. Lists
+7. Maps (tables)
+
+.
