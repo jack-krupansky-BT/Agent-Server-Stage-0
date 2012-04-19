@@ -16,11 +16,21 @@
 
 package com.basetechnology.s0.agentserver.script.intermediate;
 
+import java.util.List;
+
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 import com.basetechnology.s0.agentserver.script.runtime.value.WebValue;
 
 public class WebTypeNode extends TypeNode {
   public static WebTypeNode one = new WebTypeNode();
+
+  public WebTypeNode(){
+    
+  }
+  
+  public Value create(List<Value> argumentValues){
+    return new WebValue();
+  }
   
   public Value getDefaultValue(){
     return new WebValue();

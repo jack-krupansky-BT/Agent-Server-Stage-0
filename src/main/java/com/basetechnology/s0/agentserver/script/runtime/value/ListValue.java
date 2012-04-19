@@ -67,7 +67,7 @@ public class ListValue extends Value {
   }
 
   public String getStringValue(){
-    return Integer.toString(value.size());
+    return toString();
   }
 
   public void appendValue(Value newValue){

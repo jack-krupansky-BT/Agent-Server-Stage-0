@@ -35,6 +35,7 @@ import com.basetechnology.s0.agentserver.script.intermediate.StringTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.WebTypeNode;
 import com.basetechnology.s0.agentserver.script.runtime.ScriptState;
+import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessException;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebAccessManager;
 import com.basetechnology.s0.agentserver.webaccessmanager.WebPage;
 
@@ -95,26 +96,63 @@ public class WebValue extends Value {
       // No return value
       return NullValue.one;
       // TODO: Add "contains"
-    } else if (name.equals("get") && (numArguments >= 1 || numArguments <= 3)){
+    } else if (name.equals("get") && (numArguments >= 1 || numArguments <= 4)){
       // Get the URL of the web page to fetch
       String url = arguments.get(0).getStringValue();
+      
+      // Get the optional useCache flag
+      boolean useCache = true;
+      if (numArguments >= 2)
+        useCache = arguments.get(1).getBooleanValue();
     
       // Get the optional page refresh interval
       long refreshInterval = -1;
-      if (numArguments == 2)
-        refreshInterval = arguments.get(1).getLongValue();
+      if (numArguments >= 3)
+        refreshInterval = arguments.get(2).getLongValue();
       
       // Get the optional wait flag
       boolean wait = this.wait;
-      if (numArguments == 3)
-        wait = arguments.get(2).getBooleanValue();
+      if (numArguments >= 4)
+        wait = arguments.get(3).getBooleanValue();
         
       // Fetch the specified web page
-      String s = fetchWebPage(scriptState, url, refreshInterval, wait);
+      String s = fetchWebPage(scriptState, url, useCache, refreshInterval, wait);
       if (s == null || s.length() == 0)
         return NullValue.one;
       else
         return new StringValue(s);
+    } else if (name.equals("post") && (numArguments >= 1 || numArguments <= 4)){
+      // Get the URL of the web page to fetch
+      String url = arguments.get(0).getStringValue();
+
+      // Get the optional data to post
+      String data = null;
+      if (numArguments >= 2)
+        data = arguments.get(1).getStringValue();
+
+      // Get the optional page refresh interval
+      long refreshInterval = -1;
+      if (numArguments >= 3)
+        refreshInterval = arguments.get(2).getLongValue();
+      
+      // Get the optional wait flag
+      boolean wait = this.wait;
+      if (numArguments == 4)
+        wait = arguments.get(3).getBooleanValue();
+        
+      // Post to the specified URL
+      String s = postUrl(scriptState, url, data, refreshInterval, wait);
+      if (s == null || s.length() == 0)
+        return NullValue.one;
+      else
+        return new StringValue(s);
+    } else if (name.equals("isAccessible") && numArguments == 1){
+      // Get the URL of the web page to fetch
+      String url = arguments.get(0).getStringValue();
+
+      // Determine if the specified web page is accessible
+      boolean urlIsAccessible = isAccessible(scriptState, url);
+      return BooleanValue.create(urlIsAccessible);
     } else if (name.equals("keys") && numArguments == 0){
       // TODO
       // Build list of key string values
@@ -165,12 +203,12 @@ public class WebValue extends Value {
   }
 
   public String fetchWebPage(ScriptState scriptState, String url) throws RuntimeException {
-    return fetchWebPage(scriptState, url, -1, true);
+    return fetchWebPage(scriptState, url, true, -1, true);
   }
 
-  public String fetchWebPage(ScriptState scriptState, String url, long refreshInterval, boolean wait) throws RuntimeException {
+  public String fetchWebPage(ScriptState scriptState, String url, boolean useCache, long refreshInterval, boolean wait) throws RuntimeException {
     try {
-      webPage = AgentServer.getSingleton().getWebPage(scriptState.getUserId(), url, refreshInterval, wait);
+      webPage = scriptState.agentServer.getWebPage(scriptState.getUserId(), url, useCache, refreshInterval, wait);
       if (webPage == null)
         return null;
       else
@@ -178,6 +216,32 @@ public class WebValue extends Value {
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Web GET exception: " + e);
+    }
+  }
+
+  public String postUrl(ScriptState scriptState, String url, String data) throws RuntimeException {
+    return postUrl(scriptState, url, data, -1, true);
+  }
+
+  public String postUrl(ScriptState scriptState, String url, String data, long refreshInterval, boolean wait) throws RuntimeException {
+    try {
+      webPage = scriptState.agentServer.postUrl(scriptState.getUserId(), url, data, refreshInterval, wait);
+      if (webPage == null)
+        return null;
+      else
+        return webPage.text;
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Web GET exception: " + e);
+    }
+  }
+
+  public boolean isAccessible(ScriptState scriptState, String url) throws RuntimeException {
+    try {
+      webPage = scriptState.agentServer.getWebPage(scriptState.getUserId(), url);
+      return webPage != null;
+    } catch (WebAccessException e) {
+      return false;
     }
   }
   

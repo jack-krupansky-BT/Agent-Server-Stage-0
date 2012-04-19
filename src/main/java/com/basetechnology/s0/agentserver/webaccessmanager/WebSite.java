@@ -21,7 +21,11 @@ public class WebSite {
   public String url;
   public Robot robot;
   public int numReads = 0;
-  public int numWebReads = 0;
+  public int numWebAccesses = 0;
+  public int numWebGets = 0;
+  public int numWebPosts = 0;
+  public int numWebPuts = 0;
+  public int numWebDeletes = 0;
   
   public WebSite(WebAccessManager webAccessManager, String url){
     this.webAccessManager = webAccessManager;
@@ -40,8 +44,12 @@ public class WebSite {
   }
   
   // TODO: Think about whether caller should check cache, or this function?
-  public WebPage getWebPage(String url, long refreshInterval, boolean wait) throws InterruptedException{
+  public WebPage getWebPage(String url, long refreshInterval, boolean wait){
     return getRobot().getWebPage(url, refreshInterval, wait);
+  }
+
+  public WebPage postUrl(String url, String data, long refreshInterval, boolean wait){
+    return getRobot().postUrl(url, data, refreshInterval, wait);
   }
   
   public String toString(){

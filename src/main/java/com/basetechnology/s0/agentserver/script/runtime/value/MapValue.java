@@ -75,7 +75,7 @@ public class MapValue extends Value {
   }
 
   public String getStringValue(){
-    return Integer.toString(value.size());
+    return toString();
   }
 
   public Value getNamedValue(ScriptState scriptState, String name) throws RuntimeException {
@@ -324,7 +324,7 @@ public class MapValue extends Value {
       sb.append(text);
     }
     
-    // Return the acculated text
+    // Return the accumulated text
     return sb.toString();
   }
 

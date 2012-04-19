@@ -173,7 +173,7 @@ public class WebAccessManagerTest {
       String searchText = "<title>U.S. News - Headlines, Stories and Video from CNN.com</title>";
       assertTrue("Web page text does not contain '" + "'", text.contains(searchText));
       assertEquals("Number of reads", 1, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 1, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 1, webPage.webSite.numWebAccesses);
 
       // Validate parse of robots.txt
       Robot robot = webPage.webSite.robot;
@@ -199,17 +199,17 @@ public class WebAccessManagerTest {
       WebPage webPage3 = wam.getWebPage(userId, testUrl);
       assertTrue("Failed to return cached page", webPage == webPage3);
       assertEquals("Number of reads", 3, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 1, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 1, webPage.webSite.numWebAccesses);
       
       // Try to use zero refresh interval so cache is bypassed
       // But, this should simply return cache due to admin limit of 60 sec.
       Thread.sleep(1);
-      WebPage webPage4 = wam.getWebPage(userId, testUrl, 0, false);
+      WebPage webPage4 = wam.getWebPage(userId, testUrl, true, 0, false);
       assertTrue("Returned fresh page", webPage == webPage4);
       long delta = webPage4.time - webPage.time;
       assertTrue("Time changed", delta == 0);
       assertEquals("Number of reads", 4, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 1, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 1, webPage.webSite.numWebAccesses);
 
       // Now verify that default still returns the cached page
       WebPage webPage5 = wam.getWebPage(userId, testUrl);
@@ -217,7 +217,7 @@ public class WebAccessManagerTest {
       WebPage webPage6 = wam.getWebPage(userId, testUrl);
       assertTrue("Failed to return cached page", webPage5 == webPage6);
       assertEquals("Number of reads", 6, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 1, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 1, webPage.webSite.numWebAccesses);
 
       // Now turn off administrative throttling
       // Using refresh interval of zero should now return a fresh page since this
@@ -225,12 +225,12 @@ public class WebAccessManagerTest {
       wac.setMinimumWebSiteAccessInterval(0);
       wac.setMinimumWebAccessInterval(0);
       Thread.sleep(1);
-      webPage4 = wam.getWebPage(userId, testUrl, 0, false);
+      webPage4 = wam.getWebPage(userId, testUrl, true, 0, false);
       assertTrue("Returned cached page", webPage != webPage4);
       delta = webPage4.time - webPage.time;
       assertTrue("Time unchanged", delta != 0);
       assertEquals("Number of reads", 7, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 2, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 2, webPage.webSite.numWebAccesses);
 
       // Restore admin throttling
       wac.setMinimumWebSiteAccessInterval(minSiteInterval);
@@ -261,44 +261,44 @@ public class WebAccessManagerTest {
         // Expected
       }
       assertEquals("Number of reads", 10, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 2, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 2, webPage.webSite.numWebAccesses);
 
       // Access a page on the same site but without a wait - should fail
       try {
         testUrl = "http://www.cnn.com/WORLD/";
-        webPage = wam.getWebPage(userId, testUrl, -1, false);
+        webPage = wam.getWebPage(userId, testUrl, true, -1, false);
         fail("getWebPage succeeded unexpectedly, despite lack of wait option");
       } catch (WebAccessFrequencyException e){
         assertTrue ("Improper exception message: " + e.getMessage(), e.getMessage().contains("minimum site access interval of 300 "));
         // Expected
       }
       assertEquals("Number of reads", 11, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 2, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 2, webPage.webSite.numWebAccesses);
 
       // Turn off sit throttling and re-read and see that it fails on the overall throttling
       wac.setMinimumWebSiteAccessInterval(0);
       try {
         testUrl = "http://www.cnn.com/WORLD/";
-        webPage = wam.getWebPage(userId, testUrl, -1, false);
+        webPage = wam.getWebPage(userId, testUrl, true, -1, false);
         fail("getWebPage succeeded unexpectedly, despite lack of wait option");
       } catch (WebAccessFrequencyException e){
         assertTrue ("Improper exception message: " + e.getMessage(), e.getMessage().contains("minimum overall web access interval of 250 "));
         // Expected
       }
       assertEquals("Number of reads", 12, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 2, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 2, webPage.webSite.numWebAccesses);
 
       // Now access same page with wait option - should succeed
       testUrl = "http://www.cnn.com/WORLD/";
-      webPage = wam.getWebPage(userId, testUrl, -1, true);
+      webPage = wam.getWebPage(userId, testUrl, true, -1, true);
       assertEquals("Number of reads", 13, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 3, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 3, webPage.webSite.numWebAccesses);
 
       // Re-read the same page and see that it comes from cache
       testUrl = "http://www.cnn.com/WORLD/";
-      webPage = wam.getWebPage(userId, testUrl, -1, true);
+      webPage = wam.getWebPage(userId, testUrl, true, -1, true);
       assertEquals("Number of reads", 14, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 3, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 3, webPage.webSite.numWebAccesses);
 
       // TODO: Need to test with a site that has Crawl-delay
       // Fake a robots.txt crawl delay and test without wait option to see it fail
@@ -309,20 +309,20 @@ public class WebAccessManagerTest {
       webSite.robot.getRobotRecord().crawlDelay = 2;
       try {
         testUrl = "http://www.cnn.com/WORLD/";
-        webPage = wam.getWebPage(userId, testUrl, -1, false);
+        webPage = wam.getWebPage(userId, testUrl, true, -1, false);
         fail("getWebPage succeeded unexpectedly, despite lack of wait option");
       } catch (WebAccessFrequencyException e){
         assertTrue ("Improper exception message: " + e.getMessage(), e.getMessage().contains("Crawl-delay of 2 "));
         // Expected
       }
       assertEquals("Number of reads", 15, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 3, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 3, webPage.webSite.numWebAccesses);
 
       // Now do same operation with wait - it should succeed
       testUrl = "http://www.cnn.com/WORLD/";
-      webPage = wam.getWebPage(userId, testUrl, -1, true);
+      webPage = wam.getWebPage(userId, testUrl, true, -1, true);
       assertEquals("Number of reads", 16, webPage.webSite.numReads);
-      assertEquals("Number of web reads", 4, webPage.webSite.numWebReads);
+      assertEquals("Number of web reads", 4, webPage.webSite.numWebAccesses);
 
     }
 

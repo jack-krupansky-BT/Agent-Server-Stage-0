@@ -21,6 +21,8 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
@@ -240,7 +242,7 @@ public class Robot {
   // TODO: Who checks the cache?
   // TODO: The other verbs - POST, PUT, DELETE
 
-  public WebPage getWebPage(String url, long refreshInterval, boolean wait) throws InterruptedException {
+  public WebPage getWebPage(String url, long refreshInterval, boolean wait){
     // Check if access is permitted to the page at any time
     if (! isAccessAllowed(url))
       throw new RobotExclusionException("robots.txt denies access to this page: " + url);
@@ -270,7 +272,11 @@ public class Robot {
           if (wait){
             // Sleep until we reach the minimum interval for overall web access
             log.info("Sleeping for " + sleepIntervalOverall + " ms. due to overall minimum web access interval of " + minOverallDelta + " ms. - web page URL: " + url);
-            Thread.sleep(sleepIntervalOverall);
+            try {
+              Thread.sleep(sleepIntervalOverall);
+            } catch (InterruptedException e){
+              // Ignore the exception
+            }
           } else
             throw new WebAccessFrequencyException("Web access is too frequent (" + deltaOverall + " ms. since last access) relative to minimum overall web access interval of " + minOverallDelta + " sec. and 'wait' option was not specified");
         }
@@ -281,7 +287,11 @@ public class Robot {
           if (wait){
             // Sleep until we reach the minimum interval for access to this site
             log.info("Sleeping for " + sleepIntervalCrawl + " ms. due to robots.txt Crawl-delay interval of " + crawlDelayMs / 1000 + " sec. - web page URL: " + url);
-            Thread.sleep(sleepIntervalCrawl);
+            try {
+              Thread.sleep(sleepIntervalCrawl);
+            } catch (InterruptedException e){
+              // Ignore the exception
+            }
           } else
             throw new WebAccessFrequencyException("Web access is too frequent (" + delta + " ms. since last access) relative to robots.txt Crawl-delay of " + crawlDelayMs / 1000 + " sec. and 'wait' option was not specified");
         }
@@ -294,7 +304,11 @@ public class Robot {
           if (wait){
             // Sleep until we reach the minimum interval for access to this site
             log.info("Sleeping for " + sleepIntervalSite + " ms. due to minimum site access interval of " + crawlDelayMs + " ms. - web page URL: " + url);
-            Thread.sleep(sleepIntervalSite);
+            try {
+              Thread.sleep(sleepIntervalSite);
+            } catch (InterruptedException e){
+              // Ignore the exception
+            }
           } else
             throw new WebAccessFrequencyException("Web access is too frequent (" + delta + " ms. since last access) relative to minimum site access interval of " + minSiteDelta + " ms. and 'wait' option was not specified");
         }
@@ -305,7 +319,11 @@ public class Robot {
           if (wait){
             // Sleep until we reach the minimum interval for access to this site
             log.info("Sleeping for " + sleepIntervalCrawl + " ms. due to robots.txt Crawl-delay interval of " + crawlDelayMs / 1000 + " sec. - web page URL: " + url);
-            Thread.sleep(sleepIntervalCrawl);
+            try {
+              Thread.sleep(sleepIntervalCrawl);
+            } catch (InterruptedException e){
+              // Ignore the exception
+            }
           } else
             throw new WebAccessFrequencyException("Web access is too frequent (" + delta + " ms. since last access) relative to robots.txt Crawl-delay of " + crawlDelayMs / 1000 + " sec. and 'wait' option was not specified");
         }
@@ -318,7 +336,8 @@ public class Robot {
     // Get the web page
     try {
       // Keep track of web accesses
-      webSite.numWebReads++;
+      webSite.numWebAccesses++;
+      webSite.numWebGets++;
 
       // Do the GET for the specified web page
       log.info("Fetching web page: " + url);
@@ -401,7 +420,146 @@ public class Robot {
       throw new WebAccessException("Web GET exception: " + e.getMessage());
     }
   }
-  
+
+  public WebPage postUrl(String url, String data, long refreshInterval, boolean wait){
+    // Check if access is permitted to the page at any time
+    if (! isAccessAllowed(url))
+      throw new RobotExclusionException("robots.txt denies access to this page: " + url);
+
+    // Perform throttling and optional wait, if necessary
+    long now = System.currentTimeMillis();
+    long delta = now - lastAccess;
+    long sleepIntervalCrawl = crawlDelayMs - delta;
+
+    // Need to factor in overall throttling
+    long minOverallDelta = webSite.webAccessManager.config.getMinimumWebAccessInterval();
+    long deltaOverall = now - webSite.webAccessManager.lastAccess;
+    long sleepIntervalOverall = minOverallDelta - deltaOverall;
+
+    // Need to factor in site-specific throttling as well
+    long minSiteDelta = webSite.webAccessManager.config.getMinimumWebSiteAccessInterval();
+    long sleepIntervalSite = minSiteDelta - delta;
+
+    log.info("crawlDelayMs: " + crawlDelayMs + " sleepIntervalCrawl: " + sleepIntervalCrawl + " sleepIntervalOverall: " + sleepIntervalOverall + " sleepIntervalSite: " + sleepIntervalSite);
+    
+    // Which requires a longer wait, site, robots.txt, or overall system throttling?
+    if (sleepIntervalOverall >= sleepIntervalSite){
+      if (sleepIntervalOverall >= sleepIntervalCrawl){
+        // Check if too frequent for overall throttling
+        if (sleepIntervalOverall > 0){
+          // This is too-frequent access
+          if (wait){
+            // Sleep until we reach the minimum interval for overall web access
+            log.info("Sleeping for " + sleepIntervalOverall + " ms. due to overall minimum web access interval of " + minOverallDelta + " ms. - web page URL: " + url);
+            try {
+              Thread.sleep(sleepIntervalOverall);
+            } catch (InterruptedException e){
+              // Ignore the exception
+            }
+          } else
+            throw new WebAccessFrequencyException("Web access is too frequent (" + deltaOverall + " ms. since last access) relative to minimum overall web access interval of " + minOverallDelta + " sec. and 'wait' option was not specified");
+        }
+      } else {
+        // Check if too frequent for robots.txt crawl throttling
+        if (sleepIntervalCrawl > 0){
+          // This is too-frequent access
+          if (wait){
+            // Sleep until we reach the minimum interval for access to this site
+            log.info("Sleeping for " + sleepIntervalCrawl + " ms. due to robots.txt Crawl-delay interval of " + crawlDelayMs / 1000 + " sec. - web page URL: " + url);
+            try {
+              Thread.sleep(sleepIntervalCrawl);
+            } catch (InterruptedException e){
+              // Ignore the exception
+            }
+          } else
+            throw new WebAccessFrequencyException("Web access is too frequent (" + delta + " ms. since last access) relative to robots.txt Crawl-delay of " + crawlDelayMs / 1000 + " sec. and 'wait' option was not specified");
+        }
+      }
+    } else {
+      if (sleepIntervalSite >= sleepIntervalCrawl){
+        // Check if too frequent for site throttling
+        if (sleepIntervalSite > 0){
+          // This is too-frequent access
+          if (wait){
+            // Sleep until we reach the minimum interval for access to this site
+            log.info("Sleeping for " + sleepIntervalSite + " ms. due to minimum site access interval of " + crawlDelayMs + " ms. - web page URL: " + url);
+            try {
+              Thread.sleep(sleepIntervalSite);
+            } catch (InterruptedException e){
+              // Ignore the exception
+            }
+          } else
+            throw new WebAccessFrequencyException("Web access is too frequent (" + delta + " ms. since last access) relative to minimum site access interval of " + minSiteDelta + " ms. and 'wait' option was not specified");
+        }
+      } else {
+        // Check if too frequent for robots.txt crawl throttling
+        if (sleepIntervalCrawl > 0){
+          // This is too-frequent access
+          if (wait){
+            // Sleep until we reach the minimum interval for access to this site
+            log.info("Sleeping for " + sleepIntervalCrawl + " ms. due to robots.txt Crawl-delay interval of " + crawlDelayMs / 1000 + " sec. - web page URL: " + url);
+            try {
+              Thread.sleep(sleepIntervalCrawl);
+            } catch (InterruptedException e){
+              // Ignore the exception
+            }
+          } else
+            throw new WebAccessFrequencyException("Web access is too frequent (" + delta + " ms. since last access) relative to robots.txt Crawl-delay of " + crawlDelayMs / 1000 + " sec. and 'wait' option was not specified");
+        }
+      }
+    }
+
+    // Get updated time after the wait
+    now = System.currentTimeMillis();
+
+    // Get the web page
+    try {
+      // Keep track of web accesses
+      webSite.numWebAccesses++;
+      webSite.numWebPosts++;
+
+      // Do the POST for the specified web URL
+      log.info("Posting to web URL: " + url);
+      HttpClient httpclient = new DefaultHttpClient();
+      HttpPost httpPost = new HttpPost(url);
+      String contentString = "";
+      if (data != null)
+        contentString = data;
+      StringEntity contentEntity = new StringEntity(contentString, "UTF-8");
+      if (data != null)
+        httpPost.setEntity(contentEntity);
+      HttpResponse response = httpclient.execute(httpPost);
+
+      // Save the status for the response
+      int statusCode = response.getStatusLine().getStatusCode();
+      String reasonPhrase = response.getStatusLine().getReasonPhrase();
+
+      // Save the text of the response entity
+      HttpEntity entity = response.getEntity();
+      String text = EntityUtils.toString(entity);
+      if (statusCode / 100 != 2)
+        log.warn("HTTP response entity for status code " + statusCode + "(" + reasonPhrase + "): " + text);
+      else
+        log.info("HTTP response entity for status code " + statusCode + ": " + text);
+
+      // Create a WebPage for this page
+      WebPage webPage = new WebPage(webSite, url, refreshInterval, System.currentTimeMillis(),
+          response, statusCode, reasonPhrase, text);
+
+      // Record time of most recent access
+      now = System.currentTimeMillis();
+      lastAccess = now;
+      webSite.webAccessManager.lastAccess = now;
+
+      return webPage;
+    } catch (Exception e) {
+      throw new WebAccessException("Web POST exception: " + e.getMessage());
+    }
+
+    // TODO Who adds this to the cache
+    // Return the new web page
+  }
+
   public String toString(){
     return "Robot URL: " + webSite.url + " User-agent name: " + webSite.webAccessManager.config.getUserAgentName() +
         " lastAccess: " + DateUtils.toRfcString(lastAccess) + " robotRecords: " + robotRecords;

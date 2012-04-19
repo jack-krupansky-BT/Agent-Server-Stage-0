@@ -80,6 +80,7 @@ import com.basetechnology.s0.agentserver.script.intermediate.ThrowStatementNode;
 import com.basetechnology.s0.agentserver.script.intermediate.TryStatementNode;
 import com.basetechnology.s0.agentserver.script.intermediate.TypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.VariableReferenceNode;
+import com.basetechnology.s0.agentserver.script.intermediate.WebTypeNode;
 import com.basetechnology.s0.agentserver.script.intermediate.WhileStatementNode;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.TokenList;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.Tokenizer;
@@ -139,6 +140,7 @@ import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.Token;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.TrueToken;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.TryKeywordToken;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.TypeKeywordToken;
+import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.WebKeywordToken;
 import com.basetechnology.s0.agentserver.script.parser.tokenizer.token.WhileKeywordToken;
 import com.basetechnology.s0.agentserver.script.runtime.value.FalseValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.FloatValue;
@@ -1656,6 +1658,23 @@ public class ScriptParser {
 
       // Generate the 'new' node to create instance of a map
       node = new NewNode(MapTypeNode.one, elementList);
+    } else if (token instanceof WebKeywordToken){
+      // 'web' should be followed by '(' to start a map literal
+      token = tokens.getNext();
+      if (! (token instanceof LeftParenthesisOperatorToken))
+        throw new ParserException("Expected '(' after 'map' for a web literal, but found: " + token.toString(), token);
+
+      // Skip over the opening '('
+      token = tokens.getNext();
+
+      // Parse the closing ')' - no arguments expected
+      if (! (token instanceof RightParenthesisOperatorToken))
+        throw new ParserException("Unterminated web literal; expected ')', but encountered " + token.toString(), token);
+      token = tokens.getNext();
+
+      // Generate the 'new' node to create instance of a web object
+      List<ExpressionNode> elementList = new ArrayList<ExpressionNode>();
+      node = new NewNode(WebTypeNode.one, elementList);
     } else
       throw new ParserException("Expected expression primary, but found: " + token.getClass().getSimpleName());
 

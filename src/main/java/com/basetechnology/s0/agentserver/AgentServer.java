@@ -889,8 +889,20 @@ public class AgentServer {
     
   }
   
-  public WebPage getWebPage(String userId, String url, long refreshInterval, boolean wait) throws InterruptedException {
-    return webAccessManager.getWebPage(userId, url, refreshInterval, wait);
+  public WebPage getWebPage(String userId, String url) {
+    return webAccessManager.getWebPage(userId, url);
+  }
+  
+  public WebPage getWebPage(String userId, String url, boolean useCache, long refreshInterval, boolean wait){
+    return webAccessManager.getWebPage(userId, url, useCache, refreshInterval, wait);
+  }
+  
+  public WebPage postUrl(String userId, String url, String data) {
+    return webAccessManager.postUrl(userId, url, data);
+  }
+  
+  public WebPage postUrl(String userId, String url, String data, long refreshInterval, boolean wait){
+    return webAccessManager.postUrl(userId, url, data, refreshInterval, wait);
   }
 
   public ListMap<String, String> getWebSiteAccessControls(User user) throws JSONException, AgentServerException{

@@ -23,7 +23,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.HttpHostConnectException;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -61,6 +71,7 @@ import com.basetechnology.s0.agentserver.script.runtime.value.TrueValue;
 import com.basetechnology.s0.agentserver.script.runtime.value.Value;
 
 public class ScriptRuntimeTest extends AgentServerTestBase {
+  static final Logger log = Logger.getLogger(ScriptRuntimeTest.class);
 
   AgentAppServer agentAppServer = null;
   AgentServer agentServer = null;
@@ -225,6 +236,42 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
   public Value evalString(String expressionString, String expected) throws AgentServerException, TokenizerException, ParserException{
     Value value = eval(expressionString, "StringValue");
     assertEquals("String return value", expected, value.getStringValue());
+    return value;
+  }
+
+  public Value evalMaskedString(String expressionString, String maskPattern1, String replacement, String expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "StringValue");
+    String actualString = value.getStringValue();
+    Pattern p = Pattern.compile(maskPattern1);
+    Matcher m = p.matcher(actualString);
+    String maskedActualString = actualString;
+    if (m.find())
+      maskedActualString = actualString.substring(0, m.start()) + replacement + actualString.substring(m.end());
+    assertEquals("String return value", expected, maskedActualString);
+    return value;
+  }
+
+  public Value evalList(String expressionString, String expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "ListValue");
+    assertEquals("List return value", expected, value.getStringValue());
+    return value;
+  }
+
+  public Value evalMap(String expressionString, String expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "MapValue");
+    assertEquals("Map return value", expected, value.getStringValue());
+    return value;
+  }
+
+  public Value evalMaskedMap(String expressionString, String maskPattern1, String replacement, String expected) throws AgentServerException, TokenizerException, ParserException{
+    Value value = eval(expressionString, "MapValue");
+    String actualString = value.getStringValue();
+    Pattern p = Pattern.compile(maskPattern1);
+    Matcher m = p.matcher(actualString);
+    String maskedActualString = actualString;
+    if (m.find())
+      maskedActualString = actualString.substring(0, m.start()) + replacement + actualString.substring(m.end());
+    assertEquals("Map return value", expected, maskedActualString);
     return value;
   }
 
@@ -400,6 +447,28 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     Value value = callFunction(script, arguments, "ListValue");
     assertEquals("List return value", expected, value.toString());
     return value;
+  }
+  
+  public boolean pingSolr() throws Exception {
+    HttpClient httpclient = new DefaultHttpClient();
+    String url = "http://localhost:8983/solr/admin/ping";
+    HttpGet httpGet = new HttpGet(url);
+    HttpResponse response = null;
+    try {
+      response = httpclient.execute(httpGet);
+    } catch (HttpHostConnectException e){
+      log.info("Solr does not appear to be running - unable to connect");
+      return false;
+    }
+    HttpEntity entity = response.getEntity();
+    String s = entity == null ? null : EntityUtils.toString(entity);
+   int statusCode = response.getStatusLine().getStatusCode();
+    if (statusCode / 100 != 2){
+      log.info("Solr does not appear to be running - ping failed with status code " + statusCode +
+          " reason: " + response.getStatusLine().getReasonPhrase());
+      return false;
+    } else
+      return true;
   }
   
   @Test
@@ -4050,6 +4119,116 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     runNullScript("exit();");
     assertTrue("Should be deleted", dummyAgentInstance.deleted);
     dummyAgentInstance.deleted = false;
+  }
+
+  @Test
+  public void testSolrAccess() throws Exception {
+    // Set throttling down to speed tests
+    agentServer.webAccessConfig.setMinimumWebAccessInterval(10);
+    agentServer.webAccessConfig.setMinimumWebPageRefreshInterval(10);
+    agentServer.webAccessConfig.setMinimumWebSiteAccessInterval(10);
+    agentServer.webAccessConfig.setDefaultWebPageRefreshInterval(10);
+
+    if (! pingSolr()){
+      log.warn("Skipping Solr tests since Solr does not appear to be running");
+      return;
+    }
+
+    // Detect that solr is not running
+    evalBoolean("web().isAccessible('http://localhost:8985/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on')",
+        false);
+    evalBoolean("web().isAccessible('http://localhost:8985/solr/select/?q=xx-junk-yy')",
+        false);
+    evalBoolean("web().isAccessible('http://localhost:8983/solr/select/?q=xx-junk-yy')",
+        true);
+
+    // Test an Solr query that should return no results
+    evalString("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml.keys.string",
+        "[response]");
+    evalList("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml.keys",
+        "[response]");
+    evalList("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy').xml.keys",
+        "[response]");
+
+    evalString("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml.response.keys.string",
+        "[lst, result]");
+    evalList("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml.response.keys",
+        "[lst, result]");
+    evalList("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy').xml.response.keys",
+        "[lst, result]");
+
+    evalString("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml.response.result.string",
+        "{name: response, numFound: 0, start: 0}");
+    evalMap("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml.response.result",
+        "{name: response, numFound: 0, start: 0}");
+    evalMap("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy').xml.response.result",
+        "{name: response, numFound: 0, start: 0}");
+
+    evalInt("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml.response.result.numFound.int", 0);
+    evalInt("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy').xml.response.result.numFound.int", 0);
+
+    evalMaskedString("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml.string",
+        "QTime, text_1: [0-9]*", "QTime, text_1: x",
+        "{response: {lst: {name: responseHeader, int: [{name: status, text_1: 0}, {name: QTime, text_1: x}], lst: {name: params, str: [{name: indent, text_1: on}, {name: start, text_1: 0}, {name: q, text_1: xx-junk-yy}, {name: rows, text_1: 10}]}}, result: {name: response, numFound: 0, start: 0}}}");
+
+    evalMaskedMap("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml",
+        "QTime, text_1: [0-9]*", "QTime, text_1: x",
+        "{response: {lst: {name: responseHeader, int: [{name: status, text_1: 0}, {name: QTime, text_1: x}], lst: {name: params, str: [{name: indent, text_1: on}, {name: start, text_1: 0}, {name: q, text_1: xx-junk-yy}, {name: rows, text_1: 10}]}}, result: {name: response, numFound: 0, start: 0}}}");
+
+    evalMaskedMap("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml",
+        "QTime, text_1: [0-9]*", "QTime, text_1: x",
+        "{response: {lst: {name: responseHeader, int: [{name: status, text_1: 0}, {name: QTime, text_1: x}], lst: {name: params, str: [{name: indent, text_1: on}, {name: start, text_1: 0}, {name: q, text_1: xx-junk-yy}, {name: rows, text_1: 10}]}}, result: {name: response, numFound: 0, start: 0}}}");
+
+    evalMaskedString("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on')",
+        "QTime\">[0-9]*", "QTime\">x",
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<response>\n\n<lst name=\"responseHeader\">\n  <int name=\"status\">0</int>\n  <int name=\"QTime\">x</int>\n  <lst name=\"params\">\n    <str name=\"indent\">on</str>\n    <str name=\"start\">0</str>\n    <str name=\"q\">xx-junk-yy</str>\n    <str name=\"rows\">10</str>\n  </lst>\n</lst>\n<result name=\"response\" numFound=\"0\" start=\"0\"/>\n</response>\n");
+
+  }
+
+  @Test
+  public void testSolrPostDoc() throws Exception {
+    // Set throttling down to speed tests
+    agentServer.webAccessConfig.setMinimumWebAccessInterval(10);
+    agentServer.webAccessConfig.setMinimumWebPageRefreshInterval(10);
+    agentServer.webAccessConfig.setMinimumWebSiteAccessInterval(10);
+    agentServer.webAccessConfig.setDefaultWebPageRefreshInterval(10);
+
+    if (! pingSolr()){
+      log.warn("Skipping Solr tests since Solr does not appear to be running");
+      return;
+    }
+
+    // Detect that solr is not running
+    evalBoolean("web().isAccessible('http://localhost:8983/solr/select/?q=xx-junk-yy')", true);
+
+    // Test deletion of all documents
+    evalString("web().post('http://localhost:8983/solr/update?commit=true', '<delete><query>*:*</query></delete>').xml.response.lst.get('int')[0].string",
+        "{name: status, text_1: 0}");
+
+    // Shouldn't be any documents now
+    evalInt("web().get('http://localhost:8983/solr/select/?q=*%3A*', false).xml.response.result.numFound.int", 0);
+
+    // Test adding a document to Solr
+    evalString("web().post('http://localhost:8983/solr/update?commit=true', '<add><doc>  <field name=\"id\">SOLR1000</field>  <field name=\"name\">Solr, the Enterprise Search Server</field>  <field name=\"manu\">Apache Software Foundation</field>  <field name=\"cat\">software</field>  <field name=\"cat\">search</field>  <field name=\"features\">Advanced Full-Text Search Capabilities using Lucene</field>  <field name=\"price\">0</field>  <field name=\"popularity\">10</field>  <field name=\"inStock\">true</field>  <field name=\"incubationdate_dt\">2006-01-17T00:00:00.000Z</field></doc></add>').xml.response.lst.get('int')[0].string",
+        "{name: status, text_1: 0}");
+    evalInt("web().get('http://localhost:8983/solr/select/?q=*%3A*', false).xml.response.result.numFound.int", 1);
+
+    // Add a second document
+    evalString("web().post('http://localhost:8983/solr/update?commit=true', '<add><doc>  <field name=\"id\">SOLR1001</field>  <field name=\"name\">Solr-1, the Enterprise Search Server</field>  <field name=\"manu\">Apache Software Foundation</field>  <field name=\"cat\">software</field>  <field name=\"cat\">search</field>  <field name=\"features\">Advanced Full-Text Search Capabilities using Lucene</field>  <field name=\"price\">0</field>  <field name=\"popularity\">10</field>  <field name=\"inStock\">true</field>  <field name=\"incubationdate_dt\">2006-01-17T00:00:00.000Z</field></doc></add>').xml.response.lst.get('int')[0].string",
+        "{name: status, text_1: 0}");
+    evalInt("web().get('http://localhost:8983/solr/select/?q=*%3A*', false).xml.response.result.numFound.int", 2);
+
+    // Add two documents at the same time
+    evalString("web().post('http://localhost:8983/solr/update?commit=true', '<add><doc>  <field name=\"id\">SOLR1002</field>  <field name=\"name\">Solr-2</field></doc><doc>  <field name=\"id\">SOLR1003</field>  <field name=\"name\">Solr-4</field></doc></add>').xml.response.lst.get('int')[0].string",
+        "{name: status, text_1: 0}");
+    evalInt("web().get('http://localhost:8983/solr/select/?q=*%3A*', false).xml.response.result.numFound.int", 4);
+    
+    // Get the id of the 3rd result
+    evalString("web().get('http://localhost:8983/solr/select/?q=*%3A*', false).xml.response.result.doc[2].str[0].text_1.string", "SOLR1002");
+    
+    // Get the IDs of all four results
+    runListScript("map result = web().get('http://localhost:8983/solr/select/?q=*%3A*', false).xml.response.result; list ids; for(int i = 0; i < result.doc.size; i++) ids.add(result.doc[i].str[0].text_1); return ids;", "[SOLR1000, SOLR1001, SOLR1002, SOLR1003]");
+    
   }
   
 }

@@ -79,32 +79,33 @@ public class WebAccessManager {
     return webSites.get(webSiteUrl);
   }
 
-  public WebPage getWebPage(String userId, String url) throws InterruptedException {
-    return getWebPage(userId, url, -1, true);
+  public WebPage getWebPage(String userId, String url){
+    return getWebPage(userId, url, true, -1, true);
   }
   
-  public WebPage getWebPage(String userId, String url, long refreshInterval, boolean wait) throws InterruptedException {
+  public WebPage getWebPage(String userId, String url, boolean useCache, long refreshInterval, boolean wait){
     // Check if already in the web page cache
     WebSite webSite = null;
-    WebPageCache pageCache = webPageCache.get(url);
-    if (pageCache != null){
-      // It's in the cache, but is it still fresh enough?
-      WebPage webPage = pageCache.webPage;
-      webSite = webPage.webSite;
-      
-      if (refreshInterval < 0)
-        refreshInterval = webPage.refreshInterval;
-      long now = System.currentTimeMillis();
-      long delta = now - webPage.time;
-      if (delta < refreshInterval || ! webSite.getRobot().isAccessAllowedNow()){
-        // Fresh enough to keep using the page from the cache, or robots.txt or admin say no
-        // to another read of the web site right now
-        webSite.numReads++;
-        return webPage;
+    if (useCache){
+      WebPageCache pageCache = webPageCache.get(url);
+      if (pageCache != null){
+        // It's in the cache, but is it still fresh enough?
+        WebPage webPage = pageCache.webPage;
+        webSite = webPage.webSite;
+
+        if (refreshInterval < 0)
+          refreshInterval = webPage.refreshInterval;
+        long now = System.currentTimeMillis();
+        long delta = now - webPage.time;
+        if (delta < refreshInterval || ! webSite.getRobot().isAccessAllowedNow()){
+          // Fresh enough to keep using the page from the cache, or robots.txt or admin say no
+          // to another read of the web site right now
+          webSite.numReads++;
+          return webPage;
+        }
       }
-      
     }
-    
+
     // Not in cache; need to fetch the page
     if (webSite == null)
       webSite = getWebSite(url);
@@ -118,6 +119,31 @@ public class WebAccessManager {
 
     // Read the web page
     WebPage webPage = webSite.getWebPage(url, refreshInterval, wait);
+    
+    // Add it to the cache
+    webPageCache.put(url, new WebPageCache(webPage, refreshInterval));
+    
+    // Return the new page
+    return webPage;
+  }
+
+  public WebPage postUrl(String userId, String url, String data){
+    return postUrl(userId, url, data, -1, true);
+  }
+  
+  public WebPage postUrl(String userId, String url, String data, long refreshInterval, boolean wait){
+    // Get info for the web site
+    WebSite webSite = getWebSite(url);
+
+    // Check if this user is even allowed to access the web site
+    if (siteConfig != null && ! siteConfig.isAccessAllowed(webSite, userId))
+      throw new WebSiteAccessDeniedException("User " + userId + " is not permitted to access web site " + webSite.url);
+
+    // Access granted, count the read accesses for this site
+    webSite.numReads++;
+
+    // Post to the URL
+    WebPage webPage = webSite.postUrl(url, data, refreshInterval, wait);
     
     // Add it to the cache
     webPageCache.put(url, new WebPageCache(webPage, refreshInterval));
