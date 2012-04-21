@@ -106,7 +106,7 @@ public class AgentServerConfig {
         "execution_limit_default_level",
         "default_trigger_interval", "default_reporting_interval",
         "minimum_trigger_interval", "minimum_reporting_interval",
-        "implicitly_deny_web_access",
+        "implicitly_deny_web_access", "implicitly_deny_web_write_access",
         "mail_access_enabled", "minimum_mail_access_interval",
         "minimum_host_mail_access_interval", "minimum_address_mail_access_interval",
         "admin_approve_user_create", "mail_confirm_user_create",
@@ -222,6 +222,7 @@ public class AgentServerConfig {
     put("max_users", agentServerProperties.maxUsers);
     put("max_instances", agentServerProperties.maxInstances);
     put("implicitly_deny_web_access", agentServerProperties.implicitlyDenyWebAccess);
+    put("implicitly_deny_web_write_access", agentServerProperties.implicitlyDenyWebWriteAccess);
     put("default_trigger_interval", agentServerProperties.defaultTriggerInterval);
     put("default_reporting_interval", agentServerProperties.defaultReportingInterval);
     put("minimum_trigger_interval", agentServerProperties.minimumTriggerInterval);

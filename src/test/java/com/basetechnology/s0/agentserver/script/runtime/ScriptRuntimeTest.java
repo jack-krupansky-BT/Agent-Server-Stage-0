@@ -4192,6 +4192,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     agentServer.webAccessConfig.setMinimumWebPageRefreshInterval(10);
     agentServer.webAccessConfig.setMinimumWebSiteAccessInterval(10);
     agentServer.webAccessConfig.setDefaultWebPageRefreshInterval(10);
+    agentServer.webAccessConfig.setImplicitlyDenyWebWriteAccess(false);
 
     if (! pingSolr()){
       log.warn("Skipping Solr tests since Solr does not appear to be running");

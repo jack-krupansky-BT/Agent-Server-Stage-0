@@ -41,6 +41,7 @@ public class WebAccessManager {
   public static final long DEFAULT_MINIMUM_WEB_PAGE_REFRESH_INTERVAL = 60 * 1000;
   public static final long DEFAULT_MINIMUM_WEB_SITE_ACCESS_INTERVAL = 60 * 1000;
   public static final boolean DEFAULT_IMPLICITLY_DENY_WEB_ACCESS = false;
+  public static final boolean DEFAULT_IMPLICITLY_DENY_WEB_WRITE_ACCESS = true;
   public long lastAccess;
 
   public WebAccessManager(WebAccessConfig config, WebSiteAccessConfig siteConfig){
@@ -139,8 +140,12 @@ public class WebAccessManager {
     if (siteConfig != null && ! siteConfig.isAccessAllowed(webSite, userId))
       throw new WebSiteAccessDeniedException("User " + userId + " is not permitted to access web site " + webSite.url);
 
-    // Access granted, count the read accesses for this site
-    webSite.numReads++;
+    // Check if user is permitted write access
+    if (siteConfig != null && ! siteConfig.isWriteAccessAllowed(webSite, userId))
+      throw new WebSiteAccessDeniedException("User " + userId + " is not permitted write access to web site " + webSite.url);
+    
+    // Access granted, count the write accesses for this site
+    webSite.numWrites++;
 
     // Post to the URL
     WebPage webPage = webSite.postUrl(url, data, refreshInterval, wait);

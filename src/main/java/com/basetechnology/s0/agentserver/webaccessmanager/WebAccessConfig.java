@@ -23,6 +23,7 @@ public class WebAccessConfig {
   protected long minimumWebPageRefreshInterval;
   protected String userAgentName;
   protected boolean implicitlyDenyWebAccess;
+  protected boolean implicitlyDenyWebWriteAccess;
 
   public WebAccessConfig(
       long minimumWebAccessInterval,
@@ -30,17 +31,23 @@ public class WebAccessConfig {
       long defaultWebPageRefreshInterval,
       long minimumWebPageRefreshInterval,
       String userAgentName,
-      boolean implicitlyDenyWebAccess){
+      boolean implicitlyDenyWebAccess,
+      boolean implicitlyDenyWebWriteAccess){
     this.minimumWebAccessInterval = minimumWebAccessInterval;
     this.minimumWebSiteAccessInterval = minimumWebSiteAccessInterval;
     this.defaultWebPageRefreshInterval = defaultWebPageRefreshInterval;
     this.minimumWebPageRefreshInterval = minimumWebPageRefreshInterval;
     this.userAgentName = userAgentName;
     this.implicitlyDenyWebAccess = implicitlyDenyWebAccess;
+    this.implicitlyDenyWebWriteAccess = implicitlyDenyWebWriteAccess;
   }
   
   public boolean getImplicitlyDenyWebAccess(){
     return implicitlyDenyWebAccess;
+  }
+  
+  public boolean getImplicitlyDenyWebWriteAccess(){
+    return implicitlyDenyWebWriteAccess;
   }
   
   public long getDefaultWebPageRefreshInterval(){
@@ -65,6 +72,10 @@ public class WebAccessConfig {
   
   public void setImplicitlyDenyWebAccess(boolean implicitlyDenyWebAccess) throws Exception {
     this.implicitlyDenyWebAccess = implicitlyDenyWebAccess;
+  }
+  
+  public void setImplicitlyDenyWebWriteAccess(boolean implicitlyDenyWebWriteAccess) throws Exception {
+    this.implicitlyDenyWebAccess = implicitlyDenyWebWriteAccess;
   }
   
   public void setDefaultWebPageRefreshInterval(long defaultWebPageRefreshInterval) throws Exception {

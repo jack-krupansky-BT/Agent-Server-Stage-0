@@ -21,6 +21,7 @@ public class WebSite {
   public String url;
   public Robot robot;
   public int numReads = 0;
+  public int numWrites = 0;
   public int numWebAccesses = 0;
   public int numWebGets = 0;
   public int numWebPosts = 0;

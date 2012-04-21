@@ -59,7 +59,8 @@ public class WebAccessManagerTest {
         WebAccessManager.DEFAULT_DEFAULT_WEB_PAGE_REFRESH_INTERVAL,
         WebAccessManager.DEFAULT_MINIMUM_WEB_PAGE_REFRESH_INTERVAL,
         WebAccessManager.DEFAULT_USER_AGENT_NAME,
-        WebAccessManager.DEFAULT_IMPLICITLY_DENY_WEB_ACCESS);
+        WebAccessManager.DEFAULT_IMPLICITLY_DENY_WEB_ACCESS,
+        WebAccessManager.DEFAULT_IMPLICITLY_DENY_WEB_WRITE_ACCESS);
     wsac = new WebSiteAccessConfig(null);
     wam = new WebAccessManager(wac, wsac);
   }

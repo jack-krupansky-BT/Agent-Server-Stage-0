@@ -271,4 +271,8 @@ public class WebSiteAccessConfig {
     else
       return ! agentServer.webAccessConfig.getImplicitlyDenyWebAccess();
   }
+  
+  public boolean isWriteAccessAllowed(WebSite webSite, String userId){
+    return ! agentServer.webAccessConfig.getImplicitlyDenyWebWriteAccess();
+  }
 }

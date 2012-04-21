@@ -2220,7 +2220,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     // Determine if mail access is enabled
     boolean mailAccessEnabled =server.agentServer.config.getMailAccessEnabled();
     
-    int numConfigKeys = 33;
+    int numConfigKeys = 34;
     
     // Test reading of config settings
     String url = baseUrl + "/config";
@@ -2255,6 +2255,8 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertEquals("minimum_web_access_interval", "100", configJson.getString("minimum_web_access_interval"));
     assertTrue("implicitly_deny_web_access is not present", configJson.has("implicitly_deny_web_access"));
     assertEquals("implicitly_deny_web_access", "false", configJson.getString("implicitly_deny_web_access"));
+    assertTrue("implicitly_deny_web_write_access is not present", configJson.has("implicitly_deny_web_write_access"));
+    assertEquals("implicitly_deny_web_write_access", "true", configJson.getString("implicitly_deny_web_write_access"));
     assertTrue("mail_access_enabled not present", configJson.has("mail_access_enabled"));
     assertEquals("mail_access_enabled", Boolean.toString(server.agentServer.config.getMailAccessEnabled()), configJson.getString("mail_access_enabled"));
     assertTrue("minimum_mail_access_interval is not present", configJson.has("minimum_mail_access_interval"));
@@ -2305,6 +2307,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
             "\"default_reporting_interval\":\"200\"," +
             "\"minimum_reporting_interval\":\"5\"," +
             "\"implicitly_deny_web_access\":\"false\"," +
+            "\"implicitly_deny_web_write_access\":\"true\"," +
             "\"execution_limit_default_level\": \"2\"," +
             "\"execution_limit_level_1\": \"10\"," +
             "\"execution_limit_level_2\": \"100\"," +
@@ -2389,6 +2392,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
             "\"default_reporting_interval\":\"200\"," +
             "\"minimum_reporting_interval\":\"5\"," +
             "\"implicitly_deny_web_access\":\"false\"," +
+            "\"implicitly_deny_web_write_access\":\"true\"," +
             "\"execution_limit_default_level\": \"2\"," +
             "\"execution_limit_level_1\": \"10\"," +
             "\"execution_limit_level_2\": \"100\"," +
@@ -2403,7 +2407,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
     assertJsonSourceEquals("config JSON", someUpdatedConfigJsonExpected, configJson.toString());
     
     // Update all values
-    configJson = doPutJson(url + "?password=abracadabra", "{\"name\":\"ZZ-MyTestAgentServer-0001\",\"software\":\"zz-s0\",\"version\":\"zz-0.1.0\",\"description\":\"zz-Test server for Agent Server - Stage 0\",\"contact\":\"zz-jack@basetechnology.com\",\"default_trigger_interval\":\"1200\",\"max_users\":\"1100\",\"max_instances\":\"11000\",\"website\":\"zzhttp://basetechnology.com/agentserver\",\"default_web_page_refresh_interval\":\"160000\",\"minimum_web_page_refresh_interval\":\"100000\",\"minimum_web_site_access_interval\":\"90000\",\"minimum_web_access_interval\":\"75\",\"user_agent_name\":\"zz-AgentServer\",\"default_reporting_interval\":\"150\",\"implicitly_deny_web_access\":\"false\", \"execution_limit_default_level\": \"2\", \"execution_limit_level_1\": \"11\", \"execution_limit_level_2\": \"220\", \"execution_limit_level_3\": \"3300\", \"execution_limit_level_4\": \"44000\", \"mail_access_enabled\": \"false\", \"minimum_mail_access_interval\": \"3300\", \"minimum_host_mail_access_interval\": \"4400\", \"minimum_address_mail_access_interval\": \"44000\", \"admin_approve_user_create\": \"true\", \"mail_confirm_user_create\": \"true\", \"minimum_trigger_interval\": \"55\", \"minimum_reporting_interval\": \"56\", \"default_limit_instance_states_stored\":\"257\",\"maximum_limit_instance_states_stored\":\"10007\",\"default_limit_instance_states_returned\":\"107\",\"maximum_limit_instance_states_returned\":\"10007\"}", 204);
+    configJson = doPutJson(url + "?password=abracadabra", "{\"name\":\"ZZ-MyTestAgentServer-0001\",\"software\":\"zz-s0\",\"version\":\"zz-0.1.0\",\"description\":\"zz-Test server for Agent Server - Stage 0\",\"contact\":\"zz-jack@basetechnology.com\",\"default_trigger_interval\":\"1200\",\"max_users\":\"1100\",\"max_instances\":\"11000\",\"website\":\"zzhttp://basetechnology.com/agentserver\",\"default_web_page_refresh_interval\":\"160000\",\"minimum_web_page_refresh_interval\":\"100000\",\"minimum_web_site_access_interval\":\"90000\",\"minimum_web_access_interval\":\"75\",\"user_agent_name\":\"zz-AgentServer\",\"default_reporting_interval\":\"150\",\"implicitly_deny_web_access\":\"false\",\"implicitly_deny_web_write_access\":\"true\", \"execution_limit_default_level\": \"2\", \"execution_limit_level_1\": \"11\", \"execution_limit_level_2\": \"220\", \"execution_limit_level_3\": \"3300\", \"execution_limit_level_4\": \"44000\", \"mail_access_enabled\": \"false\", \"minimum_mail_access_interval\": \"3300\", \"minimum_host_mail_access_interval\": \"4400\", \"minimum_address_mail_access_interval\": \"44000\", \"admin_approve_user_create\": \"true\", \"mail_confirm_user_create\": \"true\", \"minimum_trigger_interval\": \"55\", \"minimum_reporting_interval\": \"56\", \"default_limit_instance_states_stored\":\"257\",\"maximum_limit_instance_states_stored\":\"10007\",\"default_limit_instance_states_returned\":\"107\",\"maximum_limit_instance_states_returned\":\"10007\"}", 204);
     assertEquals("JSON returned", null, configJson);
     configJson = doGetJson(url, 200);
     assertTrue("Config JSON not returned", configJson != null);
@@ -2431,6 +2435,7 @@ public class AgentAppServerTest extends AgentServerTestBase {
         "\"default_reporting_interval\":\"150\"," +
         "\"minimum_reporting_interval\":\"56\"," +
         "\"implicitly_deny_web_access\":\"false\"," +
+        "\"implicitly_deny_web_write_access\":\"true\"," +
         "\"execution_limit_default_level\": \"2\"," +
         "\"execution_limit_level_1\": \"11\"," +
         "\"execution_limit_level_2\": \"220\"," +

@@ -74,6 +74,7 @@ public class AgentServerProperties {
   public String maxUsers;
   public String maxInstances;
   public String implicitlyDenyWebAccess;
+  public String implicitlyDenyWebWriteAccess;
   public String defaultTriggerInterval;
   public String defaultReportingInterval;
   public String minimumTriggerInterval;
@@ -199,9 +200,14 @@ public class AgentServerProperties {
     maxInstances = getProperty("max_instances");
     if (maxInstances == null || maxInstances.trim().length() == 0)
       maxInstances = Integer.toString(AgentInstance.DEFAULT_MAX_INSTANCES);
+
     implicitlyDenyWebAccess = getProperty("implicitly_deny_web_access");
     if (implicitlyDenyWebAccess == null || implicitlyDenyWebAccess.trim().length() == 0)
       implicitlyDenyWebAccess = WebAccessManager.DEFAULT_IMPLICITLY_DENY_WEB_ACCESS ? "true" : "false";
+
+    implicitlyDenyWebWriteAccess = getProperty("implicitly_deny_web_write_access");
+    if (implicitlyDenyWebWriteAccess == null || implicitlyDenyWebWriteAccess.trim().length() == 0)
+      implicitlyDenyWebWriteAccess = WebAccessManager.DEFAULT_IMPLICITLY_DENY_WEB_WRITE_ACCESS ? "true" : "false";
 
     defaultTriggerInterval = getProperty("default_trigger_interval",
         AgentDefinition.DEFAULT_TRIGGER_INTERVAL_EXPRESSION);

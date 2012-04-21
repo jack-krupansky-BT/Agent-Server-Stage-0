@@ -29,12 +29,17 @@ public class AgentServerWebAccessConfig extends WebAccessConfig {
         config.getLong("default_web_page_refresh_interval"),
         config.getLong("minimum_web_page_refresh_interval"),
         config.get("user_agent_name"),
-        config.getBoolean("implicitly_deny_web_access"));
+        config.getBoolean("implicitly_deny_web_access"),
+        config.getBoolean("implicitly_deny_web_write_access"));
     this.config = config;
   }
   
   public boolean getImplicitlyDenyWebAccess(){
     return config.getBoolean("implicitly_deny_web_access");
+  }
+  
+  public boolean getImplicitlyDenyWebWriteAccess(){
+    return config.getBoolean("implicitly_deny_web_write_access");
   }
   
   public long getDefaultWebPageRefreshInterval(){
@@ -59,6 +64,10 @@ public class AgentServerWebAccessConfig extends WebAccessConfig {
   
   public void setImplicitlyDenyWebAccess(boolean implicitlyDenyWebAccess) throws Exception {
     config.put("implicitly_deny_web_access", implicitlyDenyWebAccess ? "true" : "false");
+  }
+  
+  public void setImplicitlyDenyWebWriteAccess(boolean implicitlyDenyWebWriteAccess) throws Exception {
+    config.put("implicitly_deny_web_write_access", implicitlyDenyWebWriteAccess ? "true" : "false");
   }
   
   public void setDefaultWebPageRefreshInterval(long defaultWebPageRefreshInterval) throws Exception {
