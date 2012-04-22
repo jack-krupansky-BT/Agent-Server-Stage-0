@@ -1,0 +1,192 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Introducing the Base Technology Software Agent Server
+
+(This doc is a work in progress, just trying out some ideas here right now.)
+
+Software agent technology held great promise fifteen years ago, but a many technical and logistical
+issues conspired to drastically limit the achievement of that promise.
+
+Many technological developments have occurred over the past fifteen years that now seem poised to
+finally begin unlooking the potential of software agents.
+
+The Base Technology Software Agent Server is a first step to providing an environment in which
+software agents can thrive and achieve at least a glimmer of their hidden potential.
+
+At its heart is a simplified but highly structured and automated agent model coupled with a very rich
+infrastructure that provides high level support for that model of computing. A new tailored scripting
+language, a library of rich web-computing functions, and a persistent store for maintaining the state
+of agents, combined with a rich REST API for communicating with agents finally provide a level of
+support that greatly facilitates the development, deployment, use, management, and maintenance of
+sophisticated software agents. 
+
+-----
+
+Software agents are a new paradigm for software components which make it possible for developers and even
+advanced users of only average skill to develop and deploy software that accesses web-based resources to
+provide information to users on an ongoing basis that they would not normally be able to normally access
+without expensive, tedious, cumbersome, and error-prone server applications. Software agents have the
+potential to bring distributed, persistent, web-computing to the masses.
+
+This new approach to distributed, persistent, web-computing has three key aspects:
+
+1. A powerful server environment which enables safe and efficient to deploy large numbers of software agents.
+2. A rich infrastructure that dramatically facilitates development of individual agents that access web resources.
+3. A software agent model that greatly facilitates the use of the outputs of any number software agents for
+   each individual agent and to simultaneously generate output that in turn fuels any number of other
+   software agents. In other words, agents can leverage other agents
+
+What distinguishes a software agent from other forms of software:
+
+1. Autonomy. An agent is long-running, independent of a user's personal computing devices (PC, phone, tablet,
+   etc.) and does not require the direct supervision of the user.
+2. Agency. An agent is developed and controlled by the user not some high-end server developer or system administrator.
+3. Persistent. An agent and its state persists regardless of what happens with the servers that it may run on.
+4. Robust. An agent is tolerant of failures of hardware and software and its environment.
+5. Transparency and simplicity. Not a large opaque mass of code. Easy to see what is at stake
+6. Trustworthy. Agents are transparent and inherently trustworthy. And the server enforces the rules.
+7. Cooperate. Agents can build on the activity of other agents.
+8. Goal-oriented. More than just specific tasks, agents can work towards goals.
+
+----
+
+Conventional computing paradigms such as computer programs, processes, threads, scripts, pipes, sockets,
+web services, etc. used in conjunction with conventional computing hardware such as personal computers,
+networked servers, mobile phones, handheld computers, tablets, etc. simply aren't up to delivering the
+kinds of next-generation computing solutions that our future will soon be demanding.
+
+It is not simply that we need more raw computing power, which utility computing services such as
+Amazon AWS provide, but we need much more intellectual leverage. Rather than hiring and organizing
+vast hordes of developers, we need to be enabling individual developers to do much more and to
+simultaneously enable them to leverage the efforts of independent individual developers.
+
+Although object-oriented programming and component-based software were supposed to spawn incredible
+"re-use" of objects and components, the promise has yet to be fulfilled. Many objects and components
+have been developed and re-used, but somehow the whole just seems to consistently worth less than the
+sum of the parts.
+
+Software agent technology has also been held out as having great promise over the past two decades,
+but simply has never come close to fulfilling that great promise. Nonetheless, software agents still
+hold great promise as a first-order approximation of what a true software component should look like.
+
+The Base Technology Software Agent Server is certainly not even close to fulfilling the grand promise
+of software agent technology, but it is a significant leap forward.
+
+One of the grand challenges of computing is persistence. A computer program does something wonderful,
+but how does one go about making the computational state of one program available to another program?
+Data interchange is a complex and messy problem. The idea with software agents is that there state is
+automatically maintained (persisted) over an extended period of time, even if the host computer crashes
+or needs to be rebooted. Existing computer program are able to approximately address this problem, but
+other through the great effort and great diligence of its developers, which is expensive and error prone.
+What is needed is a computing paradigm in which persistence and long-life are automatic with zero effort
+on the part of the developer. The Base Technology Software Agent Server provides such support.
+
+Because trust and security is a huge issue for agents, it is important that their implementation be
+absolutely transparent so that any user can see exactly what they are getting. By factoring much of the
+logic of a typical software agent into the agent server itself to the degree that each agent is very
+simple and that any procedural code is very simple and obvious. And finally, with so much of the
+processing occurring inside of the agent server itself, administrative controls can assure that rogue
+or malicious agents will not get very far. For example, the agent server assures that all agents obey
+the robot.txt standard and that the cumulative web access across all agents is kept with limits that
+may be throttled at the administrative level of the agent server.
+
+Sharing data between computer programs has always been a very challenging problem and traditionally
+has required lots of care and lots of code. The Base Technology Software Agent Server greatly simplifies
+the problem by allowing agents to declares their intentions and to easily share data so that the agent
+server itself can manage the data dependencies and arrange to agents to receive and process the data
+when it becomes available without lots of carefully written code. By using a more declarative style of
+coding for agents, the agent server is able to support automatic recalculation of data dependencies
+without even a single line of error-prone code being needed on the part of the developer. So, it is
+actually possible for an agent to respond to changes in its inputs and produce new outputs of its own
+without any application logic required to manage the update process.
+
+Distributed computing is another of the grand challenges facing software architects and developers, and
+once again it is software agents to the rescue. Although it is still too soon to apply software agents
+to all distributed computing problems, agents are appropriate for an interesting subset of them. The
+current version of the Base Technology Software Agent Server does not support distributed computing per
+se, other than the fact that it supports access to web resources and REST-based web services, but the
+agent model is designed to eventually accommodate inter-machine agent access. In other words, agents
+would be able to reference agents on other machines in a cluster or elsewhere on the web as well, with
+all of the bookkeeping for inter-agent communications and data synchronization handled 100% automatically
+by the underlying agent servers. 
+
+As with all aspects of life, sometimes it is the little things that can make a big difference. Although
+the emphasis of the Base Technology Software Agent Server is on declaring intentions and automatic
+execution, expressions and snippets of procedural code are essential to completing the full picture.
+Although many of the core features of the Java programming language were used for familiarity, there
+have been a number of omissions, additions, and improvements made to provide agent developers with
+a very powerful collection of language and library features to greatly facilitate the kinds of data
+manipulation that are commonly needed for dealing with strings, text, HTML web pages, XML data, RSS
+feeds, and REST API web services. We have benefited greatly from experience working with the Internet
+and Web in Java, which is reflected in the enhanced scripting language supported by the agent server.
+
+The heart and soul of the agent server is the agent processing loop which automatically sequences the
+numerous processing steps needed for an agent to be active and aware. This includes timers, propagating
+data dependencies and notifications, and output generation and propagation.
+
+The current implementation of the Base Technology Software Agent Server, Stage 0, is a preliminary,
+experimental testbed to evaluate the concepts introduced by this new server. It is currently a local,
+standalone server, but the vision is for a full-blown, world-wide "agent grid" of such agent servers.
+In the near term, the intention is to put the local server up on Amazon AWS for public access, and then
+scale that one server to a cluster of servers as interest warrants.
+
+----
+
+Much as with the advent of the PC with spreadsheets and word processors, software agent technology offer the
+promise of bringing a whole new level of computing to the masses.
+
+Until now, web-computing was restricted to the technical elite. Sure, anybody can put of a web site with some
+PHP scripts and even some e-commerce features, but actually doing web-computing with web resources, as opposed
+to server-base applications which merely offer browser-bsaed front-ends is a quantum leap above and beyond that
+level of relatively simple processing.
+
+Your average sophisticated web site leverages a relatively small development team over a relatively large
+number of users. User-centric web-computing seeks to deliver computing power to users on a 1-on-1 basis. In
+other words, the user themselves develops their own program and is able to deploy, operate, and maintain it
+without any team of elite devlopers. That is a steep challenge, but that is what saoftware agent technology
+is all about.
+
+This requires five new levels of capability:
+
+1. A much more sophisticated server - the agent server.
+2. A much richer infrastructure that enables software agents - web resource managers
+3. A rich code library to enable individual agents
+4. A powerful but easy to use scripting language
+5. A declarative framework that connects agents together to leverage their capabilities
+
+Five main types of agents:
+
+1. Data source agents. Directly access web resources and transform and repackage essential information in
+   a form that is easily consumed by other agents.
+2. Aggregation agents. Combine data from multiple sources, producing a distilled result that can be easily
+   consumed by other agents.
+3. Utility agents. Perform common data transformations of value to many agents.
+4. Worker agents. Perform subsets of data processing for main agents.
+5. Main agents. The agents that actually produce the output to be consumed by the end user.
+
+All of those functional types are still implemented with a single agent model, but there is one distintion
+between the data source agents and all the rest, namely the use of timers to control the reading of web
+resources, while all other forms of agent simply use declared dependencies to assure that agents run
+when new data becomes available from agents they depend on.
+
+A number of forms of "throttling" are supported to streamline operation of both individual agents,
+collections of realted agents, and the overall universe of agents on a server at an administrative level.
+
+1. Explicit timers - primarily for the data source agents
+2. Trigger throttling - controls how often an agent will run when its inputs have changed
+3. Report throttling - how frequently an agent will change its own outputs
+4. Administrative throttling - the admin can set the maximum frequency for the agent-level throttling
+   controls
+
+A variety of data formats are supported to cope with the forms of data on the web and web APIs, including
+
+1. HTML
+2. XML
+3. Text
+4. CSV
+5. JSON
+6. Lists
+7. Maps (tables)
+
+.
