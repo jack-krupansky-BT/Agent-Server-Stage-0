@@ -1,0 +1,36 @@
+ * Copyright 2012 John W. Krupansky d/b/a Base Technology
+ * Licensed under the Apache License, Version 2.0
+
+Software Agent Server Support for the Semantic Web, RDF, and Linked Open Data
+
+There is no direct support for the Semantic Web or RDF in the software agent server at this time,
+although raw XML can be processed, so RDF/XML support can be supported to a limited degree. That
+said, the software agent server was designed from the start with an intent to eventually support
+the Semantic Web and RDF.
+
+Rather than simply support RDF at a low level, the intent is to come up with a rich higher level
+model of RDF graph processing.
+
+The various forms of RDF that will eventually be supported would include:
+
+  - RDF/XML
+  - N3
+  - Turtle
+  - NTriples
+  - SPARQL queries
+  - Comparing, merging, and factoring of graphs
+  - Triplestore and quadstore
+  - Sharing graphs between agents for efficiency
+  - Caching of graphs
+
+Graphs would probably be publicly accessible directly through the REST API, so the agent server
+would effectively be a triplestore itself, and internally would be structured as such.
+
+Additional capabilities TBD.
+
+Actually, we are seeking feedback from advanced technology adopters on which Semantic Web/RDF
+features they would like to see in an early release. From that feedback we will synthesize and
+implement the high level model.
+
+.
+
