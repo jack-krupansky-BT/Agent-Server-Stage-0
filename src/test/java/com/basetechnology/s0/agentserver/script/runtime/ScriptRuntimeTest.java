@@ -470,6 +470,47 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     } else
       return true;
   }
+
+  public String getSolrRelease() throws Exception {
+    HttpClient httpclient = new DefaultHttpClient();
+    String url = "http://localhost:8983/solr/admin/system";
+    HttpGet httpGet = new HttpGet(url);
+    HttpResponse response = null;
+    try {
+      response = httpclient.execute(httpGet);
+    } catch (HttpHostConnectException e){
+      log.info("Solr does not appear to be running - unable to connect");
+      return "";
+    }
+    HttpEntity entity = response.getEntity();
+    String s = entity == null ? null : EntityUtils.toString(entity);
+   int statusCode = response.getStatusLine().getStatusCode();
+    if (statusCode / 100 != 2){
+      log.info("Solr does not appear to be running - ping failed with status code " + statusCode +
+          " reason: " + response.getStatusLine().getReasonPhrase());
+      return "";
+    } else{
+      String matchString = "<str name=\"solr-spec-version\">";
+      int i = s.indexOf("<str name=\"solr-spec-version\">");
+      if (i < 0){
+        log.info("Unable to find Solr release in admin/system");
+        return "";
+      }
+      String s1 = s.substring(i + matchString.length());
+      i = s1.indexOf('.');
+      if (i < 0){
+        log.info("Unable to find Solr release in admin/system");
+        return "";
+      }
+      i = s1.indexOf('.', i + 1);
+      if (i < 0){
+        log.info("Unable to find Solr release in admin/system");
+        return "";
+      }
+      String solrRelease = s1.substring(0, i) ;
+      return solrRelease;
+    }
+  }
   
   @Test
   public void test() throws Exception {
@@ -4134,7 +4175,9 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
       return;
     }
 
-    // Detect that solr is not running
+    String solrRelease = getSolrRelease();
+    
+    // Detect if solr is not running
     evalBoolean("web().isAccessible('http://localhost:8985/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on')",
         false);
     evalBoolean("web().isAccessible('http://localhost:8985/solr/select/?q=xx-junk-yy')",
@@ -4142,6 +4185,9 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     evalBoolean("web().isAccessible('http://localhost:8983/solr/select/?q=xx-junk-yy')",
         true);
 
+    // Check Solr ping
+    evalMap("web().get('http://localhost:8983/solr/admin/ping').xml.response.str", "{name: status, text_1: OK}");
+    
     // Test an Solr query that should return no results
     evalString("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on').xml.keys.string",
         "[response]");
@@ -4179,9 +4225,15 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
         "QTime, text_1: [0-9]*", "QTime, text_1: x",
         "{response: {lst: {name: responseHeader, int: [{name: status, text_1: 0}, {name: QTime, text_1: x}], lst: {name: params, str: [{name: indent, text_1: on}, {name: start, text_1: 0}, {name: q, text_1: xx-junk-yy}, {name: rows, text_1: 10}]}}, result: {name: response, numFound: 0, start: 0}}}");
 
-    evalMaskedString("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on')",
-        "QTime\">[0-9]*", "QTime\">x",
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<response>\n\n<lst name=\"responseHeader\">\n  <int name=\"status\">0</int>\n  <int name=\"QTime\">x</int>\n  <lst name=\"params\">\n    <str name=\"indent\">on</str>\n    <str name=\"start\">0</str>\n    <str name=\"q\">xx-junk-yy</str>\n    <str name=\"rows\">10</str>\n  </lst>\n</lst>\n<result name=\"response\" numFound=\"0\" start=\"0\"/>\n</response>\n");
+    if (solrRelease.equals("4.0")){
+      evalMaskedString("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on')",
+          "QTime\">[0-9]*", "QTime\">x",
+          "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<response>\n\n<lst name=\"responseHeader\">\n  <int name=\"status\">0</int>\n  <int name=\"QTime\">x</int>\n  <lst name=\"params\">\n    <str name=\"indent\">on</str>\n    <str name=\"start\">0</str>\n    <str name=\"q\">xx-junk-yy</str>\n    <str name=\"rows\">10</str>\n  </lst>\n</lst>\n<result name=\"response\" numFound=\"0\" start=\"0\">\n</result>\n</response>\n");
+    } else {
+      evalMaskedString("web().get('http://localhost:8983/solr/select/?q=xx-junk-yy&start=0&rows=10&indent=on')",
+          "QTime\">[0-9]*", "QTime\">x",
+          "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<response>\n\n<lst name=\"responseHeader\">\n  <int name=\"status\">0</int>\n  <int name=\"QTime\">x</int>\n  <lst name=\"params\">\n    <str name=\"indent\">on</str>\n    <str name=\"start\">0</str>\n    <str name=\"q\">xx-junk-yy</str>\n    <str name=\"rows\">10</str>\n  </lst>\n</lst>\n<result name=\"response\" numFound=\"0\" start=\"0\"/>\n</response>\n");
+    }
 
   }
 
@@ -4199,7 +4251,7 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
       return;
     }
 
-    // Detect that solr is not running
+    // Detect if solr is not running
     evalBoolean("web().isAccessible('http://localhost:8983/solr/select/?q=xx-junk-yy')", true);
 
     // Test deletion of all documents
@@ -4230,6 +4282,41 @@ public class ScriptRuntimeTest extends AgentServerTestBase {
     // Get the IDs of all four results
     runListScript("map result = web().get('http://localhost:8983/solr/select/?q=*%3A*', false).xml.response.result; list ids; for(int i = 0; i < result.doc.size; i++) ids.add(result.doc[i].str[0].text_1); return ids;", "[SOLR1000, SOLR1001, SOLR1002, SOLR1003]");
     
+  }
+
+  @Test
+  public void testCurrencyExchange() throws Exception {
+    // Set throttling down to speed tests
+    agentServer.webAccessConfig.setMinimumWebAccessInterval(10);
+    agentServer.webAccessConfig.setMinimumWebPageRefreshInterval(10);
+    agentServer.webAccessConfig.setMinimumWebSiteAccessInterval(10);
+    agentServer.webAccessConfig.setDefaultWebPageRefreshInterval(10);
+    agentServer.webAccessConfig.setImplicitlyDenyWebWriteAccess(false);
+
+    // Check that base is US dollar
+    evalString("web().get('http://openexchangerates.org/latest.json').json.base", "USD");
+    
+    // Check that timestamp is within an hour of now
+    // Note: The timestamp is in seconds, UNIX time
+    runBooleanScript("long timestamp = web().get('http://openexchangerates.org/latest.json').json.timestamp; long delta = now - timestamp * 1000; return delta > 0 && delta < 60 * 60 * 1000;", true);
+    
+    // Check that 1 US dollar is 1 US dollar
+    evalFloat("web().get('http://openexchangerates.org/latest.json').json.rates.USD.float", 1.00);
+    //evalFloat("web().get('http://openexchangerates.org/latest.json').json.rates.EUR.float", 0.76109);
+    //evalFloat("1.0/web().get('http://openexchangerates.org/latest.json').json.rates.EUR.float", 1.3139);
+
+    // Check some currencies that are equivalent to US dollar
+    evalFloat("web().get('http://openexchangerates.org/latest.json').json.rates.BMD.float", 1.00);
+    evalFloat("web().get('http://openexchangerates.org/latest.json').json.rates.BSD.float", 1.00);
+    evalFloat("web().get('http://openexchangerates.org/latest.json').json.rates.CUP.float", 1.00);
+    evalFloat("web().get('http://openexchangerates.org/latest.json').json.rates.PAB.float", 1.00);
+
+    // Check that the Barbados dollar is pegged to 2 US dollars
+    evalFloat("web().get('http://openexchangerates.org/latest.json').json.rates.BBD.float", 2.00);
+
+    // Check that euro rate is in range
+    runBooleanScript("float euro = web().get('http://openexchangerates.org/latest.json').json.rates.EUR.float; float usd = 1.0 / euro; return usd > 1.10 && usd < 1.60;", true);
+
   }
   
 }
