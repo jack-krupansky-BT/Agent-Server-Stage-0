@@ -18,6 +18,11 @@ The various forms of RDF that will eventually be supported would include:
   - Turtle
   - NTriples
   - SPARQL queries
+  - RDFa
+  - OWL, reasoning
+  - RDF triple literals
+  - Name space management
+  - triple and n-tuple conversion
   - Comparing, merging, and factoring of graphs
   - Triplestore and quadstore
   - Sharing graphs between agents for efficiency
